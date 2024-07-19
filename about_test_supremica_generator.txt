@@ -1,0 +1,106 @@
+The output of test_supremica_generator.py represents an Abstract Syntax Tree (AST) for a smart contract. The AST details various states and
+ transitions of the contract. Let's break down each component of the AST:
+
+Overall Structure
+Events: This section is currently empty. Normally, it would list events that the contract can emit.
+Components: This section contains several subcomponents that define different states and transitions within the smart contract.
+Components Breakdown
+VariableComponent: This section is currently empty. In a fully fleshed-out AST, it would define state variables and their initial values.
+
+# The following output corresponds to the casino.sol file.
+
+1. inState: This component represents a state and contains transitions based on events.
+
+edge_list:
+t0: Transitions triggered by createGame, placeBet, and decideBet events. It requires the state to be equal to _state.
+t1: This transition doesn't have specific events, guards, or actions.
+
+------------------------------------------------------------------------------------------------------------------------
+
+2. byOperator: This component contains transitions managed by the operator.
+
+edge_list:
+t0: Triggered by events like createGame, decideBet, addToPot, and removeFromPot. It requires the message sender (msg.sender) to be the operator.
+t1: This transition doesn't have specific events, guards, or actions.
+
+------------------------------------------------------------------------------------------------------------------------
+
+3. noActiveBet: This component deals with transitions when there is no active bet.
+
+edge_list:
+t0: Triggered by the removeFromPot event. It requires the state to be either State.IDLE or State.GAME_AVAILABLE.
+t1: This transition doesn't have specific events, guards, or actions.
+
+------------------------------------------------------------------------------------------------------------------------
+
+4. "" (Unnamed Component): This component sets initial states or performs basic assignments.
+
+edge_list: Contains several transitions setting initial values for variables like operator, state, timeout, pot, and wager.bet.
+createGame: Defines the transitions involved in creating a game.
+
+edge_list:
+t0: Sets hashedNumber to hashNum.
+t1: Changes the state to State.GAME_AVAILABLE.
+
+------------------------------------------------------------------------------------------------------------------------
+
+5. placeBet: Handles placing a bet.
+
+edge_list:
+t0: Ensures msg.sender is not the operator.
+t1: Ensures the bet amount is valid.
+t2: Assigns the player.
+t3: Sets the wager.
+t4: Changes the state to State.BET_PLACED.
+
+------------------------------------------------------------------------------------------------------------------------
+
+6. decideBet: Determines the outcome of a bet.
+
+edge_list:
+t0: Validates the hashed number.
+t1: Determines if the secret number is heads or tails.
+t2: Calls playerWins if the guess is correct.
+t3: Calls operatorWins if the guess is incorrect.
+t4: Conditional statement handling win/loss.
+t5: Resets the state to State.IDLE.
+
+------------------------------------------------------------------------------------------------------------------------
+
+7. playerWins: Handles the logic when a player wins.
+
+edge_list:
+t0: Temporarily stores the wager amount.
+t1: Resets the wager.
+t2: Reduces the pot.
+t3: Transfers winnings to the player.
+
+------------------------------------------------------------------------------------------------------------------------
+
+8. operatorWins: Handles the logic when the operator wins.
+
+edge_list:
+t0: Adds the wager to the pot.
+t1: Resets the wager.
+
+------------------------------------------------------------------------------------------------------------------------
+
+9. addToPot: Adds funds to the pot.
+
+edge_list:
+t0: Increases the pot by msg.value.
+
+------------------------------------------------------------------------------------------------------------------------
+
+10. removeFromPot: Removes funds from the pot.
+
+edge_list:
+t0: Decreases the pot by a specified amount.
+t1: Transfers the amount to the operator.
+
+
+Summary
+The AST describes a betting game smart contract with various states and transitions. It includes rules for creating a
+game, placing a bet, deciding the bet outcome, and handling fund transfers between the pot, the player, and the
+operator.Each component in the AST corresponds to a particular state or operation within the smart contract, detailing
+the conditions and actions associated with state transitions.

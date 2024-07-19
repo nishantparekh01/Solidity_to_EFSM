@@ -1,0 +1,106 @@
+# This is a rough file.
+# Using this file only to write out whats on my mind.
+
+# Exploring structures for each 'TYPE' in Supremica.
+
+# Structure 1 - Event Declaration - Parent : root
+event_declarations = {
+    {event_name_1},
+    {event_name_2}
+    .
+    .
+    and so on for other event names
+}
+
+# These event names above are events on which transitions occur. Hence these names must be
+generated when generating transitions
+
+# Structure 2 - Components - Parent : root
+
+components = {
+    EFSM1 (SimpleComponent)
+    EFSM2
+    .
+    .
+    and so on until EFSMn
+    ---------------------------------
+    VAR1 (VariableComponent)
+    VAR2
+    .
+    .
+    and so on until VARn
+}
+
+# Structure 3 - EFSM (SimpleComponent) - Parent : 'components'
+
+EFSM = {
+    graph {
+        node_list {}
+        edge_list {}
+    }
+
+}
+
+# In Structure 3, EFSM are of type (SimpleComponent). These represent individual automatons,
+for example : createGame, placeBet, addToPot etc. That is the function names from Solidity.
+EFSM has two substructures : node_list and edge_list.
+# node_list contains set of all the nodes its parent EFSM has.
+# edge_list contains set of all the transitions within EFSM
+
+
+# Structure 3 - VAR (VariableComponent) - Parent : 'components'
+
+# Structure 4 - edge_list (EdgeList) - Parent : 'graph'
+
+edge_list {
+    edge1
+    edge2
+    .
+    .
+    edge {
+        # Each edge represents a transitions, with source_node and target_node mentioned.
+        label_block{
+            # label_block has the name of the event which associated with the transition
+        }
+        guard_action_block {
+            # guard_action_block contains the guard and the action for this transition
+            guard  {}
+            action {}
+        }
+    }
+
+}
+
+# Final Structure
+
+Supremica {
+    Events {}
+    Components {
+        efsm (n) {
+            node_list {}
+            edge_list {
+                transition (n) {
+                    source_index : variable value
+                    target_index : variable value
+                    event        : variable value
+                    # additional info
+                }
+                GuardAction_block {
+                    guard  : variable value
+                    action : variable value
+                    # additional info
+                }
+
+            }
+        # additional info about the efsm
+        }
+        VariableComponent {}
+    }
+
+}
+
+# While generating efsm, we need some mechanism to
+# keep track of source_node and target_node
+
+# Now I need a way to add events to the transitions. So I add events, source and target nodes to the transitions.
+# And also create a separate structure for storing variables.

@@ -26,7 +26,8 @@ def handleVariableDeclaration(node):
     assert ntype(node) == 'VariableDeclaration', " Node not VariableDeclaration"
     name = node['name']
     var_type = lookup_table[ntype(node['typeName'])](node['typeName'])
-    return str(var_type + " : " + name)
+    #return str(var_type + " : " + name)
+    return(name)
 
 def handleElementaryTypeName(node):
     assert ntype(node) == 'ElementaryTypeName', "Node not ElementaryTypeName"
@@ -84,17 +85,20 @@ def handleFunctionCall(node):
     if name == 'keccak256':
         arg = node['arguments'][0]['arguments'][0]['name']
     else:
-        arg_list = []
-        for a in node['arguments']:
-            arg = lookup_table[ntype(a)](a)
-            # if isinstance(arg, dict):
-            #     arg_list.append(str(arg['name'] + "(" + arg['args'] + ")"))
-            # else:
-            #     arg_list.append(arg) # msg.sender
-        # if argument is a dictionary then convert the dictionary into string with function call
-        #print("arg_list here", arg_list)
-        #args  = ' '.join(arg_list)
-        #print(ET.tostring(arg, encoding='utf-8', method='xml').decode('utf-8'))
+        if len(node['arguments']) == 0:
+            arg = ""
+        else:
+            arg_list = []
+            for a in node['arguments']:
+                arg = lookup_table[ntype(a)](a)
+                # if isinstance(arg, dict):
+                #     arg_list.append(str(arg['name'] + "(" + arg['args'] + ")"))
+                # else:
+                #     arg_list.append(arg) # msg.sender
+            # if argument is a dictionary then convert the dictionary into string with function call
+            #print("arg_list here", arg_list)
+            #args  = ' '.join(arg_list)
+            #print(ET.tostring(arg, encoding='utf-8', method='xml').decode('utf-8'))
     return {'ntype': ntype(node), 'name' : name, 'args' : arg} # args value : msg.sender
 
 
@@ -191,12 +195,20 @@ def handleElementaryTypeNameExpression(node):
 
 def handleVariableDeclarationStatement(node):
     assert ntype(node) == 'VariableDeclarationStatement', "Node not VariableDeclarationStatement"
-    name = "".join([lookup_table[ntype(d)](d) for d in node['declarations']])
+
+    # assumption - there is only one variable declaration here
+    #name = "".join([lookup_table[ntype(d)](d) for d in node['declarations']])
+    name = lookup_table[ntype(node['declarations'][0])](node['declarations'][0])
     init_value = lookup_table[ntype(node['initialValue'])](node['initialValue'])
     if isinstance(init_value, dict):
         if init_value['ntype'] == 'Conditional':
-            return {'ntype': ntype(node), 'kind': 'conditional', 'name' : name, 'condition': init_value['condition'], 'true_exp': init_value['true_exp'], 'false_exp': init_value['false_exp']}
-    return str (name + " = " + init_value)
+
+            exp = wmodify_assignment(name,"==", init_value['true_exp'], **{'ntype': ntype(node), 'kind': 'conditional', 'name' : name, 'condition': init_value['condition'], 'true_exp': init_value['true_exp'], 'false_exp': init_value['false_exp']})
+
+
+            return exp
+    else:
+        return str (name + " = " + init_value)
 
 def handleConditional(node):
     assert ntype(node) == 'Conditional', "Node not conditional"
@@ -287,72 +299,110 @@ def is_integer(variable):
             return False
     return False
 
-def wmodify_assignment(lhs, op, rhs):
+def wmodify_assignment(lhs, op, rhs, **info):
     #print(lhs, op, rhs)
     #print(type(rhs))
     #print(rhs)
-    if isinstance(rhs, dict) and isinstance(lhs, str):
+    if info:
+        if info['ntype'] == 'VariableDeclarationStatement':
+            if info['kind'] == 'conditional':
+                # lhs = name, secret
+                # op = ==
+                # rhs = HEADS
+                true_condition = info['condition']
 
-        BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-        SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-        SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs['args']))
+                # creating false condition by appending true condition to unaryOperator = "!"
+                false_condition = ET.Element("UnaryExpression", Operator = "!")
+                false_condition.append(true_condition)
+
+                lhs_trueAssignment = wmodify_assignment(true_condition, "&", info['true_exp'], **{'ntype': 'VariableDeclarationStatement', 'kind': 'AssignmentCheck', 'variableAssigned' : info['name']})
+
+                rhs_falseAssignment = wmodify_assignment(false_condition, "&", info['false_exp'], **{'ntype': 'VariableDeclarationStatement', 'kind': 'AssignmentCheck', 'variableAssigned' : info['name']})
+
+                final_exp = wmodify_assignment(lhs_trueAssignment, "|", rhs_falseAssignment)
+
+                #print(print(ET.tostring(final_exp, encoding='utf-8', method='xml').decode('utf-8')))
+                return final_exp
+
+            if info['kind'] == 'AssignmentCheck':
+                BinaryExpression = ET.Element("BinaryExpression", Operator=str(op))
+                BinaryExpression.append(lhs)
+
+                lhs_assignment = ET.Element("UnaryExpression", Operator = "'")
+                SimpleIdentifier = ET.SubElement(lhs_assignment, "SimpleIdentifier", Name = str(info['variableAssigned']))
+
+                rhs_wmod = wmodify_assignment(lhs_assignment, "==", str(rhs))
+                BinaryExpression.append(rhs_wmod)
+                #print(print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')))
+                return BinaryExpression
 
 
-        #print(rhs['args'])
-        #print(rhs['name'])
-        #rhs = str(lhs + " "  + op + " " + str(rhs['name'] + "(" + rhs['args'] + ")"))
 
+    else:
+        if isinstance(rhs, dict) and isinstance(lhs, str):
 
-    # if the binary expression is a simple assignment
-    elif isinstance(rhs, str) and isinstance(lhs, str):
-        if is_integer(rhs):
             BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-            IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value = str(rhs))
-        else:
+            SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs['args']))
+
+
+            #print(rhs['args'])
+            #print(rhs['name'])
+            #rhs = str(lhs + " "  + op + " " + str(rhs['name'] + "(" + rhs['args'] + ")"))
+
+
+        # if the binary expression is a simple assignment
+        elif isinstance(rhs, str) and isinstance(lhs, str):
+            if is_integer(rhs):
+                BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
+                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
+                IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value = str(rhs))
+            else:
+                BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
+                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
+                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
+
+        # if rhs is xml element then append it to the BinaryExpression
+        elif isinstance(rhs, ET.Element) and isinstance(lhs, ET.Element):
+
+            BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
+            BinaryExpression.append(lhs)
+            BinaryExpression.append(rhs)
+            # SimpleIdentifier_lhs = ET.SubElement(BinaryExpression, tag=lhs)
+            # SimpleIdentifier_rhs = ET.SubElement(BinaryExpression, tag =rhs)
+
+
+        elif isinstance(rhs, ET.Element) and isinstance(lhs, str):
             BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-            SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
+            BinaryExpression.append(rhs)
+            #BinaryExpression.append(rhs)
+            print('-------------------xml party here--------------------------')
+            print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
+            #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
+            return BinaryExpression
 
-    # if rhs is xml element then append it to the BinaryExpression
-    elif isinstance(rhs, ET.Element) and isinstance(lhs, ET.Element):
+        elif isinstance(rhs, str) and isinstance(lhs, ET.Element):
 
-        BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-        BinaryExpression.append(lhs)
-        BinaryExpression.append(rhs)
-        # SimpleIdentifier_lhs = ET.SubElement(BinaryExpression, tag=lhs)
-        # SimpleIdentifier_rhs = ET.SubElement(BinaryExpression, tag =rhs)
+            if is_integer(rhs):
+                BinaryExpression = ET.Element("BinaryExpression", Operator=str(op))
+                BinaryExpression.append(lhs)
+                IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value=str(rhs))
+            else:
+                BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
+                BinaryExpression.append(lhs)
+                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
+            #BinaryExpression.append(rhs)
+            print('-------------------lhs:xml, rhs:str --------------------------')
+            print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
+            #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
+            return BinaryExpression
 
+        # Convert this to a string and return
+        #print(ET.tostring(BinaryExpression))
+        #print(type(BinaryExpression))
 
-    elif isinstance(rhs, ET.Element) and isinstance(lhs, str):
-        BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-        SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-        BinaryExpression.append(rhs)
-        #BinaryExpression.append(rhs)
-        print('-------------------xml party here--------------------------')
-        print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-        return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
+        print(str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')))
+        #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')) # thanks copilot
 
-    elif isinstance(rhs, str) and isinstance(lhs, ET.Element):
-
-        if is_integer(rhs):
-            BinaryExpression = ET.Element("BinaryExpression", Operator=str(op))
-            BinaryExpression.append(lhs)
-            IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value=str(rhs))
-        else:
-            BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-            BinaryExpression.append(lhs)
-            SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
-        #BinaryExpression.append(rhs)
-        print('-------------------lhs:xml, rhs:str --------------------------')
-        print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-        return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-
-
-    # Convert this to a string and return
-    #print(ET.tostring(BinaryExpression))
-    #print(type(BinaryExpression))
-    print(str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')))
-    #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')) # thanks copilot
-
-    return BinaryExpression
+        return BinaryExpression

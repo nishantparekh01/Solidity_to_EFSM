@@ -63,8 +63,10 @@ class EFSM:
                     guard_exp = expression['args']
                 #elif expression['name'] == 'keccak256':
                 else:
-                    print(expression['name'])
-                    action_exp = str(expression['name'] + '(' + expression['args'] + ')')
+                    #print(expression['name'])
+                    #action_exp = str(expression['name'] + '(' + expression['args'] + ')')
+                    events.append(expression['name'])
+
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
                     guard_exp = expression['condition']

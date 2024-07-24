@@ -17,7 +17,7 @@ def handleMemberAccess(node):
         #return memberName
     else:
         #return str(name + '.' + memberName)
-        return memberName
+        return name+memberName
 
 def handleIdentifier(node):
     assert ntype(node) == 'Identifier', "Node not Identifier"

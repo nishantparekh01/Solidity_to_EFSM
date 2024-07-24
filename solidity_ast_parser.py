@@ -14,8 +14,10 @@ def handleMemberAccess(node):
     #name = node['expression']['name']
     if isinstance(name, dict):
         return name['args'] + "." + memberName
+        #return memberName
     else:
-        return str(name + '.' + memberName)
+        #return str(name + '.' + memberName)
+        return memberName
 
 def handleIdentifier(node):
     assert ntype(node) == 'Identifier', "Node not Identifier"

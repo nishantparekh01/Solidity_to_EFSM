@@ -12,6 +12,8 @@
 #     ]
 #
 # }
+import xml.etree.ElementTree as ET
+
 Supremica = {}
 
 # Events - contains list of all events
@@ -53,7 +55,8 @@ class EFSM:
         # we have to check the ntype of expression and then add the transition accordingly
         # we should check this by creating a function call and then checking the ntype of the expression
         if expression != False: # This is for the placeholder statement
-            #print(expression)
+
+            print('Expression type==',type(expression))
             if expression['ntype'] == 'FunctionCall':
                 if expression['name'] == 'require':
                     # assuming that require has only one argument
@@ -78,10 +81,11 @@ class EFSM:
                     action_exp = expression['exp']
             elif expression['ntype'] == 'VariableDeclarationStatement':
                 if expression['kind'] == 'conditional':
-                    condition = expression['condition']
-                    true_body = expression['name'] + ' == ' + expression['true_exp']
-                    false_body = expression['name'] + ' == ' + expression['false_exp']
-                    guard_exp = str("(" + condition + " & " + true_body + ") | (" + "!" + "(" + condition + ")" + " & " + false_body + ")")
+                    #condition = expression['condition']
+                    #true_body = expression['name'] + ' == ' + expression['true_exp']
+                    #false_body = expression['name'] + ' == ' + expression['false_exp']
+                    #guard_exp = str("(" + condition + " & " + true_body + ") | (" + "!" + "(" + condition + ")" + " & " + false_body + ")")
+                    guard_exp = expression['expression']
             elif expression['ntype'] == 'IfStatement':
                 if 'kind' in expression and expression['kind'] == 'internal':
                     if expression['condition'] == 'true':

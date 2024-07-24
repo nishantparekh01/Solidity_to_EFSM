@@ -208,7 +208,7 @@ def handleVariableDeclarationStatement(node):
             exp = wmodify_assignment(name,"==", init_value['true_exp'], **{'ntype': ntype(node), 'kind': 'conditional', 'name' : name, 'condition': init_value['condition'], 'true_exp': init_value['true_exp'], 'false_exp': init_value['false_exp']})
 
 
-            return exp
+            return {'ntype': ntype(node), 'kind' : 'conditional', 'expression' : exp}
     else:
         return str (name + " = " + init_value)
 

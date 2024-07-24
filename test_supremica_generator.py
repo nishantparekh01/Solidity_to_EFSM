@@ -50,6 +50,7 @@ original_casino_blocking_list = [12, 13, 14, 15, 16, 17,18, 19, 20, 21, 22]
 final_result = json.dumps({})
 
 for n_id in original_casino_blocking_list:
+    print('ID PROCESSING: ', n_id)
     result = lookup_table[ntype(sol_list[n_id])](sol_list[n_id])
     json_result = result
     final_result = json_result

@@ -210,7 +210,7 @@ def handleVariableDeclarationStatement(node):
 
             return {'ntype': ntype(node), 'kind' : 'conditional', 'expression' : exp}
     else:
-        return str (name + " = " + init_value)
+        return str (name + " = " + init_value)  # need to convert this to xml as well. For later.
 
 def handleConditional(node):
     assert ntype(node) == 'Conditional', "Node not conditional"
@@ -229,13 +229,16 @@ def handleTupleExpression(node):
 
 def handleIfStatement(node):
     assert ntype(node) == 'IfStatement', "Node not IfStatement"
-    condition = lookup_table[ntype(node['condition'])](node['condition'])
+    true_condition = lookup_table[ntype(node['condition'])](node['condition'])
+    false_condition = ET.Element("UnaryExpression", Operator = "!")
+    false_condition.append(true_condition)
+
     false_body = lookup_table[ntype(node['falseBody'])](node['falseBody'])
     #print(false_body)
     true_body = lookup_table[ntype(node['trueBody'])](node['trueBody'])
     #print(true_body)
     #return  str("if" + "( " + condition+" )" + "{\n\t"  + true_body + "\n" + "} " + "else "  + "{\n\t" + false_body + "\n" + "} ")
-    return {'ntype': ntype(node), 'condition' : condition, 'true_body' : true_body, 'false_body' : false_body}
+    return {'ntype': ntype(node), 'true_condition' : true_condition,'false_condition': false_condition, 'true_body' : true_body, 'false_body' : false_body}
 
 
 def handleStructDefinition(node):

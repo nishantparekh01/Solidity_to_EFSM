@@ -62,7 +62,6 @@ class EFSM:
                     # assuming that require has only one argument
                     guard_exp = expression['args']
                 #elif expression['name'] == 'keccak256':
-
                 else:
                     print(expression['name'])
                     action_exp = str(expression['name'] + '(' + expression['args'] + ')')
@@ -90,17 +89,19 @@ class EFSM:
                 if 'kind' in expression and expression['kind'] == 'internal':
                     if expression['condition'] == 'true':
                         guard_exp = expression['guard_exp']
-                        action_exp = expression['exp']
+                        action_exp = expression['exp']  # Assumption: only one expression in the body
                     elif expression['condition'] == 'false':
                         guard_exp = expression['guard_exp']
-                        action_exp = expression['exp']
+                        action_exp = expression['exp'] # Assumption: only one expression in the body
                 else:
-                    condition = expression['condition']
+                    true_condition = expression['true_condition']
+                    false_condition = expression['false_condition']
+
                     true_body = expression['true_body']
                     false_body = expression['false_body']
-                    condition_negation = "!" + "(" + condition + ")"
-                    true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition' : 'true', 'guard_exp' : condition, 'exp': true_body}
-                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition' : 'false', 'guard_exp': condition_negation, 'exp': false_body}
+                    #condition_negation = "!" + "(" + condition + ")"
+                    true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition' : 'true', 'guard_exp' : true_condition, 'exp': true_body}
+                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition' : 'false', 'guard_exp': false_condition, 'exp': false_body}
                     self.addTransition(true_exp_transition)
                     self.addTransition(false_exp_transition)
 

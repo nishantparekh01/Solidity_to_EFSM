@@ -1,6 +1,7 @@
 from test_supremica_generator import *
 
-pre_supremica = json.loads(final_result)
+#pre_supremica = json.loads(final_result)
+pre_supremica  = final_result
 
 def check_action_present(transition):
     if transition['action_exp'] != None:

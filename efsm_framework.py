@@ -60,7 +60,7 @@ class EFSM:
             if expression['ntype'] == 'FunctionCall':
                 if expression['name'] == 'require':
                     # assuming that require has only one argument
-                    guard_exp = expression['args']
+                    guard_exp = ET.tostring(expression['args'], encoding='utf-8', method='xml').decode('utf-8')
                 #elif expression['name'] == 'keccak256':
                 else:
                     #print(expression['name'])
@@ -79,21 +79,22 @@ class EFSM:
                     #self.addTransition(true_expression_dict)
                     #self.addTransition(false_expression_dict)
                 elif expression['kind'] == 'simple':
-                    action_exp = expression['exp']
+                    #print(expression['exp'])
+                    action_exp = ET.tostring(expression['exp'], encoding='utf-8', method='xml').decode('utf-8')
             elif expression['ntype'] == 'VariableDeclarationStatement':
                 if expression['kind'] == 'conditional':
                     #condition = expression['condition']
                     #true_body = expression['name'] + ' == ' + expression['true_exp']
                     #false_body = expression['name'] + ' == ' + expression['false_exp']
                     #guard_exp = str("(" + condition + " & " + true_body + ") | (" + "!" + "(" + condition + ")" + " & " + false_body + ")")
-                    guard_exp = expression['expression']
+                    guard_exp = ET.tostring(expression['expression'], encoding='utf-8', method='xml').decode('utf-8')
             elif expression['ntype'] == 'IfStatement':
                 if 'kind' in expression and expression['kind'] == 'internal':
                     if expression['condition'] == 'true':
-                        guard_exp = expression['guard_exp']
+                        guard_exp = ET.tostring(expression['guard_exp'], encoding='utf-8', method='xml').decode('utf-8')
                         action_exp = expression['exp']  # Assumption: only one expression in the body
                     elif expression['condition'] == 'false':
-                        guard_exp = expression['guard_exp']
+                        guard_exp = ET.tostring(expression['guard_exp'], encoding='utf-8', method='xml').decode('utf-8')
                         action_exp = expression['exp'] # Assumption: only one expression in the body
                 else:
                     true_condition = expression['true_condition']

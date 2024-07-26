@@ -163,7 +163,8 @@ def handleAssignment(node):
     if isinstance(rhs, dict):
         if rhs['ntype'] == 'FunctionCall':
             #rhs = str(rhs['name'] + "(" + rhs['args'] + ")")
-            exp = str(lhs + " " +op + " " + rhs['name'] + "(" + rhs['args'] + ")")
+            #exp = str(lhs + " " +op + " " + rhs['name'] + "(" + rhs['args'] + ")")
+            exp = wmodify_assignment(lhs, op, rhs)
         elif rhs['ntype'] == 'Conditional':
             kind = 'conditional'
             return {'ntype': ntype(node), 'kind' : kind, 'lhs' : lhs, 'op' : op, 'condition' : rhs['condition'], 'true_exp' : rhs['true_exp'], 'false_exp' : rhs['false_exp']}

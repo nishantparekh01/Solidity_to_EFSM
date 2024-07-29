@@ -17,7 +17,8 @@ for efsm in pre_supremica['Components']:
         if n_transitions == 1:
             pre_supremica['Components'][efsm]['edge_list']['t0']['source_index'] = 'S0'
             pre_supremica['Components'][efsm]['edge_list']['t0']['target_index'] = 'S0'
-            pre_supremica['Components'][efsm]['edge_list']['t0']['event'] = str(efsm + '1')
+            if not pre_supremica['Components'][efsm]['edge_list']['t0']['events']:
+                pre_supremica['Components'][efsm]['edge_list']['t0']['event'] = str(efsm + '1')
         else:
             for i in range(n_transitions):
                 if i == 0:

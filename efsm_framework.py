@@ -130,7 +130,7 @@ class EFSM:
         # issue #1 in nishantparekh01/casino_conversion
         for m in modifiers:
             # if m in Components:
-            Components[m]['edge_list']['t0']['events'].append(self.name)
+            Components[m]['edge_list']['t0']['events'].append(self.name + '1')
 
 
 

@@ -39,3 +39,4 @@ for efsm in pre_supremica['Components']:
 
 
     print(json.dumps(pre_supremica))
+    print(pre_supremica)

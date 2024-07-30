@@ -17,6 +17,7 @@ for efsm in pre_supremica['Components']:
         if n_transitions == 1:
             pre_supremica['Components'][efsm]['edge_list']['t0']['source_index'] = 'S0'
             pre_supremica['Components'][efsm]['edge_list']['t0']['target_index'] = 'S0'
+            # adding events only if the events list is empty
             if not pre_supremica['Components'][efsm]['edge_list']['t0']['events']:
                 pre_supremica['Components'][efsm]['edge_list']['t0']['event'] = str(efsm + '1')
         else:
@@ -24,13 +25,14 @@ for efsm in pre_supremica['Components']:
                 if i == 0:
                     pre_supremica['Components'][efsm]['edge_list'][f't{i}']['source_index'] = 'S0'
                     pre_supremica['Components'][efsm]['edge_list'][f't{i}']['target_index'] = 'S1'
-                    # add events only if the events list is empty
-                    if pre_supremica['Components'][efsm]['edge_list'][f't{i}']['events'] == '':
+                    # adding events only if the events list is empty
+                    if not pre_supremica['Components'][efsm]['edge_list'][f't{i}']['events']:
                         pre_supremica['Components'][efsm]['edge_list'][f't{i}']['event'] = str(efsm + '1')
+
                 elif i == n_transitions - 1:
                     pre_supremica['Components'][efsm]['edge_list'][f't{i}']['source_index'] = 'S' + str(i)
                     pre_supremica['Components'][efsm]['edge_list'][f't{i}']['target_index'] = 'S0'
-                    if pre_supremica['Components'][efsm]['edge_list'][f't{i}']['events'] == '':
+                    if not pre_supremica['Components'][efsm]['edge_list'][f't{i}']['events']:
                         pre_supremica['Components'][efsm]['edge_list'][f't{i}']['event'] = str(efsm + 'X')
                 else:
                     pre_supremica['Components'][efsm]['edge_list'][f't{i}']['source_index'] = 'S' + str(i)

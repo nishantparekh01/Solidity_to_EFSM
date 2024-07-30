@@ -14,10 +14,15 @@ def handleMemberAccess(node):
     #name = node['expression']['name']
     if isinstance(name, dict):
         return name['args'] + "." + memberName
+        # example:
         #return memberName
     else:
         #return str(name + '.' + memberName)
-        return name+memberName
+        if memberName == 'transfer':
+            return name + memberName + '1'
+        else:
+            return memberName
+        # example :
 
 def handleIdentifier(node):
     assert ntype(node) == 'Identifier', "Node not Identifier"
@@ -65,6 +70,12 @@ def handleBinaryOperation(node):
     lhs = lookup_table[ntype(node['leftExpression'])](node['leftExpression'])
     op = node['operator']
     rhs = lookup_table[ntype(node['rightExpression'])](node['rightExpression'])
+
+    # if op == "||" then convert to "|" and similarly if op == "&&" then convert to "&"
+    if op == "||":
+        op = "|"
+    elif op == "&&":
+        op = "&"
 
     #exp = str(lhs + " "  + op + " " + rhs)
     exp = wmodify_assignment(lhs, op, rhs)
@@ -127,8 +138,9 @@ def handleParameterList(node):
     for p in node['parameters']:
         param = lookup_table[ntype(p)](p)
         parameters.append(param)
-    params = ', '.join(parameters)
-    return params
+    # need to return the parameters as a list
+    #params = ', '.join(parameters)
+    return parameters
 
 def handleModifierDefinition(node):
     assert ntype(node) == 'ModifierDefinition', "Node not ModifierDefinition"
@@ -177,10 +189,10 @@ def handleModifierInvocation(node):
     assert ntype(node) == 'ModifierInvocation', "Node not ModifierInvocation"
     name = lookup_table[ntype(node['modifierName'])](node['modifierName'])
     if 'arguments' in node:
-        args = ", ".join([lookup_table[ntype(a)](a) for a in node['arguments']])
-        return name
+        args = [lookup_table[ntype(a)](a) for a in node['arguments']]
+        return {'name':name, 'args': args}
     else:
-        return name
+        return {'name':name}
 
 def handleIdentifierPath(node):
     assert ntype(node) == 'IdentifierPath', "Node not IdentifierPath"

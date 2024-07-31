@@ -45,7 +45,7 @@ sol_list = data['nodes'][1]['nodes']
 # Output type -> Function definition as in code.
 
 Fun_node_list = [11,12,13,15,16,17,18,19,21,22,23,24,20]
-original_casino_blocking_list = [12, 13, 14, 15, 16, 17,18, 19, 20, 21, 22]
+original_casino_blocking_list = [2,9,12, 13, 14, 15, 16, 17,18, 19, 20, 21, 22]
 
 #final_result = json.dumps({})
 

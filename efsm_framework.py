@@ -13,7 +13,7 @@
 #
 # }
 import xml.etree.ElementTree as ET
-
+from wmodify import *
 Supremica = {}
 
 # Events - contains list of all events
@@ -25,7 +25,7 @@ Supremica['Components'] = {}
 Components = Supremica['Components']
 
 # Variable Component - Contains all variables
-Components['VariableComponent'] = {}
+Components['VariableComponent'] = []
 VariableComponent = Components['VariableComponent']
 # Supremica['Variables'] = {}
 
@@ -60,6 +60,7 @@ class EFSM:
             if expression['ntype'] == 'FunctionCall':
                 if expression['name'] == 'require':
                     # assuming that require has only one argument
+                    #guard_exp = expression['args']
                     guard_exp = ET.tostring(expression['args'], encoding='utf-8', method='xml').decode('utf-8')
                 #elif expression['name'] == 'keccak256':
                 else:
@@ -80,6 +81,7 @@ class EFSM:
                     #self.addTransition(false_expression_dict)
                 elif expression['kind'] == 'simple':
                     #print(expression['exp'])
+                    #action_exp = expression['exp']
                     action_exp = ET.tostring(expression['exp'], encoding='utf-8', method='xml').decode('utf-8')
             elif expression['ntype'] == 'VariableDeclarationStatement':
                 if expression['kind'] == 'conditional':
@@ -87,13 +89,16 @@ class EFSM:
                     #true_body = expression['name'] + ' == ' + expression['true_exp']
                     #false_body = expression['name'] + ' == ' + expression['false_exp']
                     #guard_exp = str("(" + condition + " & " + true_body + ") | (" + "!" + "(" + condition + ")" + " & " + false_body + ")")
+                    #guard_exp = expression['expression']
                     guard_exp = ET.tostring(expression['expression'], encoding='utf-8', method='xml').decode('utf-8')
             elif expression['ntype'] == 'IfStatement':
                 if 'kind' in expression and expression['kind'] == 'internal':
                     if expression['condition'] == 'true':
+                        #guard_exp = expression['guard_exp']
                         guard_exp = ET.tostring(expression['guard_exp'], encoding='utf-8', method='xml').decode('utf-8')
                         action_exp = expression['exp']  # Assumption: only one expression in the body
                     elif expression['condition'] == 'false':
+                        #guard_exp = expression['guard_exp']
                         guard_exp = ET.tostring(expression['guard_exp'], encoding='utf-8', method='xml').decode('utf-8')
                         action_exp = expression['exp'] # Assumption: only one expression in the body
                 else:
@@ -138,7 +143,25 @@ class EFSM:
 
 
 
+def superEnumDefinition(packet):
+    global VariableComponent
+    name = packet['name']
+    members = packet['members']
 
+    xml_VariableComponent = ET.Element("VariableComponent", Name=name)
+    xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
+    xml_EnumSetExpression = ET.SubElement(xml_variableRange, "EnumSetExpression")
+    for mem in members:
+        ET.SubElement(xml_EnumSetExpression, "SimpleIdentifier", Name=mem)
+
+    xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
+    xml_initialVaolue = wmodify_assignment(name, "==", members[0])
+    xml_VariableInitial.append(xml_initialVaolue)
+    #VariableComponent[name]  = xml_VariableComponent
+    #VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+    str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+    VariableComponent.append(str_xml_VariableComponent)
+    return True
 
 def addAutomata(efsm):
     global Components
@@ -188,6 +211,9 @@ def superFunctionDefinition(packet):
 
     addAutomata(function)
     return Supremica
+
+def superVariableDeclarationStatement(packet):
+    pass
 
 ################ Adding framework behaviour ################################################
 

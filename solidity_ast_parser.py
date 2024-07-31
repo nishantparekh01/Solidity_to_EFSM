@@ -3,6 +3,7 @@
 
 from efsm_framework import *
 import xml.etree.ElementTree as ET
+from wmodify import *
 
 def ntype(node):
     return node['nodeType']
@@ -14,10 +15,15 @@ def handleMemberAccess(node):
     #name = node['expression']['name']
     if isinstance(name, dict):
         return name['args'] + "." + memberName
+        # example:
         #return memberName
     else:
         #return str(name + '.' + memberName)
-        return memberName
+        if memberName == 'transfer':
+            return name + memberName + '1'
+        else:
+            return memberName
+        # example :
 
 def handleIdentifier(node):
     assert ntype(node) == 'Identifier', "Node not Identifier"
@@ -53,7 +59,10 @@ def handleEnumDefinition(node):
     for m_node in node['members']:
         m_name = lookup_table[ntype(m_node)](m_node)
         members.append(m_name)
-    return str ( name + " : " + str(members))
+    packet = {'name': name, 'members': members}
+    superEnumDefinition(packet)
+    #return str ( name + " : " + str(members))
+
 
 def handleIdentifier(node):
     assert ntype(node) == 'Identifier', "Node not Identifier"
@@ -65,6 +74,12 @@ def handleBinaryOperation(node):
     lhs = lookup_table[ntype(node['leftExpression'])](node['leftExpression'])
     op = node['operator']
     rhs = lookup_table[ntype(node['rightExpression'])](node['rightExpression'])
+
+    # if op == "||" then convert to "|" and similarly if op == "&&" then convert to "&"
+    if op == "||":
+        op = "|"
+    elif op == "&&":
+        op = "&"
 
     #exp = str(lhs + " "  + op + " " + rhs)
     exp = wmodify_assignment(lhs, op, rhs)
@@ -127,8 +142,9 @@ def handleParameterList(node):
     for p in node['parameters']:
         param = lookup_table[ntype(p)](p)
         parameters.append(param)
-    params = ', '.join(parameters)
-    return params
+    # need to return the parameters as a list
+    #params = ', '.join(parameters)
+    return parameters
 
 def handleModifierDefinition(node):
     assert ntype(node) == 'ModifierDefinition', "Node not ModifierDefinition"
@@ -163,7 +179,8 @@ def handleAssignment(node):
     if isinstance(rhs, dict):
         if rhs['ntype'] == 'FunctionCall':
             #rhs = str(rhs['name'] + "(" + rhs['args'] + ")")
-            exp = str(lhs + " " +op + " " + rhs['name'] + "(" + rhs['args'] + ")")
+            #exp = str(lhs + " " +op + " " + rhs['name'] + "(" + rhs['args'] + ")")
+            exp = wmodify_assignment(lhs, op, rhs)
         elif rhs['ntype'] == 'Conditional':
             kind = 'conditional'
             return {'ntype': ntype(node), 'kind' : kind, 'lhs' : lhs, 'op' : op, 'condition' : rhs['condition'], 'true_exp' : rhs['true_exp'], 'false_exp' : rhs['false_exp']}
@@ -176,10 +193,10 @@ def handleModifierInvocation(node):
     assert ntype(node) == 'ModifierInvocation', "Node not ModifierInvocation"
     name = lookup_table[ntype(node['modifierName'])](node['modifierName'])
     if 'arguments' in node:
-        args = ", ".join([lookup_table[ntype(a)](a) for a in node['arguments']])
-        return name
+        args = [lookup_table[ntype(a)](a) for a in node['arguments']]
+        return {'name':name, 'args': args}
     else:
-        return name
+        return {'name':name}
 
 def handleIdentifierPath(node):
     assert ntype(node) == 'IdentifierPath', "Node not IdentifierPath"
@@ -208,9 +225,9 @@ def handleVariableDeclarationStatement(node):
             exp = wmodify_assignment(name,"==", init_value['true_exp'], **{'ntype': ntype(node), 'kind': 'conditional', 'name' : name, 'condition': init_value['condition'], 'true_exp': init_value['true_exp'], 'false_exp': init_value['false_exp']})
 
 
-            return exp
+            return {'ntype': ntype(node), 'kind' : 'conditional', 'expression' : exp}
     else:
-        return str (name + " = " + init_value)
+        return str (name + " = " + init_value)  # need to convert this to xml as well. For later.
 
 def handleConditional(node):
     assert ntype(node) == 'Conditional', "Node not conditional"
@@ -229,13 +246,16 @@ def handleTupleExpression(node):
 
 def handleIfStatement(node):
     assert ntype(node) == 'IfStatement', "Node not IfStatement"
-    condition = lookup_table[ntype(node['condition'])](node['condition'])
+    true_condition = lookup_table[ntype(node['condition'])](node['condition'])
+    false_condition = ET.Element("UnaryExpression", Operator = "!")
+    false_condition.append(true_condition)
+
     false_body = lookup_table[ntype(node['falseBody'])](node['falseBody'])
     #print(false_body)
     true_body = lookup_table[ntype(node['trueBody'])](node['trueBody'])
     #print(true_body)
     #return  str("if" + "( " + condition+" )" + "{\n\t"  + true_body + "\n" + "} " + "else "  + "{\n\t" + false_body + "\n" + "} ")
-    return {'ntype': ntype(node), 'condition' : condition, 'true_body' : true_body, 'false_body' : false_body}
+    return {'ntype': ntype(node), 'true_condition' : true_condition,'false_condition': false_condition, 'true_body' : true_body, 'false_body' : false_body}
 
 
 def handleStructDefinition(node):
@@ -256,6 +276,10 @@ def handleIndexAccess(node):
     base = lookup_table[ntype(node['baseExpression'])](node['baseExpression'])
     index = lookup_table[ntype(node['indexExpression'])](node['indexExpression'])
     return  str( base + "[" + index + "]")
+
+def structConstructorCall(node):
+    assert ntype(node) == 'StructConstructorCall', "Node not StructConstructorCall"
+
 
 lookup_table = {}
 
@@ -289,122 +313,3 @@ lookup_table['Mapping'] = handleMapping
 lookup_table['IndexAccess'] = handleIndexAccess
 
 
-# to check if a variable with str in it can be converted to an int or not
-def is_integer(variable):
-    if isinstance(variable, int):
-        return True
-    if isinstance(variable, str):
-        try:
-            int(variable)
-            return True
-        except ValueError:
-            return False
-    return False
-
-def wmodify_assignment(lhs, op, rhs, **info):
-    #print(lhs, op, rhs)
-    #print(type(rhs))
-    #print(rhs)
-    if info:
-        if info['ntype'] == 'VariableDeclarationStatement':
-            if info['kind'] == 'conditional':
-                # lhs = name, secret
-                # op = ==
-                # rhs = HEADS
-                true_condition = info['condition']
-
-                # creating false condition by appending true condition to unaryOperator = "!"
-                false_condition = ET.Element("UnaryExpression", Operator = "!")
-                false_condition.append(true_condition)
-
-                lhs_trueAssignment = wmodify_assignment(true_condition, "&", info['true_exp'], **{'ntype': 'VariableDeclarationStatement', 'kind': 'AssignmentCheck', 'variableAssigned' : info['name']})
-
-                rhs_falseAssignment = wmodify_assignment(false_condition, "&", info['false_exp'], **{'ntype': 'VariableDeclarationStatement', 'kind': 'AssignmentCheck', 'variableAssigned' : info['name']})
-
-                final_exp = wmodify_assignment(lhs_trueAssignment, "|", rhs_falseAssignment)
-
-                #print(print(ET.tostring(final_exp, encoding='utf-8', method='xml').decode('utf-8')))
-                return final_exp
-
-            if info['kind'] == 'AssignmentCheck':
-                BinaryExpression = ET.Element("BinaryExpression", Operator=str(op))
-                BinaryExpression.append(lhs)
-
-                lhs_assignment = ET.Element("UnaryExpression", Operator = "'")
-                SimpleIdentifier = ET.SubElement(lhs_assignment, "SimpleIdentifier", Name = str(info['variableAssigned']))
-
-                rhs_wmod = wmodify_assignment(lhs_assignment, "==", str(rhs))
-                BinaryExpression.append(rhs_wmod)
-                #print(print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')))
-                return BinaryExpression
-
-
-
-    else:
-        if isinstance(rhs, dict) and isinstance(lhs, str):
-
-            BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-            SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-            SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs['args']))
-
-
-            #print(rhs['args'])
-            #print(rhs['name'])
-            #rhs = str(lhs + " "  + op + " " + str(rhs['name'] + "(" + rhs['args'] + ")"))
-
-
-        # if the binary expression is a simple assignment
-        elif isinstance(rhs, str) and isinstance(lhs, str):
-            if is_integer(rhs):
-                BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-                IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value = str(rhs))
-            else:
-                BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
-
-        # if rhs is xml element then append it to the BinaryExpression
-        elif isinstance(rhs, ET.Element) and isinstance(lhs, ET.Element):
-
-            BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-            BinaryExpression.append(lhs)
-            BinaryExpression.append(rhs)
-            # SimpleIdentifier_lhs = ET.SubElement(BinaryExpression, tag=lhs)
-            # SimpleIdentifier_rhs = ET.SubElement(BinaryExpression, tag =rhs)
-
-
-        elif isinstance(rhs, ET.Element) and isinstance(lhs, str):
-            BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-            SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-            BinaryExpression.append(rhs)
-            #BinaryExpression.append(rhs)
-            print('-------------------xml party here--------------------------')
-            print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-            #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-            return BinaryExpression
-
-        elif isinstance(rhs, str) and isinstance(lhs, ET.Element):
-
-            if is_integer(rhs):
-                BinaryExpression = ET.Element("BinaryExpression", Operator=str(op))
-                BinaryExpression.append(lhs)
-                IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value=str(rhs))
-            else:
-                BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
-                BinaryExpression.append(lhs)
-                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
-            #BinaryExpression.append(rhs)
-            print('-------------------lhs:xml, rhs:str --------------------------')
-            print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-            #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-            return BinaryExpression
-
-        # Convert this to a string and return
-        #print(ET.tostring(BinaryExpression))
-        #print(type(BinaryExpression))
-
-        print(str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')))
-        #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')) # thanks copilot
-
-        return BinaryExpression

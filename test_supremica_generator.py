@@ -45,11 +45,12 @@ sol_list = data['nodes'][1]['nodes']
 # Output type -> Function definition as in code.
 
 Fun_node_list = [11,12,13,15,16,17,18,19,21,22,23,24,20]
-original_casino_blocking_list = [12, 13, 14, 15, 16, 17,18, 19, 20, 21, 22]
+original_casino_blocking_list = [2,9,12, 13, 14, 15, 16, 17,18, 19, 20, 21, 22]
 
-final_result = json.dumps({})
+#final_result = json.dumps({})
 
 for n_id in original_casino_blocking_list:
+    print('ID PROCESSING: ', n_id)
     result = lookup_table[ntype(sol_list[n_id])](sol_list[n_id])
     json_result = result
     final_result = json_result
@@ -59,4 +60,5 @@ for n_id in original_casino_blocking_list:
     # print("\n")
     # print("-------------")
     # print("\n")
-print((final_result))
+print(type((final_result)))
+#print(json.dumps(final_result))

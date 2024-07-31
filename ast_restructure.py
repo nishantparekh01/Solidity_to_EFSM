@@ -1,6 +1,7 @@
 from test_supremica_generator import *
 
-pre_supremica = json.loads(final_result)
+#pre_supremica = json.loads(final_result)
+pre_supremica  = final_result
 
 def check_action_present(transition):
     if transition['action_exp'] != None:
@@ -79,13 +80,18 @@ for efsm in pre_supremica['Components']:
 
 
 # reorder transition names after deleting some
-
 for efsm in pre_supremica['Components']:
     if efsm != 'VariableComponent':
         for i, transition in enumerate(list(pre_supremica['Components'][efsm]['edge_list'])):
             pre_supremica['Components'][efsm]['edge_list'][f't{i}'] = pre_supremica['Components'][efsm]['edge_list'].pop(transition)
 
 
+# remove 'evaluate_exp' from the transitions
+for efsm in pre_supremica['Components']:
+    if efsm != 'VariableComponent':
+        for transition in pre_supremica['Components'][efsm]['edge_list']:
+            pre_supremica['Components'][efsm]['edge_list'][transition].pop('evaluate_exp')
+
 
 final_result = pre_supremica
-print(json.dumps(pre_supremica))
+print(pre_supremica)

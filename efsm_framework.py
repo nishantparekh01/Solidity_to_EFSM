@@ -12,6 +12,8 @@
 #     ]
 #
 # }
+import xml.etree.ElementTree as ET
+from wmodify import *
 Supremica = {}
 
 # Events - contains list of all events
@@ -23,7 +25,7 @@ Supremica['Components'] = {}
 Components = Supremica['Components']
 
 # Variable Component - Contains all variables
-Components['VariableComponent'] = {}
+Components['VariableComponent'] = []
 VariableComponent = Components['VariableComponent']
 # Supremica['Variables'] = {}
 
@@ -53,16 +55,19 @@ class EFSM:
         # we have to check the ntype of expression and then add the transition accordingly
         # we should check this by creating a function call and then checking the ntype of the expression
         if expression != False: # This is for the placeholder statement
-            #print(expression)
+
+            print('Expression type==',type(expression))
             if expression['ntype'] == 'FunctionCall':
                 if expression['name'] == 'require':
                     # assuming that require has only one argument
-                    guard_exp = expression['args']
+                    #guard_exp = expression['args']
+                    guard_exp = ET.tostring(expression['args'], encoding='utf-8', method='xml').decode('utf-8')
                 #elif expression['name'] == 'keccak256':
-
                 else:
-                    print(expression['name'])
-                    action_exp = str(expression['name'] + '(' + expression['args'] + ')')
+                    #print(expression['name'])
+                    #action_exp = str(expression['name'] + '(' + expression['args'] + ')')
+                    events.append(expression['name'])
+
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
                     guard_exp = expression['condition']
@@ -75,28 +80,36 @@ class EFSM:
                     #self.addTransition(true_expression_dict)
                     #self.addTransition(false_expression_dict)
                 elif expression['kind'] == 'simple':
-                    action_exp = expression['exp']
+                    #print(expression['exp'])
+                    #action_exp = expression['exp']
+                    action_exp = ET.tostring(expression['exp'], encoding='utf-8', method='xml').decode('utf-8')
             elif expression['ntype'] == 'VariableDeclarationStatement':
                 if expression['kind'] == 'conditional':
-                    condition = expression['condition']
-                    true_body = expression['name'] + ' == ' + expression['true_exp']
-                    false_body = expression['name'] + ' == ' + expression['false_exp']
-                    guard_exp = str("(" + condition + " & " + true_body + ") | (" + "!" + "(" + condition + ")" + " & " + false_body + ")")
+                    #condition = expression['condition']
+                    #true_body = expression['name'] + ' == ' + expression['true_exp']
+                    #false_body = expression['name'] + ' == ' + expression['false_exp']
+                    #guard_exp = str("(" + condition + " & " + true_body + ") | (" + "!" + "(" + condition + ")" + " & " + false_body + ")")
+                    #guard_exp = expression['expression']
+                    guard_exp = ET.tostring(expression['expression'], encoding='utf-8', method='xml').decode('utf-8')
             elif expression['ntype'] == 'IfStatement':
                 if 'kind' in expression and expression['kind'] == 'internal':
                     if expression['condition'] == 'true':
-                        guard_exp = expression['guard_exp']
-                        action_exp = expression['exp']
+                        #guard_exp = expression['guard_exp']
+                        guard_exp = ET.tostring(expression['guard_exp'], encoding='utf-8', method='xml').decode('utf-8')
+                        action_exp = expression['exp']  # Assumption: only one expression in the body
                     elif expression['condition'] == 'false':
-                        guard_exp = expression['guard_exp']
-                        action_exp = expression['exp']
+                        #guard_exp = expression['guard_exp']
+                        guard_exp = ET.tostring(expression['guard_exp'], encoding='utf-8', method='xml').decode('utf-8')
+                        action_exp = expression['exp'] # Assumption: only one expression in the body
                 else:
-                    condition = expression['condition']
+                    true_condition = expression['true_condition']
+                    false_condition = expression['false_condition']
+
                     true_body = expression['true_body']
                     false_body = expression['false_body']
-                    condition_negation = "!" + "(" + condition + ")"
-                    true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition' : 'true', 'guard_exp' : condition, 'exp': true_body}
-                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition' : 'false', 'guard_exp': condition_negation, 'exp': false_body}
+                    #condition_negation = "!" + "(" + condition + ")"
+                    true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition' : 'true', 'guard_exp' : true_condition, 'exp': true_body}
+                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition' : 'false', 'guard_exp': false_condition, 'exp': false_body}
                     self.addTransition(true_exp_transition)
                     self.addTransition(false_exp_transition)
 
@@ -122,11 +135,33 @@ class EFSM:
         # issue #1 in nishantparekh01/casino_conversion
         for m in modifiers:
             # if m in Components:
-            Components[m]['edge_list']['t0']['events'].append(self.name)
+            # m['name'] is the name of the modifier
+
+
+            mod = m['name']
+            Components[mod]['edge_list']['t0']['events'].append(self.name + '1')
 
 
 
+def superEnumDefinition(packet):
+    global VariableComponent
+    name = packet['name']
+    members = packet['members']
 
+    xml_VariableComponent = ET.Element("VariableComponent", Name=name)
+    xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
+    xml_EnumSetExpression = ET.SubElement(xml_variableRange, "EnumSetExpression")
+    for mem in members:
+        ET.SubElement(xml_EnumSetExpression, "SimpleIdentifier", Name=mem)
+
+    xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
+    xml_initialVaolue = wmodify_assignment(name, "==", members[0])
+    xml_VariableInitial.append(xml_initialVaolue)
+    #VariableComponent[name]  = xml_VariableComponent
+    #VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+    str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+    VariableComponent.append(str_xml_VariableComponent)
+    return True
 
 def addAutomata(efsm):
     global Components
@@ -176,6 +211,9 @@ def superFunctionDefinition(packet):
 
     addAutomata(function)
     return Supremica
+
+def superVariableDeclarationStatement(packet):
+    pass
 
 ################ Adding framework behaviour ################################################
 

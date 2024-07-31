@@ -25,8 +25,11 @@ Supremica['Components'] = {}
 Components = Supremica['Components']
 
 # Variable Component - Contains all variables
-Components['VariableComponent'] = []
+Components['VariableComponent'] = {}
 VariableComponent = Components['VariableComponent']
+VariableComponent['EnumVariables'] = {}
+VariableComponent['StructVariables'] = {}
+
 # Supremica['Variables'] = {}
 
 class EFSM:
@@ -148,20 +151,54 @@ def superEnumDefinition(packet):
     name = packet['name']
     members = packet['members']
 
-    xml_VariableComponent = ET.Element("VariableComponent", Name=name)
-    xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
-    xml_EnumSetExpression = ET.SubElement(xml_variableRange, "EnumSetExpression")
-    for mem in members:
-        ET.SubElement(xml_EnumSetExpression, "SimpleIdentifier", Name=mem)
-
-    xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
-    xml_initialVaolue = wmodify_assignment(name, "==", members[0])
-    xml_VariableInitial.append(xml_initialVaolue)
-    #VariableComponent[name]  = xml_VariableComponent
-    #VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
-    str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
-    VariableComponent.append(str_xml_VariableComponent)
+    VariableComponent['EnumVariables'][name] = members
     return True
+
+def superStructDefinition(packet):
+    global VariableComponent
+    name = packet['name']
+    members = packet['members']
+
+    VariableComponent['StructVariables'][name] = members
+    return True
+
+def superVariableDeclaration(packet):
+    global VariableComponent
+    name = packet['name']
+    type = packet['type']
+
+    if type in VariableComponent['EnumVariables']:
+        members = VariableComponent['EnumVariables'][type]
+
+        xml_VariableComponent = ET.Element("VariableComponent", Name=name)
+        xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
+        xml_EnumSetExpression = ET.SubElement(xml_variableRange, "EnumSetExpression")
+        for mem in members:
+            ET.SubElement(xml_EnumSetExpression, "SimpleIdentifier", Name=mem)
+
+        xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
+        xml_initialValue = wmodify_assignment(name, "==", members[0])
+        xml_VariableInitial.append(xml_initialValue)
+        #VariableComponent[name]  = xml_VariableComponent
+        VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+        #str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+        #VariableComponent.append(str_xml_VariableComponent)
+
+    elif type == 'uint' or type == 'uint256' or type == 'bytes32':
+
+        xml_VariableComponent = ET.Element("VariableComponent", Name=name)
+        xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
+        xml_NumericRangeExpression = wmodify_assignment("0", "..", "1")
+        xml_variableRange.append(xml_NumericRangeExpression)
+
+        xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
+        xml_initialValue = wmodify_assignment(name, "==", "0")
+        xml_VariableInitial.append(xml_initialValue)
+        #VariableComponent[name]  = xml_VariableComponent
+        VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+        #str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+        #VariableComponent.append(str_xml_VariableComponent)
+
 
 def addAutomata(efsm):
     global Components

@@ -69,9 +69,13 @@ def wmodify_assignment(lhs, op, rhs, **info):
 
         # if the binary expression is a simple assignment
         elif isinstance(rhs, str) and isinstance(lhs, str):
-            if is_integer(rhs):
+            if is_integer(rhs) and not is_integer(lhs):
                 BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
                 SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
+                IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value = str(rhs))
+            elif is_integer(lhs) and is_integer(rhs):
+                BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
+                IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value = str(lhs))
                 IntConstant = ET.SubElement(BinaryExpression, "IntConstant", Value = str(rhs))
             else:
                 BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))

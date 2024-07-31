@@ -35,6 +35,10 @@ def handleVariableDeclaration(node):
     name = node['name']
     var_type = lookup_table[ntype(node['typeName'])](node['typeName'])
     #return str(var_type + " : " + name)
+    packet = {'name': name, 'type': var_type}
+
+    if superVariableDeclaration(packet):
+        return  True
     return(name)
 
 def handleElementaryTypeName(node):
@@ -261,9 +265,12 @@ def handleIfStatement(node):
 def handleStructDefinition(node):
     assert ntype(node) == 'StructDefinition', "Node not StructDefinition"
     members = [lookup_table[ntype(m)](m) for m in node['members']]
-    members = "\n".join(members)
+    #members = "\n".join(members)
     name = node['name']
-    return str (name + " {\n" + members + "\n}")
+    packet = {'name': name, 'members': members}
+    if superStructDefinition(packet):
+        return True
+    #return str (name + " {\n" + members + "\n}")
 
 def handleMapping(node):
     assert ntype(node) == 'Mapping', "Node not Mapping"
@@ -279,6 +286,7 @@ def handleIndexAccess(node):
 
 def structConstructorCall(node):
     assert ntype(node) == 'StructConstructorCall', "Node not StructConstructorCall"
+
 
 
 lookup_table = {}

@@ -37,7 +37,7 @@ def wmodify_assignment(lhs, op, rhs, **info):
 
                 final_exp = wmodify_assignment(lhs_trueAssignment, "|", rhs_falseAssignment)
 
-                #print(print(ET.tostring(final_exp, encoding='utf-8', method='xml').decode('utf-8')))
+                #print(print(ET.tostring(final_exp, encoding='unicode', method='xml')))
                 return final_exp
 
             if info['kind'] == 'AssignmentCheck':
@@ -49,7 +49,7 @@ def wmodify_assignment(lhs, op, rhs, **info):
 
                 rhs_wmod = wmodify_assignment(lhs_assignment, "==", str(rhs))
                 BinaryExpression.append(rhs_wmod)
-                #print(print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')))
+                #print(print(ET.tostring(BinaryExpression, encoding='unicode', method='xml')))
                 return BinaryExpression
 
 
@@ -97,9 +97,9 @@ def wmodify_assignment(lhs, op, rhs, **info):
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
             BinaryExpression.append(rhs)
             #BinaryExpression.append(rhs)
-            print('-------------------xml party here--------------------------')
-            print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-            #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
+            #print('-------------------xml party here--------------------------')
+            #print(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
+            #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             return BinaryExpression
 
         elif isinstance(rhs, str) and isinstance(lhs, ET.Element):
@@ -113,16 +113,16 @@ def wmodify_assignment(lhs, op, rhs, **info):
                 BinaryExpression.append(lhs)
                 SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
             #BinaryExpression.append(rhs)
-            print('-------------------lhs:xml, rhs:str --------------------------')
-            print(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
-            #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8'))
+            #print('-------------------lhs:xml, rhs:str --------------------------')
+            #print(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
+            #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             return BinaryExpression
 
         # Convert this to a string and return
         #print(ET.tostring(BinaryExpression))
         #print(type(BinaryExpression))
 
-        print(str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')))
-        #return str(ET.tostring(BinaryExpression, encoding='utf-8', method='xml').decode('utf-8')) # thanks copilot
+        #print(str(ET.tostring(BinaryExpression, encoding='unicode', method='xml')))
+        #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml')) # thanks copilot
 
         return BinaryExpression

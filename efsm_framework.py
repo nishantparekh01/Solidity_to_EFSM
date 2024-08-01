@@ -59,12 +59,12 @@ class EFSM:
         # we should check this by creating a function call and then checking the ntype of the expression
         if expression != False: # This is for the placeholder statement
 
-            print('Expression type==',type(expression))
+            #print('Expression type==',type(expression))
             if expression['ntype'] == 'FunctionCall':
                 if expression['name'] == 'require':
                     # assuming that require has only one argument
                     #guard_exp = expression['args']
-                    guard_exp = ET.tostring(expression['args'], encoding='utf-8', method='xml').decode('utf-8')
+                    guard_exp = ET.tostring(expression['args'], encoding='unicode', method='xml')
                 #elif expression['name'] == 'keccak256':
                 else:
                     #print(expression['name'])
@@ -85,7 +85,7 @@ class EFSM:
                 elif expression['kind'] == 'simple':
                     #print(expression['exp'])
                     #action_exp = expression['exp']
-                    action_exp = ET.tostring(expression['exp'], encoding='utf-8', method='xml').decode('utf-8')
+                    action_exp = ET.tostring(expression['exp'], encoding='unicode', method='xml')
             elif expression['ntype'] == 'VariableDeclarationStatement':
                 if expression['kind'] == 'conditional':
                     #condition = expression['condition']
@@ -93,16 +93,16 @@ class EFSM:
                     #false_body = expression['name'] + ' == ' + expression['false_exp']
                     #guard_exp = str("(" + condition + " & " + true_body + ") | (" + "!" + "(" + condition + ")" + " & " + false_body + ")")
                     #guard_exp = expression['expression']
-                    guard_exp = ET.tostring(expression['expression'], encoding='utf-8', method='xml').decode('utf-8')
+                    guard_exp = ET.tostring(expression['expression'], encoding='unicode', method='xml')
             elif expression['ntype'] == 'IfStatement':
                 if 'kind' in expression and expression['kind'] == 'internal':
                     if expression['condition'] == 'true':
                         #guard_exp = expression['guard_exp']
-                        guard_exp = ET.tostring(expression['guard_exp'], encoding='utf-8', method='xml').decode('utf-8')
+                        guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
                         action_exp = expression['exp']  # Assumption: only one expression in the body
                     elif expression['condition'] == 'false':
                         #guard_exp = expression['guard_exp']
-                        guard_exp = ET.tostring(expression['guard_exp'], encoding='utf-8', method='xml').decode('utf-8')
+                        guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
                         action_exp = expression['exp'] # Assumption: only one expression in the body
                 else:
                     true_condition = expression['true_condition']
@@ -180,8 +180,8 @@ def superVariableDeclaration(packet):
         xml_initialValue = wmodify_assignment(name, "==", members[0])
         xml_VariableInitial.append(xml_initialValue)
         #VariableComponent[name]  = xml_VariableComponent
-        VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
-        #str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+        VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='unicode', method='xml')
+        #str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='unicode', method='xml')
         #VariableComponent.append(str_xml_VariableComponent)
 
     elif type == 'uint' or type == 'uint256' or type == 'bytes32':
@@ -195,8 +195,8 @@ def superVariableDeclaration(packet):
         xml_initialValue = wmodify_assignment(name, "==", "0")
         xml_VariableInitial.append(xml_initialValue)
         #VariableComponent[name]  = xml_VariableComponent
-        VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
-        #str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='utf-8', method='xml').decode('utf-8')
+        VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='unicode', method='xml')
+        #str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='unicode', method='xml')
         #VariableComponent.append(str_xml_VariableComponent)
 
 

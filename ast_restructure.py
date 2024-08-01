@@ -58,7 +58,7 @@ def check_false_evaluate(transition, efsm, transition_name):
     if transition['evaluate_exp'] == False:
         # remove that node from the pre_supremica
         # remove pre_supremica['Components']['#efsm_name']['edge_list'][#transition_number']
-        print(f'Removing transition {efsm}[ {transition_name} ]' )
+        #print(f'Removing transition {efsm}[ {transition_name} ]' )
         del pre_supremica['Components'][efsm]['edge_list'][transition_name]
         return True # return true if transition is removed
 
@@ -94,4 +94,4 @@ for efsm in pre_supremica['Components']:
 
 
 final_result = pre_supremica
-print(pre_supremica)
+#print(type(pre_supremica))

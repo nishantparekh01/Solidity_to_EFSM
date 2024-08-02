@@ -14,7 +14,43 @@ def is_integer(variable):
             return False
     return False
 
+# A function to add nodes to node_list
+def add_nodes_to_xml(node_list):
+    # Exameple of node_list = ['S0', 'S1', 'S2', 'S3']
+    NodeList = ET.Element("NodeList")
+    for node in node_list:
+        if node == 'S0':
+            SimpleNode = ET.SubElement(NodeList, "SimpleNode", Initial = "true",  Name = node)
+            EventList = ET.SubElement(SimpleNode, "EventList")
+            SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name = ":accepting")
+        else:
+            SimpleNode = ET.SubElement(NodeList, "SimpleNode",  Name = node)
 
+    return  NodeList
+
+
+def add_transition_to_xml(transition):
+    # Example of transition = {'action_exp': 'action', 'guard_exp': 'guard', 'source_index': 'S0', 'target_index': 'S1', 'event': 'event'}
+    Edge = ET.Element("Edge", Source = transition['source_index'], Target = transition['target_index'])
+    LabelBlock = ET.SubElement(Edge, "LabelBlock")
+    if 'event' in transition:
+        event_SimpleIdentifier = ET.SubElement(LabelBlock, "SimpleIdentifier", Name=transition['event'])
+    else:
+        for event in transition['events']:
+            event_SimpleIdentifier = ET.SubElement(LabelBlock, "SimpleIdentifier", Name=event)
+
+    GuardActionBlock = ET.SubElement(Edge, "GuardActionBlock")
+    # check if guard_exp is present
+    if transition['guard_exp'] is not None:
+        Guard = ET.SubElement(GuardActionBlock, "Guards")
+        guard_exp_xml = transition['guard_exp']
+        Guard.append(guard_exp_xml)
+    if transition['action_exp'] is not None:
+        Action = ET.SubElement(GuardActionBlock, "Actions")
+        action_exp_xml = transition['action_exp']
+        Action.append(action_exp_xml)
+
+    return Edge
 def wmodify_assignment(lhs, op, rhs, **info):
     #print(lhs, op, rhs)
     #print(type(rhs))

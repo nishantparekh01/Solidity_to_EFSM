@@ -1,14 +1,18 @@
-from test_supremica_generator import *
+from add_events_nodes import *
 import xml.etree.ElementTree as ET
 
-pre_supremica = final_result
+# pre_supremica is imported from add_events_nodes.py
+# pre_supremica is in the form of a dictionary
 
-print(pre_supremica)
-
-print(pre_supremica == final_result)
+#print(pre_supremica)
 
 Module = ET.Element("Module", Name = "Casino-blocking")
-EventDeclList = ET.SubElement(Module, "EventDeclList")
+
+# Adding the EventDeclList to the Module
+xml_EventDecl = pre_supremica['Events']
+Module.append(xml_EventDecl)
+
+
 ComponentList = ET.SubElement(Module, "ComponentList")
 
 # Here we are specifying the xmlns attribute that we have to add
@@ -24,9 +28,47 @@ def add_XMLNS_attributes(tree, xmlns_uris_dict):
 
 add_XMLNS_attributes(Module, xmlns_uris)
 
+
+
+
+# Loop to add VariableComponent
+for var, val in pre_supremica['Components']['VariableComponent'].items():
+    #VariableComponent = ET.SubElement(ComponentList, "VariableComponent",  Name = var)
+    #print(var)
+    #print('-----------------')
+    if not isinstance(val, dict):
+        xml_VariableComponent = pre_supremica['Components']['VariableComponent'][var]
+        #print(str(xml_VariableComponent))
+        ComponentList.append(xml_VariableComponent)
+
+
+
+
 for efsm in pre_supremica['Components']:
-    SimpleComponent = ET.SubElement(ComponentList, "SimpleComponent", Name = efsm, Kind = "Plant")
+    SimpleComponent = None
+    if efsm != 'VariableComponent':
+        if efsm == "":
+            efsm = ""
+            #global SimpleComponent
+            SimpleComponent = ET.SubElement(ComponentList, "SimpleComponent",  Kind = "PLANT",Name = efsm)
+        else:
+            #global SimpleComponent
+            SimpleComponent = ET.SubElement(ComponentList, "SimpleComponent",  Kind = "PLANT", Name = efsm)
+
+        Graph = ET.SubElement(SimpleComponent, "Graph")
+        #NodeList = ET.SubElement(Graph, "NodeList")
+        #EdgeList = ET.SubElement(Graph, "EdgeList")
+
+        xml_NodeList = pre_supremica['Components'][efsm]['node_list']
+        xml_EdgeList = pre_supremica['Components'][efsm]['edge_list']
+
+        Graph.append(xml_NodeList)
+        Graph.append(xml_EdgeList)
+
+
+
 
 print('______________________________________________________')
 
-print(isinstance(Module, ET.Element))
+
+print(ET.tostring(Module, encoding='utf8').decode('utf8'))

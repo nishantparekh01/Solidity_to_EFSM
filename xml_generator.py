@@ -12,6 +12,9 @@ Module = ET.Element("Module", Name = "Casino-blocking")
 xml_EventDecl = pre_supremica['Events']
 Module.append(xml_EventDecl)
 
+# Adding event Name = ":accepting", kind = "PROPOSITION" to the EventDeclList
+EventDecl_accepting = ET.SubElement(xml_EventDecl, "EventDecl", Kind = "PROPOSITION", Name = ":accepting")
+
 
 ComponentList = ET.SubElement(Module, "ComponentList")
 

@@ -20,7 +20,7 @@ def handleMemberAccess(node):
     else:
         #return str(name + '.' + memberName)
         if memberName == 'transfer':
-            return name + memberName + '1'
+            return {'name':name + memberName + '1', 'type': 'transfer'}
         else:
             return memberName
         # example :
@@ -120,7 +120,11 @@ def handleFunctionCall(node):
             #print("arg_list here", arg_list)
             #args  = ' '.join(arg_list)
             #print(ET.tostring(arg, encoding='utf-8', method='xml').decode('utf-8'))
-    return {'ntype': ntype(node), 'name' : name, 'args' : arg} # args value : msg.sender
+
+    if isinstance(name, dict):
+        return {'ntype': ntype(node), 'name' : name['name'], 'args' : arg, 'type': name['type']}
+    else:
+        return {'ntype': ntype(node), 'name' : name, 'args' : arg} # args value : msg.sender
 
 
 def handleExpressionStatement(node):

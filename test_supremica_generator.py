@@ -60,5 +60,5 @@ for n_id in original_casino_blocking_list:
     # print("\n")
     # print("-------------")
     # print("\n")
-print(type((final_result)))
+#print(type((final_result)))
 #print(json.dumps(final_result))

@@ -30,7 +30,11 @@ VariableComponent = Components['VariableComponent']
 VariableComponent['EnumVariables'] = {}
 VariableComponent['StructVariables'] = {}
 
-# Supremica['Variables'] = {}
+# creating a dictionary to store all generated addresses
+VariableComponent['AddressVariables'] = {}
+
+# declaring address_index to keep track of address variables
+address_index = 0
 
 class EFSM:
     def __init__(self, name):  # This is to create the structure for each efsm. Right for modifiers. Later for all functions
@@ -162,6 +166,12 @@ def superStructDefinition(packet):
     VariableComponent['StructVariables'][name] = members
     return True
 
+
+def get_address_index():
+    global address_index
+    address_index += 1
+    return address_index
+
 def superVariableDeclaration(packet):
     global VariableComponent
     name = packet['name']
@@ -198,6 +208,32 @@ def superVariableDeclaration(packet):
         #VariableComponent[name] = ET.tostring(xml_VariableComponent, encoding='unicode', method='xml')
         #str_xml_VariableComponent = ET.tostring(xml_VariableComponent, encoding='unicode', method='xml')
         #VariableComponent.append(str_xml_VariableComponent)
+
+    elif type == 'address':
+
+        # name has the name and type has value 'address'
+        # set address index to 0 and increment it for each address
+        # append the address index to the address name
+
+        address_index = get_address_index()
+        address_name = 'x000' + str(address_index)
+
+        # Add this to the dictionary AddressVariables
+        VariableComponent['AddressVariables'][name] = address_name
+
+        # create the xml element for the address
+        xml_VariableComponent = ET.Element("VariableComponent", Name=name)
+        xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
+        xml_EnumSetExpression = ET.SubElement(xml_variableRange, "EnumSetExpression")
+
+        ET.SubElement(xml_EnumSetExpression, "SimpleIdentifier", Name=address_name)
+
+        xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
+        xml_initialValue = wmodify_assignment(name, "==", address_name)
+        xml_VariableInitial.append(xml_initialValue)
+        VariableComponent[name]  = xml_VariableComponent
+
+
 
 
 def addAutomata(efsm):

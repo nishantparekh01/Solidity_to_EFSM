@@ -44,14 +44,18 @@ for var, val in pre_supremica['Components']['VariableComponent'].items():
         #print(str(xml_VariableComponent))
         ComponentList.append(xml_VariableComponent)
 
+#############################################################################################################
+
 # Adding variable 'value' to the VariableComponent
 
 VariableComponent_value = ET.Element("VariableComponent",  Name = "value")
 
 VariableRange_value = ET.SubElement(VariableComponent_value, "VariableRange")
-BinaryExpression_value = ET.SubElement(VariableRange_value, "BinaryExpression", Operator = "..")
-IntConstant_value_0 = ET.SubElement(BinaryExpression_value, "IntConstant", Value = "0")
-IntConstant_value_1 = ET.SubElement(BinaryExpression_value, "IntConstant", Value = "1")
+BinaryExpression_value = wmodify_assignment("0", "..", "1")
+VariableRange_value.append(BinaryExpression_value)
+# BinaryExpression_value = ET.SubElement(VariableRange_value, "BinaryExpression", Operator = "..")
+# IntConstant_value_0 = ET.SubElement(BinaryExpression_value, "IntConstant", Value = "0")
+# IntConstant_value_1 = ET.SubElement(BinaryExpression_value, "IntConstant", Value = "1")
 
 VariableInitial_value = ET.SubElement(VariableComponent_value, "VariableInitial")
 BinaryExpression_value_init = wmodify_assignment("value", "==", "0")
@@ -61,6 +65,10 @@ VariableInitial_value.append(BinaryExpression_value_init)
 # BinaryExpression_value_init = ET.SubElement(VariableInitial_value, "BinaryExpression", Operator = "==")
 # SimpleIdentifier_value = ET.SubElement(BinaryExpression_value_init, "SimpleIdentifier", Name = "value")
 # IntConstant_value_init = ET.SubElement(BinaryExpression_value_init, "IntConstant", Value = "0")
+
+ComponentList.append(VariableComponent_value)
+
+#############################################################################################################
 
 # Adding variable 'sender' to the VariableComponent
 
@@ -82,11 +90,15 @@ VariableInitial_sender.append(BinaryExpression_sender_init)
 
 ComponentList.append(VariableComponent_sender)
 
+#############################################################################################################
+
+# Adding transfer efsm for each address variable
 
 
-ComponentList.append(VariableComponent_value)
 
 
+
+#############################################################################################################
 
 
 for efsm in pre_supremica['Components']:

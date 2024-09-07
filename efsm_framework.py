@@ -86,6 +86,8 @@ class EFSM:
 
             elif expression['ntype'] == 'Simple':
                 events.append(expression['name'])
+                if expression['name'] == 'transfer_fail':
+                    target_index = 'S0'
 
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
@@ -297,8 +299,12 @@ def superFunctionDefinition(packet):
     for exp in body:
         if 'type' in exp and exp['type'] == 'transfer':
             function.addTransition(exp)
-            transfer_success_exp = {'ntype': 'Simple', 'name' : 'transfer_success'}
+            transfer_success_exp = {'ntype': 'Simple', 'name': 'transfer_success'}
+            transfer_fail_exp = {'ntype': 'Simple', 'name': 'transfer_fail'}
+
+            function.addTransition(transfer_fail_exp)
             function.addTransition(transfer_success_exp)
+
         else:
             function.addTransition(exp)
 

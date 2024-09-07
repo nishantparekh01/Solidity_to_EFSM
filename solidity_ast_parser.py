@@ -20,7 +20,7 @@ def handleMemberAccess(node):
     else:
         #return str(name + '.' + memberName)
         if memberName == 'transfer':
-            return {'name':name + memberName + '1', 'type': 'transfer'}
+            return {'name':name + memberName , 'type': 'transfer'}
         else:
             return memberName
         # example :
@@ -173,6 +173,9 @@ def handleFunctionDefinition(node):
     packet['body'] = lookup_table[ntype(node['body'])](node['body'])
     packet['params'] = lookup_table[ntype(node['parameters'])](node['parameters'])
     packet['name'] = node['name']
+    if packet['name'] == "":
+        # do nothing
+        return
     packet['modifiers'] = [lookup_table[ntype(m)](m) for m in node['modifiers']]
     super_struct = superFunctionDefinition(packet)
     return super_struct

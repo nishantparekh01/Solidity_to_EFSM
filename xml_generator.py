@@ -1,5 +1,8 @@
 from add_events_nodes import *
 import xml.etree.ElementTree as ET
+from datetime import datetime
+import os
+
 
 # pre_supremica is imported from add_events_nodes.py
 # pre_supremica is in the form of a dictionary
@@ -124,8 +127,38 @@ for efsm in pre_supremica['Components']:
 
 
 
-
 print('______________________________________________________')
 
+timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
 
-print(ET.tostring(Module, encoding='utf8').decode('utf8'))
+
+# Define the folder where you want to store the output files
+base_folder = r'C:\Users\nishantp\OneDrive - Chalmers\Casino\Casino_Nishant\casino\Output test files'
+
+
+# Create a unique folder name using the current timestamp
+output_folder = os.path.join(base_folder, f"output_{timestamp}")
+
+# Create new output folder
+os.makedirs(f"{output_folder}")
+
+
+# Generate a unique filename using the current timestamp
+filename = os.path.join(base_folder, f"{output_folder}\\output_{timestamp}.wmod")
+
+# Text file containing a short summary of changes made
+filename_txt = os.path.join(base_folder,f"{output_folder}\\output_{timestamp}.txt")
+
+
+# Open the file and write the output
+with open(filename, 'w') as file:
+    print(ET.tostring(Module, encoding='utf8').decode('utf8'), file=file)
+
+summary = "This is a test output file. Here I will write some changes which I have made in the code"
+
+with open(filename_txt, 'w') as file:
+    print(summary, file=file)
+
+print(f"Output written to {output_folder}")
+
+#print(ET.tostring(Module, encoding='utf8').decode('utf8'))

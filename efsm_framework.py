@@ -37,6 +37,9 @@ VariableComponent['AddressVariables'] = {}
 # declaring address_index to keep track of address variables
 address_index = 0
 
+# list for transfer efsms
+transfer_efsm_list = []
+
 
 class EFSM:
     def __init__(self,
@@ -86,7 +89,7 @@ class EFSM:
 
             elif expression['ntype'] == 'Simple':
                 events.append(expression['name'])
-                if expression['name'] == 'transfer_fail':
+                if expression['type'] == 'transfer_fail':
                     target_index = 'S0'
 
             elif expression['ntype'] == 'Assignment':
@@ -298,9 +301,34 @@ def superFunctionDefinition(packet):
 
     for exp in body:
         if 'type' in exp and exp['type'] == 'transfer':
+
+            # Create a transfer efsm if it already does not exist
+            if exp['name'] not in transfer_efsm_list:
+                transfer_efsm = EFSM(exp['name'])
+                transfer_efsm_list.append(exp['name'])
+                #transfer_efsm.add_transfer(exp)
+
+                # transition for transfer event
+                transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
+                transfer_efsm.addTransition(transfer_event)
+
+                # transition for transfer fail
+                transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_fail'}
+                transfer_efsm.addTransition(transfer_fail)
+
+                # transition for transfer success
+                transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_success'}
+                transfer_efsm.addTransition(transfer_success)
+
+                addAutomata(transfer_efsm)
+
             function.addTransition(exp)
-            transfer_success_exp = {'ntype': 'Simple', 'name': 'transfer_success'}
-            transfer_fail_exp = {'ntype': 'Simple', 'name': 'transfer_fail'}
+
+            transfer_success = exp['name'] + 'X'
+            transfer_fail = exp['name'] + 'Fail'
+            
+            transfer_success_exp = {'ntype': 'Simple', 'name': transfer_success, 'type': 'transfer_success'}
+            transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_fail, 'type': 'transfer_fail'}
 
             function.addTransition(transfer_fail_exp)
             function.addTransition(transfer_success_exp)

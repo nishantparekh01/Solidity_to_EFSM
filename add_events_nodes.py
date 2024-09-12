@@ -10,6 +10,8 @@ pre_supremica = final_result
 # Creating the EventDecl xml here
 EventDeclList = ET.Element("EventDeclList")
 
+event_list = []
+
 
 # Create a separate eventdecl for this
 # <EventDecl Kind="PROPOSITION" Name=":accepting"/>
@@ -17,8 +19,13 @@ EventDeclList = ET.Element("EventDeclList")
 # Need to write a function for adding generated events to xml eventdecl
 def add_events_to_xml(event):  # event is a string
     global EventDeclList
-    EventDecl = ET.SubElement(EventDeclList, "EventDecl", Kind="CONTROLLABLE", Name=event)
-    # EventDeclList.append(EventDecl)
+    global event_list
+
+    if event not in event_list:
+        event_list.append(event)
+        ET.SubElement(EventDeclList, "EventDecl", Kind="CONTROLLABLE", Name=event)
+    else:
+        return
 
 
 # Creating a list to add all the nodes for a specific efsm
@@ -31,7 +38,10 @@ def add_node_to_efsm_node_list(source_node, target_node):
     if target_node not in efsm_node_list:
         efsm_node_list.append(target_node)
 
+
 node_id = 0
+
+
 def get_new_node(type):
     global node_id
     if type == 'source':
@@ -66,6 +76,11 @@ for efsm in pre_supremica['Components']:
                     event_name = str(efsm + '1')
                     pre_supremica['Components'][efsm]['edge_list']['t0']['event'] = event_name
                     add_events_to_xml(event_name)
+                else:
+                    event_names = pre_supremica['Components'][efsm]['edge_list']['t0']['events']
+                    for event_name in event_names:
+                        add_events_to_xml(event_name)
+                    
 
                 transition_xml = add_transition_to_xml(processing_transition)
                 EdgeList.append(transition_xml)
@@ -76,10 +91,11 @@ for efsm in pre_supremica['Components']:
                         source_node = get_new_node('source')
                         if processing_transition['transition_type'] == 'self_loop':
                             target_node = source_node
-                            #i = i - 1
+                            # i = i - 1
                         else:
-                            #target_node = get_new_node('target')
-                            target_node = get_new_node('target') if not processing_transition['target_index'] else processing_transition['target_index']
+                            # target_node = get_new_node('target')
+                            target_node = get_new_node('target') if not processing_transition['target_index'] else \
+                            processing_transition['target_index']
                         processing_transition['source_index'] = source_node
                         processing_transition['target_index'] = target_node
                         add_node_to_efsm_node_list(source_node, target_node)
@@ -89,12 +105,18 @@ for efsm in pre_supremica['Components']:
                             event_name = str(efsm + '1')
                             pre_supremica['Components'][efsm]['edge_list'][f't{i}']['event'] = event_name
                             add_events_to_xml(event_name)
+                        else:
+                            event_names = pre_supremica['Components'][efsm]['edge_list'][f't{i}']['events']
+                            for event_name in event_names:
+                                add_events_to_xml(event_name)
+
+
 
                     elif i == n_transitions - 1:
                         source_node = get_new_node('source')
                         if processing_transition['transition_type'] == 'self_loop':
                             target_node = source_node
-                            #i = i - 1
+                            # i = i - 1
                         else:
                             target_node = 'S0'
                         processing_transition['source_index'] = source_node
@@ -106,13 +128,17 @@ for efsm in pre_supremica['Components']:
                             event_name = str(efsm + 'X')
                             pre_supremica['Components'][efsm]['edge_list'][f't{i}']['event'] = event_name
                             add_events_to_xml(event_name)
+                        else:
+                            event_names = pre_supremica['Components'][efsm]['edge_list'][f't{i}']['events']
+                            for event_name in event_names:
+                                add_events_to_xml(event_name)
                     else:
                         source_node = get_new_node('source')
                         if processing_transition['transition_type'] == 'self_loop':
                             target_node = source_node
-                            #i = i - 1
+                            # i = i - 1
                         else:
-                            #target_node = get_new_node('target')
+                            # target_node = get_new_node('target')
                             target_node = get_new_node('target') if not processing_transition['target_index'] else processing_transition['target_index']
 
                         processing_transition['source_index'] = source_node
@@ -124,6 +150,10 @@ for efsm in pre_supremica['Components']:
                             event_name = str(efsm + str(i + 1))
                             pre_supremica['Components'][efsm]['edge_list'][f't{i}']['event'] = event_name
                             add_events_to_xml(event_name)
+                        else:
+                            event_names = pre_supremica['Components'][efsm]['edge_list'][f't{i}']['events']
+                            for event_name in event_names:
+                                add_events_to_xml(event_name)
 
                     transition_xml = add_transition_to_xml(processing_transition)
                     EdgeList.append(transition_xml)

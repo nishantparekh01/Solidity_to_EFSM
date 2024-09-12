@@ -154,7 +154,7 @@ filename_txt = os.path.join(base_folder,f"{output_folder}\\output_{timestamp}.tx
 with open(filename, 'w') as file:
     print(ET.tostring(Module, encoding='utf8').decode('utf8'), file=file)
 
-summary = (""" Able to achieve transition for transfer_fail. from the node where transfer takes place. Thank god !!!
+summary = (""" Adding the eventtransferX and eventtransferFail events to EventDecl list
 """)
 
 with open(filename_txt, 'w') as file:

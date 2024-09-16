@@ -88,9 +88,10 @@ class EFSM:
                     events.append(expression['name'])
 
             elif expression['ntype'] == 'Simple':
-                events.append(expression['name'])
-                if expression['type'] == 'transfer_fail':
-                    target_index = 'S0'
+                if 'name' in expression:
+                    events.append(expression['name'])
+                    if expression['type'] == 'transfer_fail':
+                        target_index = 'S0'
 
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
@@ -320,6 +321,7 @@ def superFunctionDefinition(packet):
                 transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_success'}
                 transfer_efsm.addTransition(transfer_success)
 
+
                 addAutomata(transfer_efsm)
 
             function.addTransition(exp)
@@ -330,8 +332,12 @@ def superFunctionDefinition(packet):
             transfer_success_exp = {'ntype': 'Simple', 'name': transfer_success, 'type': 'transfer_success'}
             transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_fail, 'type': 'transfer_fail'}
 
+            next_statement = {'ntype': 'Simple'}
+
+
             function.addTransition(transfer_fail_exp)
             function.addTransition(transfer_success_exp)
+            function.addTransition(next_statement)
 
         else:
             function.addTransition(exp)

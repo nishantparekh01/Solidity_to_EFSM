@@ -125,6 +125,17 @@ for efsm in pre_supremica['Components']:
         Graph.append(xml_NodeList)
         Graph.append(xml_EdgeList)
 
+#############################################################################################################
+
+# Adding assignSender from string format to xml
+file_path_assignSender = r'C:\Users\nishantp\PyCharmProjects\Casino conversion\venv\Scripts\test\assignSender.xml'
+
+assignSender_string = ET.parse(file_path_assignSender)
+
+ComponentList.append(assignSender_string.getroot())
+add_events_to_xml('assignSev')
+
+
 
 
 print('______________________________________________________')
@@ -148,6 +159,7 @@ filename = os.path.join(base_folder, f"{output_folder}\\output_{timestamp}.wmod"
 
 # Text file containing a short summary of changes made
 filename_txt = os.path.join(base_folder,f"{output_folder}\\output_{timestamp}.txt")
+
 
 
 # Open the file and write the output

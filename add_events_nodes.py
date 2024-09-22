@@ -39,16 +39,31 @@ def add_node_to_efsm_node_list(source_node, target_node):
         efsm_node_list.append(target_node)
 
 
+
 node_id = 0
 
 
 def get_new_node(type):
     global node_id
     if type == 'source':
-        return 'S' + str(node_id)
+        s_node = 'S' + str(node_id)
+        return s_node
+    elif type == 'source_reduced':
+        node_id = node_id - 1
+        s_node = 'S' + str(node_id)
+        node_id = node_id + 1
+        return s_node
     elif type == 'target':
         node_id += 1
-        return 'S' + str(node_id)
+        t_node = 'S' + str(node_id)
+        return t_node
+
+
+    node_list = []
+
+    # Add node to node_list and check if it is already present
+    # if is present, then return next node
+
 
 
 for efsm in pre_supremica['Components']:
@@ -91,7 +106,7 @@ for efsm in pre_supremica['Components']:
                         source_node = get_new_node('source')
                         if processing_transition['transition_type'] == 'self_loop':
                             target_node = source_node
-                            # i = i - 1
+
                         else:
                             # target_node = get_new_node('target')
                             target_node = get_new_node('target') if not processing_transition['target_index'] else \
@@ -116,7 +131,15 @@ for efsm in pre_supremica['Components']:
                         source_node = get_new_node('source')
                         if processing_transition['transition_type'] == 'self_loop':
                             target_node = source_node
-                            # i = i - 1
+
+                        elif processing_transition['transition_type'] == 'transfer_success':
+                            print('found some transfer success here')
+                            #node_id = node_id - 1
+                            source_node = get_new_node('source_reduced')
+                            target_node = get_new_node('target')
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
                         else:
                             target_node = 'S0'
                         processing_transition['source_index'] = source_node
@@ -136,7 +159,16 @@ for efsm in pre_supremica['Components']:
                         source_node = get_new_node('source')
                         if processing_transition['transition_type'] == 'self_loop':
                             target_node = source_node
-                            # i = i - 1
+
+                        elif processing_transition['transition_type'] == 'transfer_success':
+                            print('found some transfer success here')
+                            #node_id = node_id - 1
+                            source_node = get_new_node('source_reduced')
+                            target_node = get_new_node('target')
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
                         else:
                             # target_node = get_new_node('target')
                             target_node = get_new_node('target') if not processing_transition['target_index'] else processing_transition['target_index']

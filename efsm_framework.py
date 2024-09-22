@@ -90,8 +90,19 @@ class EFSM:
             elif expression['ntype'] == 'Simple':
                 if 'name' in expression:
                     events.append(expression['name'])
-                    if expression['type'] == 'transfer_fail':
+                    if expression['type'] == 'efsm_fail':
+                        transition_type = 'efsm_fail'
                         target_index = 'S0'
+
+                    elif expression['type'] == 'transfer_success':
+                        transition_type = 'transfer_success'
+
+                    elif expression['type'] == 'transfer_fail':
+                        transition_type = 'transfer_fail'
+
+                    elif expression['type'] == 'transfer_efsm_fail':
+                        target_index = 'S0'
+
 
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
@@ -307,20 +318,19 @@ def superFunctionDefinition(packet):
             if exp['name'] not in transfer_efsm_list:
                 transfer_efsm = EFSM(exp['name'])
                 transfer_efsm_list.append(exp['name'])
-                #transfer_efsm.add_transfer(exp)
+                # transfer_efsm.add_transfer(exp)
 
                 # transition for transfer event
                 transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
                 transfer_efsm.addTransition(transfer_event)
 
                 # transition for transfer fail
-                transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_fail'}
+                transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_efsm_fail'}
                 transfer_efsm.addTransition(transfer_fail)
 
                 # transition for transfer success
-                transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_success'}
+                transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_efsm_success'}
                 transfer_efsm.addTransition(transfer_success)
-
 
                 addAutomata(transfer_efsm)
 
@@ -328,14 +338,14 @@ def superFunctionDefinition(packet):
 
             transfer_success = exp['name'] + 'X'
             transfer_fail = exp['name'] + 'Fail'
-            
+
             transfer_success_exp = {'ntype': 'Simple', 'name': transfer_success, 'type': 'transfer_success'}
             transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_fail, 'type': 'transfer_fail'}
-
             next_statement = {'ntype': 'Simple'}
-
+            efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
 
             function.addTransition(transfer_fail_exp)
+            function.addTransition(efsm_fail)
             function.addTransition(transfer_success_exp)
             function.addTransition(next_statement)
 

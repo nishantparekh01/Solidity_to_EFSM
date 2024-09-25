@@ -108,6 +108,9 @@ class EFSM:
                     elif expression['type'] == 'true_body_last' or expression['type'] == 'false_body_last':
                         transition_type = expression['type']
 
+                    elif expression['type'] == 'function_fail':
+                        target_index = 'S0'
+
 
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
@@ -378,9 +381,13 @@ def superFunctionDefinition(packet):
                 if stmnt['ntype'] == 'FunctionCall':
                     if index == len(true_body) - 1:
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
+                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                        function.addTransition(function_fail)
                         function.addTransition(function_complete)
                     else:
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
+                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                        function.addTransition(function_fail)
                         function.addTransition(function_complete)
 
             function.addTransition(false_exp_transition)
@@ -389,10 +396,14 @@ def superFunctionDefinition(packet):
                 if stmnt['ntype'] == 'FunctionCall':
                     if index == len(false_body) - 1:
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
+                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                        function.addTransition(function_fail)
                         function.addTransition(function_complete)
 
                     else:
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
+                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                        function.addTransition(function_fail)
                         function.addTransition(function_complete)
 
         else:

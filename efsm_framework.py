@@ -105,6 +105,9 @@ class EFSM:
                     elif expression['type'] == 'transfer_efsm_fail':
                         target_index = 'S0'
 
+                    elif expression['type'] == 'true_body_last' or expression['type'] == 'false_body_last':
+                        transition_type = expression['type']
+
 
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
@@ -370,18 +373,27 @@ def superFunctionDefinition(packet):
                                     'guard_exp': false_condition, 'type': 'false_body_start'}
 
             function.addTransition(true_exp_transition)
-            for stmnt in true_body:
+            for index, stmnt in enumerate(true_body):
                 function.addTransition(stmnt)
                 if stmnt['ntype'] == 'FunctionCall':
-                    function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
-                    function.addTransition(function_complete)
+                    if index == len(true_body) - 1:
+                        function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
+                        function.addTransition(function_complete)
+                    else:
+                        function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
+                        function.addTransition(function_complete)
 
             function.addTransition(false_exp_transition)
-            for stmnt in false_body:
+            for index, stmnt in enumerate(false_body):
                 function.addTransition(stmnt)
                 if stmnt['ntype'] == 'FunctionCall':
-                    function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
-                    function.addTransition(function_complete)
+                    if index == len(false_body) - 1:
+                        function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
+                        function.addTransition(function_complete)
+
+                    else:
+                        function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
+                        function.addTransition(function_complete)
 
         else:
             function.addTransition(exp)

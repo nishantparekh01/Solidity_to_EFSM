@@ -104,6 +104,7 @@ for efsm in pre_supremica['Components']:
                 EdgeList.append(transition_xml)
             else:
                 condition_node = str()
+                true_last_node = str()
                 for i in range(n_transitions):
                     processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
 
@@ -166,8 +167,6 @@ for efsm in pre_supremica['Components']:
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
-
-
                         else:
                             target_node = 'S0'
                         processing_transition['source_index'] = source_node
@@ -205,6 +204,22 @@ for efsm in pre_supremica['Components']:
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'true_body_last':
+                            print('found some true last here')
+                            target_node = get_new_node('target')
+                            true_last_node = target_node
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'false_body_last':
+                            print('found some false last here')
+                            target_node = true_last_node
+                            node_id = int(target_node[-1])
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(condition_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_start':
                             print('found some false body start here')

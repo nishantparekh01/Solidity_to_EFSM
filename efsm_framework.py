@@ -85,7 +85,9 @@ class EFSM:
                 else:
                     # print(expression['name'])
                     # action_exp = str(expression['name'] + '(' + expression['args'] + ')')
-                    events.append(expression['name'])
+                    transition_type = 'self_loop'
+                    print('found self loop here')
+                    events.append(str(expression['name'] + '1'))
 
             elif expression['ntype'] == 'Simple':
                 if 'name' in expression:
@@ -128,28 +130,31 @@ class EFSM:
                     guard_exp = expression['expression']
                     # guard_exp = ET.tostring(expression['expression'], encoding='unicode', method='xml')
             elif expression['ntype'] == 'IfStatement':
+
                 if 'kind' in expression and expression['kind'] == 'internal':
                     if expression['condition'] == 'true':
                         guard_exp = expression['guard_exp']
-                        # guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
-                        # action_exp = expression['exp']  # Assumption: only one expression in the body
+                        transition_type = expression['type']
+                #         # guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
+                #         # action_exp = expression['exp']  # Assumption: only one expression in the body
                     elif expression['condition'] == 'false':
                         guard_exp = expression['guard_exp']
-                        # guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
-                        # action_exp = expression['exp'] # Assumption: only one expression in the body
-                else:
-                    true_condition = expression['true_condition']
-                    false_condition = expression['false_condition']
-
-                    true_body = expression['true_body']
-                    false_body = expression['false_body']
-                    # condition_negation = "!" + "(" + condition + ")"
-                    true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
-                                           'guard_exp': true_condition, 'exp': true_body}
-                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
-                                            'guard_exp': false_condition, 'exp': false_body}
-                    self.addTransition(true_exp_transition)
-                    self.addTransition(false_exp_transition)
+                        transition_type = expression['type']
+                #         # guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
+                #         # action_exp = expression['exp'] # Assumption: only one expression in the body
+                # else:
+                #     true_condition = expression['true_condition']
+                #     false_condition = expression['false_condition']
+                #
+                #     true_body = expression['true_body']
+                #     false_body = expression['false_body']
+                #     # condition_negation = "!" + "(" + condition + ")"
+                #     true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
+                #                            'guard_exp': true_condition, 'exp': true_body}
+                #     false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
+                #                             'guard_exp': false_condition, 'exp': false_body}
+                #     self.addTransition(true_exp_transition)
+                #     self.addTransition(false_exp_transition)
 
         transition = {
             'transition_type': transition_type,
@@ -334,6 +339,8 @@ def superFunctionDefinition(packet):
 
                 addAutomata(transfer_efsm)
 
+
+
             function.addTransition(exp)
 
             transfer_success = exp['name'] + 'X'
@@ -348,6 +355,33 @@ def superFunctionDefinition(packet):
             function.addTransition(efsm_fail)
             function.addTransition(transfer_success_exp)
             function.addTransition(next_statement)
+
+        elif exp['ntype'] == 'IfStatement':
+            # print(exp)
+            true_condition = exp['true_condition']
+            false_condition = exp['false_condition']
+
+            true_body = exp['true_body']
+            false_body = exp['false_body']
+
+            true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
+                                   'guard_exp': true_condition, 'type': 'true_body_start'}
+            false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
+                                    'guard_exp': false_condition, 'type': 'false_body_start'}
+
+            function.addTransition(true_exp_transition)
+            for stmnt in true_body:
+                function.addTransition(stmnt)
+                if stmnt['ntype'] == 'FunctionCall':
+                    function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
+                    function.addTransition(function_complete)
+
+            function.addTransition(false_exp_transition)
+            for stmnt in false_body:
+                function.addTransition(stmnt)
+                if stmnt['ntype'] == 'FunctionCall':
+                    function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
+                    function.addTransition(function_complete)
 
         else:
             function.addTransition(exp)

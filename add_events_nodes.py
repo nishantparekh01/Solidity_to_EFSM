@@ -141,7 +141,7 @@ for efsm in pre_supremica['Components']:
                             target_node = source_node
 
                         elif processing_transition['transition_type'] == 'transfer_success':
-                            print('found some transfer success here')
+                            #print('found some transfer success here')
                             #node_id = node_id - 1
                             source_node = get_new_node('source_reduced')
                             target_node = get_new_node('target')
@@ -150,7 +150,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'true_body_start':
-                            print('found some true body start here')
+                            #print('found some true body start here')
                             source_node = get_new_node('source')
                             condition_node = source_node
                             target_node = get_new_node('target')
@@ -159,7 +159,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_start':
-                            print('found some false body start here')
+                            #print('found some false body start here')
                             source_node = condition_node
 
                             target_node = get_new_node('target')
@@ -188,7 +188,7 @@ for efsm in pre_supremica['Components']:
                             target_node = source_node
 
                         elif processing_transition['transition_type'] == 'transfer_success':
-                            print('found some transfer success here')
+                            #print('found some transfer success here')
                             #node_id = node_id - 1
                             source_node = get_new_node('source_reduced')
                             target_node = get_new_node('target')
@@ -197,7 +197,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'true_body_start':
-                            print('found some true body start here')
+                            #print('found some true body start here')
                             source_node = get_new_node('source')
                             condition_node = source_node
                             target_node = get_new_node('target')
@@ -206,7 +206,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'true_body_last':
-                            print('found some true last here')
+                            #print('found some true last here')
                             target_node = get_new_node('target')
                             true_last_node = target_node
                             processing_transition['source_index'] = source_node
@@ -214,7 +214,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_last':
-                            print('found some false last here')
+                            #print('found some false last here')
                             target_node = true_last_node
                             node_id = int(target_node[-1])
                             processing_transition['source_index'] = source_node
@@ -222,7 +222,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(condition_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_start':
-                            print('found some false body start here')
+                            #print('found some false body start here')
                             source_node = condition_node
 
                             target_node = get_new_node('target')

@@ -14,8 +14,11 @@
 # }
 import xml.etree.ElementTree as ET
 from wmodify import *
+from copy import deepcopy
 
 Supremica = {}
+
+modifier_objects_dict = {}
 
 # Events - contains list of all events
 Supremica['Events'] = {}
@@ -44,6 +47,8 @@ transfer_efsm_list = []
 class EFSM:
     def __init__(self,
                  name):  # This is to create the structure for each efsm. Right for modifiers. Later for all functions
+        self.params_dict = {}
+        #self.guard_transition_template = []
         self.name = name
         self.efsm = {}
 
@@ -86,7 +91,7 @@ class EFSM:
                     # print(expression['name'])
                     # action_exp = str(expression['name'] + '(' + expression['args'] + ')')
                     transition_type = 'self_loop'
-                    print('found self loop here')
+                    #print('found self loop here')
                     events.append(str(expression['name'] + '1'))
 
             elif expression['ntype'] == 'Simple':
@@ -110,6 +115,10 @@ class EFSM:
 
                     elif expression['type'] == 'function_fail':
                         target_index = 'S0'
+
+                    elif expression['type'] == 'modifier_guard':
+                        transition_type = 'self_loop'
+                        guard_exp = expression['guard_exp']
 
 
             elif expression['ntype'] == 'Assignment':
@@ -183,7 +192,42 @@ class EFSM:
             # m['name'] is the name of the modifier
 
             mod = m['name']
-            Components[mod]['edge_list']['t0']['events'].append(self.name + '1')
+
+            if 'args' in m:
+                mod = modifier_objects_dict[mod]
+                event_name = self.name + '1'
+                params_dict_key_list = list(mod.params_dict.keys())
+                #print(params_dict_key_list)
+                for i, param_value in enumerate(m['args']):
+                    mod.params_dict[params_dict_key_list[i]] = param_value
+                #print('#################################')
+                #print(mod.params_dict)
+                #print(mod.guard_transition_template[0]) # Why 0 here ? Refer to issue #39 in nishantparekh01/casino_conversion/test1
+
+                replacement_guard = mod.guard_transition_template[0]
+                if 'args' in replacement_guard:
+                    root = deepcopy(replacement_guard['args'])
+                    for si in root.findall('.//SimpleIdentifier'):    # This is to replace the name of the variables in the guard expression with the values passed in the modifier
+                        current_name = si.get('Name')
+                        #print("CURRENT NAME", current_name)
+                        if current_name in mod.params_dict:
+                            #print(mod.params_dict[current_name])
+                            si.set('Name', mod.params_dict[current_name])
+
+                guard_transition = {'ntype': 'Simple', 'name': event_name, 'type': 'modifier_guard', 'guard_exp': root}
+
+                mod.addTransition(guard_transition)
+
+            else:
+                Components[mod]['edge_list']['t0']['events'].append(self.name + '1')
+
+    def addModifierParameter(self, parameters):
+
+        for p in parameters:
+            self.params_dict[p] = str()
+            #print(p)
+       # print('PARAMS DICT', self.params_dict)
+
 
     def add_transfer(self, expression):
         transition_type = 'self_loop'
@@ -295,15 +339,24 @@ def superModifierDefinition(packet):
 
     params = packet['params']
     # Use parameters in whichever way
-
+    #print(params)
     body = packet['body']  # list of expressions
     # Generate transitions using expressions here.
 
     # Create modifier object
     modifier = EFSM(name)
-    for exp in body:
-        modifier.addTransition(exp)
-    # print("MODIFIER  ",modifier.efsm)
+    if params:
+        modifier.addModifierParameter(params)
+        modifier.guard_transition_template = body
+        #print("MODIFIER  ", modifier.guard_transition_template)
+    else:
+        for exp in body:
+            modifier.addTransition(exp)
+
+
+    # Add modifier to the global dictionary
+    modifier_objects_dict[name] = modifier
+
     addAutomata(modifier)
     return Supremica
 
@@ -320,6 +373,7 @@ def superFunctionDefinition(packet):
     # Add function name to invoked modifiers
     # print(name, modifiers)
     if modifiers:
+        #print(modifiers)
         function.addModifierInvocation(modifiers)
 
     for exp in body:

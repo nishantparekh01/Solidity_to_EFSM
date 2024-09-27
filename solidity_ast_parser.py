@@ -146,11 +146,13 @@ def handleBlock(node):
 
 def handleParameterList(node):
     assert ntype(node) == 'ParameterList', "Node not ParameterList"
-    parameters = []
+    parameters = {}
     for p in node['parameters']:
-        param = lookup_table[ntype(p)](p)
-        parameters.append(param)
-    # need to return the parameters as a list
+        param_name = lookup_table[ntype(p)](p) # name of the parameter
+        param_type = lookup_table[ntype(p['typeName'])](p['typeName']) # type of the parameter
+        parameters[param_name] = param_type # add the parameter to the dictionary
+
+    # need to return the parameters as a dictionary
     #params = ', '.join(parameters)
     return parameters
 

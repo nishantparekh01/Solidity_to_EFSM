@@ -120,6 +120,10 @@ class EFSM:
                         transition_type = 'self_loop'
                         guard_exp = expression['guard_exp']
 
+                elif 'type' in expression and expression['type'] == 'param_assignment':
+                    print('PARAM ASSIGNMENT====================')
+                    guard_exp = expression['guard_exp']
+
 
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
@@ -375,6 +379,17 @@ def superFunctionDefinition(packet):
     if modifiers:
         #print(modifiers)
         function.addModifierInvocation(modifiers)
+
+    # Add transitions to the function based on parameters and its respective values
+    print("-----parameters here----- : ",params)
+    for param,param_type in params.items():
+        if param_type in VariableComponent['EnumVariables']:
+            print("EnumVariable---->: ", VariableComponent['EnumVariables'][param_type])
+            # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+            guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type], **{'ntype': 'ParameterDeclarationStatement', 'kind': 'AssignmentCheck'})
+            print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
+            param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+            function.addTransition(param_assignment)
 
     for exp in body:
         if 'type' in exp and exp['type'] == 'transfer':

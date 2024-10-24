@@ -10,8 +10,16 @@ def ntype(node):
 
 def handleMemberAccess(node):
     assert ntype(node) == 'MemberAccess', "Node not MemberAccess"
+
     memberName = node['memberName']
     name = lookup_table[ntype(node['expression'])](node['expression']) # name = {'ntype': 'FunctionCall', 'name' : name, 'args' : 'msg.sender'}
+
+    if ntype(node['expression']) == 'FunctionCall' and node['expression']['kind'] == 'typeConversion':
+        name = node['expression']['arguments'][0]['name']
+
+    else:
+        name = lookup_table[ntype(node['expression'])](node['expression'])
+
     #name = node['expression']['name']
     if isinstance(name, dict):
         return name['args'] + "." + memberName
@@ -23,7 +31,6 @@ def handleMemberAccess(node):
             return {'name':name + memberName , 'type': 'transfer'}
         else:
             return memberName
-        # example :
 
 def handleIdentifier(node):
     assert ntype(node) == 'Identifier', "Node not Identifier"
@@ -110,8 +117,9 @@ def handleFunctionCall(node):
             arg = ""
         else:
             arg_list = []
-            for a in node['arguments']:
-                arg = lookup_table[ntype(a)](a)
+            arg = lookup_table[ntype(node['arguments'][0])](node['arguments'][0])
+            # for a in node['arguments']:
+            #     arg = lookup_table[ntype(a)](a)
                 # if isinstance(arg, dict):
                 #     arg_list.append(str(arg['name'] + "(" + arg['args'] + ")"))
                 # else:
@@ -166,16 +174,13 @@ def handleModifierDefinition(node):
     super_struct = superModifierDefinition(packet)
     return super_struct
 
-
-    #return (name + "(" + params + ")" + "{" + "\n" + body + " " + "\n" + "}")
-
 def handleFunctionDefinition(node):
     assert ntype(node) == 'FunctionDefinition', "Node not FunctionDefinition"
     packet = {}
     packet['body'] = lookup_table[ntype(node['body'])](node['body'])
     packet['params'] = lookup_table[ntype(node['parameters'])](node['parameters'])
     packet['name'] = node['name']
-    if packet['name'] == "":
+    if packet['name'] == "": # The constructor as no name
         # do nothing
         return
     packet['modifiers'] = [lookup_table[ntype(m)](m) for m in node['modifiers']]
@@ -263,12 +268,16 @@ def handleIfStatement(node):
     false_condition = ET.Element("UnaryExpression", Operator = "!")
     false_condition.append(true_condition)
 
-    false_body = lookup_table[ntype(node['falseBody'])](node['falseBody'])
+    if 'falseBody' in node:
+        false_body = lookup_table[ntype(node['falseBody'])](node['falseBody'])
     #print(false_body)
     true_body = lookup_table[ntype(node['trueBody'])](node['trueBody'])
     #print(true_body)
     #return  str("if" + "( " + condition+" )" + "{\n\t"  + true_body + "\n" + "} " + "else "  + "{\n\t" + false_body + "\n" + "} ")
-    return {'ntype': ntype(node), 'true_condition' : true_condition,'false_condition': false_condition, 'true_body' : true_body, 'false_body' : false_body}
+    if 'falseBody' in node:
+        return {'ntype': ntype(node), 'true_condition' : true_condition,'false_condition': false_condition, 'true_body' : true_body, 'false_body' : false_body}
+    else:
+        return {'ntype': ntype(node), 'true_condition' : true_condition,'true_body' : true_body}
 
 
 def handleStructDefinition(node):

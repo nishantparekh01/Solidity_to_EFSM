@@ -56,18 +56,11 @@ VariableComponent_value = ET.Element("VariableComponent",  Name = "value")
 VariableRange_value = ET.SubElement(VariableComponent_value, "VariableRange")
 BinaryExpression_value = wmodify_assignment("0", "..", "1")
 VariableRange_value.append(BinaryExpression_value)
-# BinaryExpression_value = ET.SubElement(VariableRange_value, "BinaryExpression", Operator = "..")
-# IntConstant_value_0 = ET.SubElement(BinaryExpression_value, "IntConstant", Value = "0")
-# IntConstant_value_1 = ET.SubElement(BinaryExpression_value, "IntConstant", Value = "1")
+
 
 VariableInitial_value = ET.SubElement(VariableComponent_value, "VariableInitial")
 BinaryExpression_value_init = wmodify_assignment("value", "==", "0")
 VariableInitial_value.append(BinaryExpression_value_init)
-
-# used wmodify_assignment function to create the BinaryExpression instead of code below
-# BinaryExpression_value_init = ET.SubElement(VariableInitial_value, "BinaryExpression", Operator = "==")
-# SimpleIdentifier_value = ET.SubElement(BinaryExpression_value_init, "SimpleIdentifier", Name = "value")
-# IntConstant_value_init = ET.SubElement(BinaryExpression_value_init, "IntConstant", Value = "0")
 
 ComponentList.append(VariableComponent_value)
 
@@ -87,6 +80,7 @@ for address in sender_list.values():
     EnumSetExpression_sender.append(ET.Element("SimpleIdentifier", Name = address))
 
 # adding initial value to 'sender'
+# Ideally this value should be the one which is assigned in the constructor of the contract
 VariableInitial_sender = ET.SubElement(VariableComponent_sender, "VariableInitial")
 BinaryExpression_sender_init = wmodify_assignment("sender", "==", "x0001")
 VariableInitial_sender.append(BinaryExpression_sender_init)

@@ -12,6 +12,9 @@ EventDeclList = ET.Element("EventDeclList")
 
 event_list = []
 
+# Initial Node - S0
+INITIAL_NODE = 'S0'
+
 
 # Create a separate eventdecl for this
 # <EventDecl Kind="PROPOSITION" Name=":accepting"/>
@@ -82,7 +85,7 @@ for efsm in pre_supremica['Components']:
             EdgeList = ET.Element("EdgeList")
 
             if n_transitions == 1:
-                source_node = 'S0'
+                source_node = INITIAL_NODE
                 target_node = source_node
                 processing_transition = pre_supremica['Components'][efsm]['edge_list']['t0']
                 processing_transition['source_index'] = source_node
@@ -168,7 +171,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         else:
-                            target_node = 'S0'
+                            target_node = INITIAL_NODE
                         processing_transition['source_index'] = source_node
                         processing_transition['target_index'] = target_node
                         add_node_to_efsm_node_list(source_node, target_node)

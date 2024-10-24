@@ -1,6 +1,8 @@
 # importing modules
 import xml.etree.ElementTree as ET
 
+# Initial node = S0
+INITIAL_NODE = 'S0'
 
 # to check if a variable with str in it can be converted to an int or not
 def is_integer(variable):
@@ -19,8 +21,8 @@ def add_nodes_to_xml(node_list):
     # Exameple of node_list = ['S0', 'S1', 'S2', 'S3']
     NodeList = ET.Element("NodeList")
     for node in node_list:
-        if node == 'S0':
-            SimpleNode = ET.SubElement(NodeList, "SimpleNode", Initial = "true",  Name = node)
+        if node == INITIAL_NODE:
+            SimpleNode = ET.SubElement(NodeList, "SimpleNode", Initial = "true",  Name = node) # Initial = "true" is added to the first node
             EventList = ET.SubElement(SimpleNode, "EventList")
             SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name = ":accepting")
         else:
@@ -89,7 +91,7 @@ def wmodify_assignment(lhs, op, rhs, **info):
                 return BinaryExpression
 
         elif info['ntype'] == 'ParameterDeclarationStatement':
-            print('Parameter Declaration Statement=====================')
+
             if info['kind'] == 'AssignmentCheck':
                 # lhs = param
                 # op = ==
@@ -147,11 +149,6 @@ def wmodify_assignment(lhs, op, rhs, **info):
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs['args']))
 
 
-            #print(rhs['args'])
-            #print(rhs['name'])
-            #rhs = str(lhs + " "  + op + " " + str(rhs['name'] + "(" + rhs['args'] + ")"))
-
-
         # if the binary expression is a simple assignment
         elif isinstance(rhs, str) and isinstance(lhs, str):
             if is_integer(rhs) and not is_integer(lhs):
@@ -182,7 +179,6 @@ def wmodify_assignment(lhs, op, rhs, **info):
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
             BinaryExpression.append(rhs)
             #BinaryExpression.append(rhs)
-            #print('-------------------xml party here--------------------------')
             #print(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             return BinaryExpression
@@ -198,16 +194,10 @@ def wmodify_assignment(lhs, op, rhs, **info):
                 BinaryExpression.append(lhs)
                 SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
             #BinaryExpression.append(rhs)
-            #print('-------------------lhs:xml, rhs:str --------------------------')
             #print(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             return BinaryExpression
 
-        # Convert this to a string and return
-        #print(ET.tostring(BinaryExpression))
-        #print(type(BinaryExpression))
-
-        #print(str(ET.tostring(BinaryExpression, encoding='unicode', method='xml')))
         #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml')) # thanks copilot
 
         return BinaryExpression

@@ -40,6 +40,9 @@ VariableComponent['AddressVariables'] = {}
 # declaring address_index to keep track of address variables
 address_index = 0
 
+# Initial Node = S0
+INITIAL_NODE = 'S0'
+
 # list for transfer efsms
 transfer_efsm_list = []
 
@@ -74,7 +77,7 @@ class EFSM:
         # we should check this by creating a function call and then checking the ntype of the expression
         if expression:  # This is for the placeholder statement
 
-            # print('Expression type==',type(expression))
+
             if expression['ntype'] == 'FunctionCall':
                 if expression['name'] == 'require':
                     # assuming that require has only one argument
@@ -88,10 +91,9 @@ class EFSM:
                     # transfer_failure = {'ntype': 'Simple', 'name': 'transfer_failure', 'args': 'false'}
 
                 else:
-                    # print(expression['name'])
+
                     # action_exp = str(expression['name'] + '(' + expression['args'] + ')')
                     transition_type = 'self_loop'
-                    #print('found self loop here')
                     events.append(str(expression['name'] + '1'))
 
             elif expression['ntype'] == 'Simple':
@@ -99,7 +101,7 @@ class EFSM:
                     events.append(expression['name'])
                     if expression['type'] == 'efsm_fail':
                         transition_type = 'efsm_fail'
-                        target_index = 'S0'
+                        target_index = INITIAL_NODE
 
                     elif expression['type'] == 'transfer_success':
                         transition_type = 'transfer_success'
@@ -108,20 +110,19 @@ class EFSM:
                         transition_type = 'transfer_fail'
 
                     elif expression['type'] == 'transfer_efsm_fail':
-                        target_index = 'S0'
+                        target_index = INITIAL_NODE
 
                     elif expression['type'] == 'true_body_last' or expression['type'] == 'false_body_last':
                         transition_type = expression['type']
 
                     elif expression['type'] == 'function_fail':
-                        target_index = 'S0'
+                        target_index = INITIAL_NODE
 
                     elif expression['type'] == 'modifier_guard':
                         transition_type = 'self_loop'
                         guard_exp = expression['guard_exp']
 
                 elif 'type' in expression and expression['type'] == 'param_assignment':
-                    print('PARAM ASSIGNMENT====================')
                     guard_exp = expression['guard_exp']
 
 
@@ -132,12 +133,14 @@ class EFSM:
                     false_body = expression['lhs'] + ' = ' + expression['false_exp']
                     true_expression_dict = {'ntype': 'Assignment', 'kind': 'simple', 'exp': true_body}
                     false_expression_dict = {'ntype': 'Assignment', 'kind': 'simple', 'exp': false_body}
-                    # print(true_expression_dict)
-                    # print(false_expression_dict)
+
                     # self.addTransition(true_expression_dict)
                     # self.addTransition(false_expression_dict)
                 elif expression['kind'] == 'simple':
-                    # print(expression['exp'])
+                    # if expression['exp'] != None:
+                    #     action_exp = expression['exp']
+                    # else:
+                    #     action_exp = None
                     action_exp = expression['exp']
                     # action_exp = ET.tostring(expression['exp'], encoding='unicode', method='xml')
             elif expression['ntype'] == 'VariableDeclarationStatement':
@@ -161,19 +164,7 @@ class EFSM:
                         transition_type = expression['type']
                 #         # guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
                 #         # action_exp = expression['exp'] # Assumption: only one expression in the body
-                # else:
-                #     true_condition = expression['true_condition']
-                #     false_condition = expression['false_condition']
-                #
-                #     true_body = expression['true_body']
-                #     false_body = expression['false_body']
-                #     # condition_negation = "!" + "(" + condition + ")"
-                #     true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
-                #                            'guard_exp': true_condition, 'exp': true_body}
-                #     false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
-                #                             'guard_exp': false_condition, 'exp': false_body}
-                #     self.addTransition(true_exp_transition)
-                #     self.addTransition(false_exp_transition)
+
 
         transition = {
             'transition_type': transition_type,
@@ -201,11 +192,8 @@ class EFSM:
                 mod = modifier_objects_dict[mod]
                 event_name = self.name + '1'
                 params_dict_key_list = list(mod.params_dict.keys())
-                #print(params_dict_key_list)
                 for i, param_value in enumerate(m['args']):
                     mod.params_dict[params_dict_key_list[i]] = param_value
-                #print('#################################')
-                #print(mod.params_dict)
                 #print(mod.guard_transition_template[0]) # Why 0 here ? Refer to issue #39 in nishantparekh01/casino_conversion/test1
 
                 replacement_guard = mod.guard_transition_template[0]
@@ -213,9 +201,7 @@ class EFSM:
                     root = deepcopy(replacement_guard['args'])
                     for si in root.findall('.//SimpleIdentifier'):    # This is to replace the name of the variables in the guard expression with the values passed in the modifier
                         current_name = si.get('Name')
-                        #print("CURRENT NAME", current_name)
                         if current_name in mod.params_dict:
-                            #print(mod.params_dict[current_name])
                             si.set('Name', mod.params_dict[current_name])
 
                 guard_transition = {'ntype': 'Simple', 'name': event_name, 'type': 'modifier_guard', 'guard_exp': root}
@@ -229,9 +215,6 @@ class EFSM:
 
         for p in parameters:
             self.params_dict[p] = str()
-            #print(p)
-       # print('PARAMS DICT', self.params_dict)
-
 
     def add_transfer(self, expression):
         transition_type = 'self_loop'
@@ -343,16 +326,15 @@ def superModifierDefinition(packet):
 
     params = packet['params']
     # Use parameters in whichever way
-    #print(params)
     body = packet['body']  # list of expressions
     # Generate transitions using expressions here.
 
     # Create modifier object
     modifier = EFSM(name)
+
     if params:
         modifier.addModifierParameter(params)
         modifier.guard_transition_template = body
-        #print("MODIFIER  ", modifier.guard_transition_template)
     else:
         for exp in body:
             modifier.addTransition(exp)
@@ -366,6 +348,7 @@ def superModifierDefinition(packet):
 
 
 def superFunctionDefinition(packet):
+    global false_body
     name = packet['name']
     params = packet['params']
     body = packet['body']
@@ -375,44 +358,56 @@ def superFunctionDefinition(packet):
     function = EFSM(name)
 
     # Add function name to invoked modifiers
-    # print(name, modifiers)
     if modifiers:
-        #print(modifiers)
         function.addModifierInvocation(modifiers)
 
     # Add transitions to the function based on parameters and its respective values
-    print("-----parameters here----- : ",params)
-    for param,param_type in params.items():
-        if param_type in VariableComponent['EnumVariables']:
-            print("EnumVariable---->: ", VariableComponent['EnumVariables'][param_type])
-            # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
-            guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type], **{'ntype': 'ParameterDeclarationStatement', 'kind': 'AssignmentCheck'})
-            print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
-            param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-            function.addTransition(param_assignment)
 
-    for exp in body:
+    for exp_index, exp in enumerate(body):
+
         if 'type' in exp and exp['type'] == 'transfer':
+            if exp_index == 0:
+                first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
+                function.addTransition(first_transition)
+                if exp['name'] not in transfer_efsm_list:
+                    transfer_efsm = EFSM(exp['name'])
+                    transfer_efsm_list.append(exp['name'])
+                    # transfer_efsm.add_transfer(exp)
 
-            # Create a transfer efsm if it already does not exist
-            if exp['name'] not in transfer_efsm_list:
-                transfer_efsm = EFSM(exp['name'])
-                transfer_efsm_list.append(exp['name'])
-                # transfer_efsm.add_transfer(exp)
+                    # transition for transfer event
+                    transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
+                    transfer_efsm.addTransition(transfer_event)
 
-                # transition for transfer event
-                transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
-                transfer_efsm.addTransition(transfer_event)
+                    # transition for transfer fail
+                    transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_efsm_fail'}
+                    transfer_efsm.addTransition(transfer_fail)
 
-                # transition for transfer fail
-                transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_efsm_fail'}
-                transfer_efsm.addTransition(transfer_fail)
+                    # transition for transfer success
+                    transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_efsm_success'}
+                    transfer_efsm.addTransition(transfer_success)
 
-                # transition for transfer success
-                transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_efsm_success'}
-                transfer_efsm.addTransition(transfer_success)
+                    addAutomata(transfer_efsm)
 
-                addAutomata(transfer_efsm)
+            else:
+                # Create a transfer efsm if it already does not exist
+                if exp['name'] not in transfer_efsm_list:
+                    transfer_efsm = EFSM(exp['name'])
+                    transfer_efsm_list.append(exp['name'])
+                    # transfer_efsm.add_transfer(exp)
+
+                    # transition for transfer event
+                    transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
+                    transfer_efsm.addTransition(transfer_event)
+
+                    # transition for transfer fail
+                    transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_efsm_fail'}
+                    transfer_efsm.addTransition(transfer_fail)
+
+                    # transition for transfer success
+                    transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_efsm_success'}
+                    transfer_efsm.addTransition(transfer_success)
+
+                    addAutomata(transfer_efsm)
 
 
 
@@ -432,16 +427,19 @@ def superFunctionDefinition(packet):
             function.addTransition(next_statement)
 
         elif exp['ntype'] == 'IfStatement':
-            # print(exp)
             true_condition = exp['true_condition']
-            false_condition = exp['false_condition']
+            if 'false_condition' in exp:
+                false_condition = exp['false_condition']
 
             true_body = exp['true_body']
-            false_body = exp['false_body']
+
+            if 'false_body' in exp:
+                false_body = exp['false_body']
 
             true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
                                    'guard_exp': true_condition, 'type': 'true_body_start'}
-            false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
+            if 'false_body' in exp:
+                false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
                                     'guard_exp': false_condition, 'type': 'false_body_start'}
 
             function.addTransition(true_exp_transition)
@@ -459,30 +457,76 @@ def superFunctionDefinition(packet):
                         function.addTransition(function_fail)
                         function.addTransition(function_complete)
 
-            function.addTransition(false_exp_transition)
-            for index, stmnt in enumerate(false_body):
-                function.addTransition(stmnt)
-                if stmnt['ntype'] == 'FunctionCall':
-                    if index == len(false_body) - 1:
-                        function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
-                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                        function.addTransition(function_fail)
-                        function.addTransition(function_complete)
+            if 'false_body' in exp:
+                function.addTransition(false_exp_transition)
 
-                    else:
-                        function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
-                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                        function.addTransition(function_fail)
-                        function.addTransition(function_complete)
+            if 'false_body' in exp:
+                for index, stmnt in enumerate(false_body):
+                    function.addTransition(stmnt)
+                    if stmnt['ntype'] == 'FunctionCall':
+                        if index == len(false_body) - 1:
+                            function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
+                            function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                            function.addTransition(function_fail)
+                            function.addTransition(function_complete)
+
+                        else:
+                            function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
+                            function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                            function.addTransition(function_fail)
+                            function.addTransition(function_complete)
+
+        elif exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
+            # exp_node = exp['args']
+            # for ignore_var in ignore_list:
+            #     if in_ignore_list(exp_node, ignore_var):
+            #         exp['args'] = None
+            #         function.addTransition(exp)
+            #     else:
+            #         function.addTransition(exp)
+            process_in_ignore_list(exp, 'args', ignore_list, function)
+            #function.addTransition(exp)
+            for param, param_type in params.items():
+                if param_type in VariableComponent['EnumVariables']:
+                    # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+                    guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
+                                                   **{'ntype': 'ParameterDeclarationStatement',
+                                                      'kind': 'AssignmentCheck'})
+                   # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
+                    param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                    function.addTransition(param_assignment)
 
         else:
-            function.addTransition(exp)
+            if 'exp' in exp or 'expression' in exp:
+                #exp_string = ET.tostring(exp['exp'], encoding='unicode', method='xml')
+                if 'exp' in exp:
+                #     exp_node = exp['exp']
+                # # elif 'expression' in exp:
+                # #     exp_node = exp['expression']
+                #
+                #     for ignore_var in ignore_list:
+                #         if in_ignore_list(exp_node, ignore_var):
+                #             exp['exp'] = None
+                #             function.addTransition(exp)
+                #         else:
+                #             function.addTransition(exp)
+                    process_in_ignore_list(exp, 'exp', ignore_list, function)
 
-    # for modifier_name in modifiers:
-    #     modifier_name.addEvent(name)
+                elif 'expression' in exp:
+                    # exp_node = exp['expression']
+                    # for ignore_var in ignore_list:
+                    #     if in_ignore_list(exp_node, ignore_var):
+                    #         exp['expression'] = None
+                    #         function.addTransition(exp)
+                    #     else:
+                    #         function.addTransition(exp)
+                    process_in_ignore_list(exp, 'expression', ignore_list, function)
+
 
     addAutomata(function)
     return Supremica
+
+ignore_list = ['pot', 'tmp', 'bet']
 
 
 def superVariableDeclarationStatement(packet):
@@ -490,11 +534,37 @@ def superVariableDeclarationStatement(packet):
 
 ################ Adding framework behaviour ################################################
 
-# Assign Sender
+################ Adding in_ignore_list ################################################
 
+def in_ignore_list(element, search_string):
+    # Check if the search string is in the element's text
+    if element.text and search_string in element.text:
+        return True
 
-# transfer function 
+    # Check if the search string is in the element's tail text
+    if element.tail and search_string in element.tail:
+        return True
 
+    # Check if the search string is in any of the element's attributes
+    for attribute in element.attrib.values():
+        if search_string in attribute:
+            return True
 
-# for k,v in Supremica.items():
-#     print(k,v)
+    # Recursively check all child elements
+    for child in element:
+        if in_ignore_list(child, search_string):
+            return True
+
+    # If none of the conditions are met
+    return False
+
+################ Processing if in in_ignore_list ################################################
+
+def process_in_ignore_list(exp, exp_key, ignore_list, function):
+    exp_node = exp[exp_key]
+    for ignore_var in ignore_list:
+        if in_ignore_list(exp_node, ignore_var):
+            exp[exp_key] = None
+            break
+
+    function.addTransition(exp)

@@ -201,3 +201,14 @@ def wmodify_assignment(lhs, op, rhs, **info):
         #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml')) # thanks copilot
 
         return BinaryExpression
+
+
+
+
+def replace_identifier(root, old_name, new_name):
+
+    for element in root.iter():
+        if element.get('Name') == old_name:
+            element.set('Name', new_name)
+
+    return root

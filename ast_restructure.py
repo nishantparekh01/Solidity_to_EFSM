@@ -18,7 +18,7 @@ def get_ntype_eval_exp(transition):
         return None
 
 
-def restrucrue(pre_supremica):
+def restructure(pre_supremica):
     processing_node = {}
 
     for efsm in pre_supremica['Components']:
@@ -61,7 +61,7 @@ def check_false_evaluate(transition, efsm, transition_name):
 # final for loop run
 
 # calling the function to restructure the pre_supremica
-restrucrue(pre_supremica)
+restructure(pre_supremica)
 
 # removing transitions with evaluate_exp as False
 for efsm in pre_supremica['Components']:

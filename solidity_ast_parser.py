@@ -4,6 +4,7 @@
 from efsm_framework import *
 import xml.etree.ElementTree as ET
 from wmodify import *
+import copy
 
 def ntype(node):
     return node['nodeType']
@@ -41,8 +42,40 @@ def handleVariableDeclaration(node):
     assert ntype(node) == 'VariableDeclaration', " Node not VariableDeclaration"
     name = node['name']
     var_type = lookup_table[ntype(node['typeName'])](node['typeName'])
+
+    # checking if var_type is already defined as a struct
+    if var_type in VariableComponent['StructVariables']:
+        #print('Struct found', var_type)
+        #print(VariableComponent['StructVariables'][var_type])
+        struct_var_attributes = VariableComponent['StructVariables'][var_type]
+
+        # Now generating the names for object of the struct
+        for attr in struct_var_attributes:
+            var_struct = name + "_" + attr
+            print('Struct variable:', var_struct)
+            # Now adding the struct variable to the VariableComponent with value as the attribute of the struct
+
+            # replace the attr with var_struct
+            base_attr_xml = copy.deepcopy(VariableComponent[attr])
+            base_attr_xml_updated = replace_identifier(base_attr_xml, attr, var_struct)
+
+            VariableComponent[var_struct] = base_attr_xml_updated
+            print('Struct variable added to VariableComponent:', VariableComponent[var_struct])
+
+
+
     #return str(var_type + " : " + name)
-    packet = {'name': name, 'type': var_type}
+    if isinstance(var_type, dict):
+        if var_type['ntype'] == 'Mapping':
+            # print("Mapping found")
+            # print(var_type['key_value'])
+            packet = {'name': name, 'type': var_type['ntype'], 'key_value': var_type['key_value']}
+            #print(packet)
+
+
+    else:
+        packet = {'name': name, 'type': var_type}
+    #print(packet)
 
     if superVariableDeclaration(packet):
         return  True
@@ -110,6 +143,10 @@ def handleBinaryOperation(node):
 def handleFunctionCall(node):
     assert ntype(node) == 'FunctionCall', "Node not FunctionCall"
     name = lookup_table[ntype(node['expression'])](node['expression'])
+    kind = str()
+    if 'kind' in node:
+        kind = node['kind']
+
     if name == 'keccak256':
         arg = node['arguments'][0]['arguments'][0]['name']
     else:
@@ -286,6 +323,7 @@ def handleStructDefinition(node):
     #members = "\n".join(members)
     name = node['name']
     packet = {'name': name, 'members': members}
+    print(packet)
     if superStructDefinition(packet):
         return True
     #return str (name + " {\n" + members + "\n}")
@@ -294,7 +332,19 @@ def handleMapping(node):
     assert ntype(node) == 'Mapping', "Node not Mapping"
     key = lookup_table[ntype(node['keyType'])](node['keyType'])
     value = lookup_table[ntype(node['valueType'])](node['valueType'])
-    return  str( key + " => "  + value)
+    key_value = str()
+    node_type = 'Mapping'
+    # return  str( key + " => "  + value)
+    # Currently only handling the key value pair of type address -> uint
+    # We assume that all the variable of 'address' type have been declared in the contract before mapping
+    if key == 'address' and (value == 'uint' or value == 'uint256'):
+        key_value  = 'address_uint'
+    packet = {'ntype':node_type, 'key_value': key_value}
+    print(packet)
+    return packet
+
+
+
 
 def handleIndexAccess(node):
     assert ntype(node) == 'IndexAccess' , "Node not IndexAccess"
@@ -302,8 +352,8 @@ def handleIndexAccess(node):
     index = lookup_table[ntype(node['indexExpression'])](node['indexExpression'])
     return  str( base + "[" + index + "]")
 
-def structConstructorCall(node):
-    assert ntype(node) == 'StructConstructorCall', "Node not StructConstructorCall"
+
+
 
 
 

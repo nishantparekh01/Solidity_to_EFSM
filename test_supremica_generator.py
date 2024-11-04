@@ -164,7 +164,7 @@ def process_contract_in_memory(contract_file):
 
 
 # Example usage
-contract_file = r'smart_contracts/escrow_v2_blocking.sol'  # Replace with the path to your contract
+contract_file = r'smart_contracts/casino_blocking.sol'  # Replace with the path to your contract
 try:
     final_result = process_contract_in_memory(contract_file)
 except Exception as e:

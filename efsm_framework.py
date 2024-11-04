@@ -310,6 +310,18 @@ def superVariableDeclaration(packet):
         xml_VariableInitial.append(xml_initialValue)
         VariableComponent[name] = xml_VariableComponent
 
+    elif type == 'Mapping':
+        #print(packet)
+        #{'name': 'withdrawable', 'type': 'Mapping', 'key_value': 'address_uint'}
+        mapping_name = packet['name']
+        mapping_key_value  = packet['key_value']
+        if mapping_key_value == 'address_uint':
+            AddressVariables = VariableComponent['AddressVariables']
+            # generate variable names combining address and mapping name
+            for declared_address in AddressVariables.keys():
+                print(mapping_name + '_'+ declared_address)
+
+        gyg = gyg - 2
 
 def addAutomata(efsm):
     global Components
@@ -351,6 +363,8 @@ def superFunctionDefinition(packet):
     global false_body
     name = packet['name']
     params = packet['params']
+    global param_assigned
+    param_assigned = False
     body = packet['body']
     modifiers = packet['modifiers']
 
@@ -486,15 +500,20 @@ def superFunctionDefinition(packet):
             #         function.addTransition(exp)
             process_in_ignore_list(exp, 'args', ignore_list, function)
             #function.addTransition(exp)
-            for param, param_type in params.items():
-                if param_type in VariableComponent['EnumVariables']:
-                    # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
-                    guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
-                                                   **{'ntype': 'ParameterDeclarationStatement',
-                                                      'kind': 'AssignmentCheck'})
-                   # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
-                    param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-                    function.addTransition(param_assignment)
+
+            # Parameter assignment place here so that it is called after the require statement if any require statement is present
+            if param_assigned == False:
+                for param, param_type in params.items():
+                    #print(param, param_type, 'param and param_type')
+                    if param_type in VariableComponent['EnumVariables']:
+                        # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+                        guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
+                                                       **{'ntype': 'ParameterDeclarationStatement',
+                                                          'kind': 'AssignmentCheck'})
+                       # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
+                        param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                        function.addTransition(param_assignment)
+                        param_assigned = True
 
         else:
             if 'exp' in exp or 'expression' in exp:

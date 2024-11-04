@@ -143,6 +143,8 @@ class EFSM:
                     #     action_exp = None
                     action_exp = expression['exp']
                     # action_exp = ET.tostring(expression['exp'], encoding='unicode', method='xml')
+
+
             elif expression['ntype'] == 'VariableDeclarationStatement':
                 if expression['kind'] == 'conditional':
                     # condition = expression['condition']
@@ -164,6 +166,7 @@ class EFSM:
                         transition_type = expression['type']
                 #         # guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
                 #         # action_exp = expression['exp'] # Assumption: only one expression in the body
+
 
 
         transition = {
@@ -514,6 +517,18 @@ def superFunctionDefinition(packet):
                         param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
                         function.addTransition(param_assignment)
                         param_assigned = True
+
+        elif exp['ntype'] == 'Assignment' and exp['kind'] == 'structConstructorCall':
+            print('Struct Constructor Call')
+            for attr_assignments in exp['exp']:
+                #function.addTransition(attr_assignments)
+                #print(attr_assignments)
+                 exp = {'ntype': 'Assignment', 'kind': 'simple', 'exp': attr_assignments}
+                 print(exp)
+                 #process_in_ignore_list(    attr_assignments, 'exp', ignore_list, function)
+                 function.addTransition(exp)
+                 print('assignment added')
+            #print(asdf)
 
         else:
             if 'exp' in exp or 'expression' in exp:

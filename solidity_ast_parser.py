@@ -13,7 +13,7 @@ def handleMemberAccess(node):
     assert ntype(node) == 'MemberAccess', "Node not MemberAccess"
 
     memberName = node['memberName']
-    name = lookup_table[ntype(node['expression'])](node['expression']) # name = {'ntype': 'FunctionCall', 'name' : name, 'args' : 'msg.sender'}
+    #name = lookup_table[ntype(node['expression'])](node['expression']) # name = {'ntype': 'FunctionCall', 'name' : name, 'args' : 'msg.sender'} or name = wager
 
     if ntype(node['expression']) == 'FunctionCall' and node['expression']['kind'] == 'typeConversion':
         name = node['expression']['arguments'][0]['name']
@@ -21,7 +21,13 @@ def handleMemberAccess(node):
     else:
         name = lookup_table[ntype(node['expression'])](node['expression'])
 
-    #name = node['expression']['name']
+    for members in VariableComponent['StructVariables'].values():
+        if memberName in members:
+            print('Struct variable found:', memberName)
+            #print(asdf)
+            return name + "_" + memberName
+
+
     if isinstance(name, dict):
         return name['args'] + "." + memberName
         # example:
@@ -229,13 +235,30 @@ def handleAssignment(node):
     lhs = lookup_table[ntype(node['leftHandSide'])](node['leftHandSide'])
     op = node['operator']
     rhs = lookup_table[ntype(node['rightHandSide'])](node['rightHandSide'])
+    node_rhs = node['rightHandSide']
     kind = 'simple'
 
     if isinstance(rhs, dict):
-        if rhs['ntype'] == 'FunctionCall':
+        if rhs['ntype'] == 'FunctionCall' and node_rhs['kind'] != 'structConstructorCall':
             #rhs = str(rhs['name'] + "(" + rhs['args'] + ")")
             #exp = str(lhs + " " +op + " " + rhs['name'] + "(" + rhs['args'] + ")")
             exp = wmodify_assignment(lhs, op, rhs)
+
+        elif rhs['ntype'] == 'FunctionCall' and node_rhs['kind'] == 'structConstructorCall':
+            var_name = lhs # wager
+            exp = []
+            for index, attr_name in enumerate(node_rhs['names']):
+                struct_var = var_name + "_" + attr_name
+                node_rhs_arg_value  = lookup_table[ntype(node_rhs['arguments'][index])](node_rhs['arguments'][index])
+                print(struct_var + " = " + node_rhs_arg_value)
+                exp.append(wmodify_assignment(struct_var, "=", node_rhs_arg_value))
+
+            return {'ntype': ntype(node), 'kind' : 'structConstructorCall', 'exp' : exp}
+
+
+
+
+
         elif rhs['ntype'] == 'Conditional':
             kind = 'conditional'
             return {'ntype': ntype(node), 'kind' : kind, 'lhs' : lhs, 'op' : op, 'condition' : rhs['condition'], 'true_exp' : rhs['true_exp'], 'false_exp' : rhs['false_exp']}

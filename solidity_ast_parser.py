@@ -4,30 +4,15 @@
 from efsm_framework import *
 import xml.etree.ElementTree as ET
 from wmodify import *
-import copy
 
 def ntype(node):
     return node['nodeType']
 
 def handleMemberAccess(node):
     assert ntype(node) == 'MemberAccess', "Node not MemberAccess"
-
     memberName = node['memberName']
-    #name = lookup_table[ntype(node['expression'])](node['expression']) # name = {'ntype': 'FunctionCall', 'name' : name, 'args' : 'msg.sender'} or name = wager
-
-    if ntype(node['expression']) == 'FunctionCall' and node['expression']['kind'] == 'typeConversion':
-        name = node['expression']['arguments'][0]['name']
-
-    else:
-        name = lookup_table[ntype(node['expression'])](node['expression'])
-
-    for members in VariableComponent['StructVariables'].values():
-        if memberName in members:
-            print('Struct variable found:', memberName)
-            #print(asdf)
-            return name + "_" + memberName
-
-
+    name = lookup_table[ntype(node['expression'])](node['expression']) # name = {'ntype': 'FunctionCall', 'name' : name, 'args' : 'msg.sender'}
+    #name = node['expression']['name']
     if isinstance(name, dict):
         return name['args'] + "." + memberName
         # example:
@@ -35,9 +20,10 @@ def handleMemberAccess(node):
     else:
         #return str(name + '.' + memberName)
         if memberName == 'transfer':
-            return {'name':name + memberName , 'type': 'transfer'}
+            return {'name':name + memberName + '1', 'type': 'transfer'}
         else:
             return memberName
+        # example :
 
 def handleIdentifier(node):
     assert ntype(node) == 'Identifier', "Node not Identifier"
@@ -48,40 +34,8 @@ def handleVariableDeclaration(node):
     assert ntype(node) == 'VariableDeclaration', " Node not VariableDeclaration"
     name = node['name']
     var_type = lookup_table[ntype(node['typeName'])](node['typeName'])
-
-    # checking if var_type is already defined as a struct
-    if var_type in VariableComponent['StructVariables']:
-        #print('Struct found', var_type)
-        #print(VariableComponent['StructVariables'][var_type])
-        struct_var_attributes = VariableComponent['StructVariables'][var_type]
-
-        # Now generating the names for object of the struct
-        for attr in struct_var_attributes:
-            var_struct = name + "_" + attr
-            print('Struct variable:', var_struct)
-            # Now adding the struct variable to the VariableComponent with value as the attribute of the struct
-
-            # replace the attr with var_struct
-            base_attr_xml = copy.deepcopy(VariableComponent[attr])
-            base_attr_xml_updated = replace_identifier(base_attr_xml, attr, var_struct)
-
-            VariableComponent[var_struct] = base_attr_xml_updated
-            print('Struct variable added to VariableComponent:', VariableComponent[var_struct])
-
-
-
     #return str(var_type + " : " + name)
-    if isinstance(var_type, dict):
-        if var_type['ntype'] == 'Mapping':
-            # print("Mapping found")
-            # print(var_type['key_value'])
-            packet = {'name': name, 'type': var_type['ntype'], 'key_value': var_type['key_value']}
-            #print(packet)
-
-
-    else:
-        packet = {'name': name, 'type': var_type}
-    #print(packet)
+    packet = {'name': name, 'type': var_type}
 
     if superVariableDeclaration(packet):
         return  True
@@ -149,10 +103,6 @@ def handleBinaryOperation(node):
 def handleFunctionCall(node):
     assert ntype(node) == 'FunctionCall', "Node not FunctionCall"
     name = lookup_table[ntype(node['expression'])](node['expression'])
-    kind = str()
-    if 'kind' in node:
-        kind = node['kind']
-
     if name == 'keccak256':
         arg = node['arguments'][0]['arguments'][0]['name']
     else:
@@ -160,9 +110,8 @@ def handleFunctionCall(node):
             arg = ""
         else:
             arg_list = []
-            arg = lookup_table[ntype(node['arguments'][0])](node['arguments'][0])
-            # for a in node['arguments']:
-            #     arg = lookup_table[ntype(a)](a)
+            for a in node['arguments']:
+                arg = lookup_table[ntype(a)](a)
                 # if isinstance(arg, dict):
                 #     arg_list.append(str(arg['name'] + "(" + arg['args'] + ")"))
                 # else:
@@ -197,13 +146,11 @@ def handleBlock(node):
 
 def handleParameterList(node):
     assert ntype(node) == 'ParameterList', "Node not ParameterList"
-    parameters = {}
+    parameters = []
     for p in node['parameters']:
-        param_name = lookup_table[ntype(p)](p) # name of the parameter
-        param_type = lookup_table[ntype(p['typeName'])](p['typeName']) # type of the parameter
-        parameters[param_name] = param_type # add the parameter to the dictionary
-
-    # need to return the parameters as a dictionary
+        param = lookup_table[ntype(p)](p)
+        parameters.append(param)
+    # need to return the parameters as a list
     #params = ', '.join(parameters)
     return parameters
 
@@ -217,15 +164,15 @@ def handleModifierDefinition(node):
     super_struct = superModifierDefinition(packet)
     return super_struct
 
+
+    #return (name + "(" + params + ")" + "{" + "\n" + body + " " + "\n" + "}")
+
 def handleFunctionDefinition(node):
     assert ntype(node) == 'FunctionDefinition', "Node not FunctionDefinition"
     packet = {}
     packet['body'] = lookup_table[ntype(node['body'])](node['body'])
     packet['params'] = lookup_table[ntype(node['parameters'])](node['parameters'])
     packet['name'] = node['name']
-    if packet['name'] == "": # The constructor as no name
-        # do nothing
-        return
     packet['modifiers'] = [lookup_table[ntype(m)](m) for m in node['modifiers']]
     super_struct = superFunctionDefinition(packet)
     return super_struct
@@ -235,30 +182,13 @@ def handleAssignment(node):
     lhs = lookup_table[ntype(node['leftHandSide'])](node['leftHandSide'])
     op = node['operator']
     rhs = lookup_table[ntype(node['rightHandSide'])](node['rightHandSide'])
-    node_rhs = node['rightHandSide']
     kind = 'simple'
 
     if isinstance(rhs, dict):
-        if rhs['ntype'] == 'FunctionCall' and node_rhs['kind'] != 'structConstructorCall':
+        if rhs['ntype'] == 'FunctionCall':
             #rhs = str(rhs['name'] + "(" + rhs['args'] + ")")
             #exp = str(lhs + " " +op + " " + rhs['name'] + "(" + rhs['args'] + ")")
             exp = wmodify_assignment(lhs, op, rhs)
-
-        elif rhs['ntype'] == 'FunctionCall' and node_rhs['kind'] == 'structConstructorCall':
-            var_name = lhs # wager
-            exp = []
-            for index, attr_name in enumerate(node_rhs['names']):
-                struct_var = var_name + "_" + attr_name
-                node_rhs_arg_value  = lookup_table[ntype(node_rhs['arguments'][index])](node_rhs['arguments'][index])
-                print(struct_var + " = " + node_rhs_arg_value)
-                exp.append(wmodify_assignment(struct_var, "=", node_rhs_arg_value))
-
-            return {'ntype': ntype(node), 'kind' : 'structConstructorCall', 'exp' : exp}
-
-
-
-
-
         elif rhs['ntype'] == 'Conditional':
             kind = 'conditional'
             return {'ntype': ntype(node), 'kind' : kind, 'lhs' : lhs, 'op' : op, 'condition' : rhs['condition'], 'true_exp' : rhs['true_exp'], 'false_exp' : rhs['false_exp']}
@@ -328,16 +258,12 @@ def handleIfStatement(node):
     false_condition = ET.Element("UnaryExpression", Operator = "!")
     false_condition.append(true_condition)
 
-    if 'falseBody' in node:
-        false_body = lookup_table[ntype(node['falseBody'])](node['falseBody'])
+    false_body = lookup_table[ntype(node['falseBody'])](node['falseBody'])
     #print(false_body)
     true_body = lookup_table[ntype(node['trueBody'])](node['trueBody'])
     #print(true_body)
     #return  str("if" + "( " + condition+" )" + "{\n\t"  + true_body + "\n" + "} " + "else "  + "{\n\t" + false_body + "\n" + "} ")
-    if 'falseBody' in node:
-        return {'ntype': ntype(node), 'true_condition' : true_condition,'false_condition': false_condition, 'true_body' : true_body, 'false_body' : false_body}
-    else:
-        return {'ntype': ntype(node), 'true_condition' : true_condition,'true_body' : true_body}
+    return {'ntype': ntype(node), 'true_condition' : true_condition,'false_condition': false_condition, 'true_body' : true_body, 'false_body' : false_body}
 
 
 def handleStructDefinition(node):
@@ -346,7 +272,6 @@ def handleStructDefinition(node):
     #members = "\n".join(members)
     name = node['name']
     packet = {'name': name, 'members': members}
-    print(packet)
     if superStructDefinition(packet):
         return True
     #return str (name + " {\n" + members + "\n}")
@@ -355,19 +280,7 @@ def handleMapping(node):
     assert ntype(node) == 'Mapping', "Node not Mapping"
     key = lookup_table[ntype(node['keyType'])](node['keyType'])
     value = lookup_table[ntype(node['valueType'])](node['valueType'])
-    key_value = str()
-    node_type = 'Mapping'
-    # return  str( key + " => "  + value)
-    # Currently only handling the key value pair of type address -> uint
-    # We assume that all the variable of 'address' type have been declared in the contract before mapping
-    if key == 'address' and (value == 'uint' or value == 'uint256'):
-        key_value  = 'address_uint'
-    packet = {'ntype':node_type, 'key_value': key_value}
-    print(packet)
-    return packet
-
-
-
+    return  str( key + " => "  + value)
 
 def handleIndexAccess(node):
     assert ntype(node) == 'IndexAccess' , "Node not IndexAccess"
@@ -375,8 +288,8 @@ def handleIndexAccess(node):
     index = lookup_table[ntype(node['indexExpression'])](node['indexExpression'])
     return  str( base + "[" + index + "]")
 
-
-
+def structConstructorCall(node):
+    assert ntype(node) == 'StructConstructorCall', "Node not StructConstructorCall"
 
 
 

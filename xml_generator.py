@@ -1,8 +1,5 @@
 from add_events_nodes import *
 import xml.etree.ElementTree as ET
-from datetime import datetime
-import os
-
 
 # pre_supremica is imported from add_events_nodes.py
 # pre_supremica is in the form of a dictionary
@@ -56,11 +53,18 @@ VariableComponent_value = ET.Element("VariableComponent",  Name = "value")
 VariableRange_value = ET.SubElement(VariableComponent_value, "VariableRange")
 BinaryExpression_value = wmodify_assignment("0", "..", "1")
 VariableRange_value.append(BinaryExpression_value)
-
+# BinaryExpression_value = ET.SubElement(VariableRange_value, "BinaryExpression", Operator = "..")
+# IntConstant_value_0 = ET.SubElement(BinaryExpression_value, "IntConstant", Value = "0")
+# IntConstant_value_1 = ET.SubElement(BinaryExpression_value, "IntConstant", Value = "1")
 
 VariableInitial_value = ET.SubElement(VariableComponent_value, "VariableInitial")
 BinaryExpression_value_init = wmodify_assignment("value", "==", "0")
 VariableInitial_value.append(BinaryExpression_value_init)
+
+# used wmodify_assignment function to create the BinaryExpression instead of code below
+# BinaryExpression_value_init = ET.SubElement(VariableInitial_value, "BinaryExpression", Operator = "==")
+# SimpleIdentifier_value = ET.SubElement(BinaryExpression_value_init, "SimpleIdentifier", Name = "value")
+# IntConstant_value_init = ET.SubElement(BinaryExpression_value_init, "IntConstant", Value = "0")
 
 ComponentList.append(VariableComponent_value)
 
@@ -80,7 +84,6 @@ for address in sender_list.values():
     EnumSetExpression_sender.append(ET.Element("SimpleIdentifier", Name = address))
 
 # adding initial value to 'sender'
-# Ideally this value should be the one which is assigned in the constructor of the contract
 VariableInitial_sender = ET.SubElement(VariableComponent_sender, "VariableInitial")
 BinaryExpression_sender_init = wmodify_assignment("sender", "==", "x0001")
 VariableInitial_sender.append(BinaryExpression_sender_init)
@@ -119,55 +122,10 @@ for efsm in pre_supremica['Components']:
         Graph.append(xml_NodeList)
         Graph.append(xml_EdgeList)
 
-#############################################################################################################
-
-# Adding assignSender from string format to xml
-file_path_assignSender = r'C:\Users\nishantp\PyCharmProjects\Casino conversion\venv\Scripts\test\assignSender.xml'
-
-assignSender_string = ET.parse(file_path_assignSender)
-
-ComponentList.append(assignSender_string.getroot())
-add_events_to_xml('assignSev')
-
 
 
 
 print('______________________________________________________')
 
 
-
-timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
-
-
-# Define the folder where you want to store the output files
-base_folder = r'C:\Users\nishantp\OneDrive - Chalmers\Casino\Casino_Nishant\casino\Output test files'
-
-
-# Create a unique folder name using the current timestamp
-output_folder = os.path.join(base_folder, f"output_{timestamp}")
-
-# Create new output folder
-os.makedirs(f"{output_folder}")
-
-
-# Generate a unique filename using the current timestamp
-filename = os.path.join(base_folder, f"{output_folder}\\output_{timestamp}.wmod")
-
-# Text file containing a short summary of changes made
-filename_txt = os.path.join(base_folder,f"{output_folder}\\output_{timestamp}.txt")
-
-
-
-# Open the file and write the output
-with open(filename, 'w') as file:
-    print(ET.tostring(Module, encoding='utf8').decode('utf8'), file=file)
-
-summary = (""" Adding the eventtransferX and eventtransferFail events to EventDecl list
-""")
-
-with open(filename_txt, 'w') as file:
-    print(summary, file=file)
-
-print(f"Output written to {output_folder}")
-
-#print(ET.tostring(Module, encoding='utf8').decode('utf8'))
+print(ET.tostring(Module, encoding='utf8').decode('utf8'))

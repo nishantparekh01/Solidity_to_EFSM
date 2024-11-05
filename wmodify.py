@@ -1,6 +1,8 @@
 # importing modules
 import xml.etree.ElementTree as ET
 
+# Initial node = S0
+INITIAL_NODE = 'S0'
 
 # to check if a variable with str in it can be converted to an int or not
 def is_integer(variable):
@@ -19,8 +21,8 @@ def add_nodes_to_xml(node_list):
     # Exameple of node_list = ['S0', 'S1', 'S2', 'S3']
     NodeList = ET.Element("NodeList")
     for node in node_list:
-        if node == 'S0':
-            SimpleNode = ET.SubElement(NodeList, "SimpleNode", Initial = "true",  Name = node)
+        if node == INITIAL_NODE:
+            SimpleNode = ET.SubElement(NodeList, "SimpleNode", Initial = "true",  Name = node) # Initial = "true" is added to the first node
             EventList = ET.SubElement(SimpleNode, "EventList")
             SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name = ":accepting")
         else:
@@ -88,6 +90,55 @@ def wmodify_assignment(lhs, op, rhs, **info):
                 #print(print(ET.tostring(BinaryExpression, encoding='unicode', method='xml')))
                 return BinaryExpression
 
+        elif info['ntype'] == 'ParameterDeclarationStatement':
+
+            if info['kind'] == 'AssignmentCheck':
+                # lhs = param
+                # op = ==
+                # rhs = ['HEADS', 'TAILS']
+                # expression to be geenrate = param' == 'HEADS' | param' == 'TAILS'
+
+                root_expression = ET.Element("BinaryExpression", Operator = "|")
+                previous_expression = None
+
+                if len(rhs) == 2:
+                    binary_expression1 = ET.Element("BinaryExpression", Operator="==")
+                    lhs_assignment1 = ET.SubElement(binary_expression1, "UnaryExpression", Operator="'")
+                    ET.SubElement(lhs_assignment1, "SimpleIdentifier", Name=lhs)
+                    ET.SubElement(binary_expression1, "SimpleIdentifier", Name=rhs[0])
+
+                    # Create the second binary expression
+                    binary_expression2 = ET.Element("BinaryExpression", Operator="==")
+                    lhs_assignment2 = ET.SubElement(binary_expression2, "UnaryExpression", Operator="'")
+                    ET.SubElement(lhs_assignment2, "SimpleIdentifier", Name=lhs)
+                    ET.SubElement(binary_expression2, "SimpleIdentifier", Name=rhs[1])
+
+                    # Create an OR binary expression combining the two
+                    root_expression.append(binary_expression1)
+                    root_expression.append(binary_expression2)
+                else:
+                    for value in rhs:
+                        BinaryExpression = ET.Element("BinaryExpression", Operator = "==")
+                        lhs_assignment = ET.SubElement(BinaryExpression, "UnaryExpression", Operator = "'")
+                        ET.SubElement(lhs_assignment, "SimpleIdentifier", Name = str(lhs))
+
+                        # creating rhs
+                        ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(value))
+
+                        if previous_expression is None:
+                            previous_expression = BinaryExpression
+                        else:
+                            or_expression = ET.Element("BinaryExpression", Operator = "|")
+                            or_expression.append(previous_expression)
+                            or_expression.append(BinaryExpression)
+                            previous_expression = or_expression
+
+                    root_expression.append(previous_expression)
+
+                return root_expression
+
+
+
 
 
     else:
@@ -96,11 +147,6 @@ def wmodify_assignment(lhs, op, rhs, **info):
             BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs['args']))
-
-
-            #print(rhs['args'])
-            #print(rhs['name'])
-            #rhs = str(lhs + " "  + op + " " + str(rhs['name'] + "(" + rhs['args'] + ")"))
 
 
         # if the binary expression is a simple assignment
@@ -133,7 +179,6 @@ def wmodify_assignment(lhs, op, rhs, **info):
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
             BinaryExpression.append(rhs)
             #BinaryExpression.append(rhs)
-            #print('-------------------xml party here--------------------------')
             #print(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             return BinaryExpression
@@ -149,16 +194,21 @@ def wmodify_assignment(lhs, op, rhs, **info):
                 BinaryExpression.append(lhs)
                 SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs))
             #BinaryExpression.append(rhs)
-            #print('-------------------lhs:xml, rhs:str --------------------------')
             #print(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             return BinaryExpression
 
-        # Convert this to a string and return
-        #print(ET.tostring(BinaryExpression))
-        #print(type(BinaryExpression))
-
-        #print(str(ET.tostring(BinaryExpression, encoding='unicode', method='xml')))
         #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml')) # thanks copilot
 
         return BinaryExpression
+
+
+
+
+def replace_identifier(root, old_name, new_name):
+
+    for element in root.iter():
+        if element.get('Name') == old_name:
+            element.set('Name', new_name)
+
+    return root

@@ -126,6 +126,8 @@ file_path_assignSender = r'C:\Users\nishantp\PyCharmProjects\Casino conversion\v
 
 assignSender_string = ET.parse(file_path_assignSender)
 
+print('hello')
+
 ComponentList.append(assignSender_string.getroot())
 add_events_to_xml('assignSev')
 

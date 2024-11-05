@@ -525,8 +525,8 @@ def superFunctionDefinition(packet):
                 #print(attr_assignments)
                  exp = {'ntype': 'Assignment', 'kind': 'simple', 'exp': attr_assignments}
                  print(exp)
-                 #process_in_ignore_list(    attr_assignments, 'exp', ignore_list, function)
-                 function.addTransition(exp)
+                 process_in_ignore_list(    exp, 'exp', ignore_list, function)
+                 #function.addTransition(exp)
                  print('assignment added')
             #print(asdf)
 

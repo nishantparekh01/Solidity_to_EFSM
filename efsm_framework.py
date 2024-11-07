@@ -15,6 +15,7 @@
 import xml.etree.ElementTree as ET
 from wmodify import *
 from copy import deepcopy
+from json_contract import *  # load the list of nodes from the json_contract.py file corresponding to the contract
 
 Supremica = {}
 
@@ -483,8 +484,13 @@ def superFunctionDefinition(packet):
                     if stmnt['ntype'] == 'FunctionCall':
                         if index == len(false_body) - 1:
                             function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
-                            function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                            function.addTransition(function_fail)
+                            function_call_name = stmnt['name']
+                            if check_transfer_in_function(function_call_name):
+                                function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                                function.addTransition(function_fail)
+                            # else:
+                            # function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                            # function.addTransition(function_fail)
                             function.addTransition(function_complete)
 
                         else:
@@ -602,3 +608,27 @@ def process_in_ignore_list(exp, exp_key, ignore_list, function):
             break
 
     function.addTransition(exp)
+
+
+################ Checking through final_sol_list ################################################
+
+#print(final_sol_list)
+
+def check_transfer_in_function(function_name):
+    for node in final_sol_list:
+        if node['nodeType'] == 'FunctionDefinition' and node['name'] == function_name:
+            # convert node into a string
+            node_string = str(node) # convert the node into a string
+            # check if the function name is present in the node_string
+            if 'transfer' in node_string:
+                print('Hurrah! Transfer present in the function: ', function_name)
+                print(node['name'])
+                return True
+            else:
+                print('Transfer not present in the function: ', function_name)
+                print(node['name'])
+                return False
+
+
+
+#check_transfer_in_function('operatorWins')

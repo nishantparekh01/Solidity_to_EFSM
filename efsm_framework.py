@@ -38,6 +38,9 @@ VariableComponent['StructVariables'] = {}
 # creating a dictionary to store all generated addresses
 VariableComponent['AddressVariables'] = {}
 
+# creating a dictionary to store all generated boolean variables
+VariableComponent['BooleanVariables'] = {}
+
 # declaring address_index to keep track of address variables
 address_index = 0
 
@@ -129,11 +132,11 @@ class EFSM:
 
             elif expression['ntype'] == 'Assignment':
                 if expression['kind'] == 'conditional':
-                    guard_exp = expression['condition']
-                    true_body = expression['lhs'] + ' = ' + expression['true_exp']
-                    false_body = expression['lhs'] + ' = ' + expression['false_exp']
-                    true_expression_dict = {'ntype': 'Assignment', 'kind': 'simple', 'exp': true_body}
-                    false_expression_dict = {'ntype': 'Assignment', 'kind': 'simple', 'exp': false_body}
+                    guard_exp = expression['expression']
+                    # true_body = expression['lhs'] + ' = ' + expression['true_exp']
+                    # false_body = expression['lhs'] + ' = ' + expression['false_exp']
+                    # true_expression_dict = {'ntype': 'Assignment', 'kind': 'simple', 'exp': true_body}
+                    # false_expression_dict = {'ntype': 'Assignment', 'kind': 'simple', 'exp': false_body}
 
                     # self.addTransition(true_expression_dict)
                     # self.addTransition(false_expression_dict)
@@ -326,6 +329,24 @@ def superVariableDeclaration(packet):
                 print(mapping_name + '_'+ declared_address)
 
         gyg = gyg - 2
+    elif type == 'bool':
+        members =['false', 'true']
+
+        xml_VariableComponent = ET.Element("VariableComponent", Name=name)
+        xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
+        xml_EnumSetExpression = ET.SubElement(xml_variableRange, "EnumSetExpression")
+        for mem in members:
+            ET.SubElement(xml_EnumSetExpression, "SimpleIdentifier", Name=mem)
+
+        xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
+        xml_initialValue = wmodify_assignment(name, "==", members[0])
+        xml_VariableInitial.append(xml_initialValue)
+        VariableComponent[name] = xml_VariableComponent
+        #print('bool variable added', name)
+
+        # Add this to the dictionary AddressVariables
+        VariableComponent['BooleanVariables'][name] = members
+        print('Boolean Variables: ', VariableComponent['BooleanVariables'])
 
 def addAutomata(efsm):
     global Components

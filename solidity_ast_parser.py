@@ -132,6 +132,16 @@ def handleBinaryOperation(node):
         op = "&"
 
     #exp = str(lhs + " "  + op + " " + rhs)
+
+    # Case when lhs is a boolean value and used in a binary operation like if(isBuyerIn) then convert to isBuyerIn == true
+    if isinstance(lhs, str) and (lhs in VariableComponent['BooleanVariables']) and (rhs != 'true' or rhs != 'false'):
+        lhs_name = lhs
+        lhs = wmodify_assignment(lhs, "==", "true")
+
+    if isinstance(rhs, str) and (rhs in VariableComponent['BooleanVariables']) and (lhs_name in VariableComponent['BooleanVariables']):
+        print("Both are boolean variables")
+        rhs = wmodify_assignment(rhs, "==", "true")
+
     exp = wmodify_assignment(lhs, op, rhs)
     # if isinstance(exp, ET.Element):
     #     return str(ET.tostring(exp, encoding='utf-8', method='xml').decode('utf-8'))
@@ -261,7 +271,12 @@ def handleAssignment(node):
 
         elif rhs['ntype'] == 'Conditional':
             kind = 'conditional'
-            return {'ntype': ntype(node), 'kind' : kind, 'lhs' : lhs, 'op' : op, 'condition' : rhs['condition'], 'true_exp' : rhs['true_exp'], 'false_exp' : rhs['false_exp']}
+            print(ntype(node))
+            exp = wmodify_assignment(lhs,"==", rhs['true_exp'], **{'ntype': ntype(node), 'kind': 'conditional', 'name' : lhs, 'condition': rhs['condition'], 'true_exp': rhs['true_exp'], 'false_exp': rhs['false_exp']})
+            print('Expression conditional:',exp)
+            return {'ntype': ntype(node), 'kind' : 'conditional', 'expression' : exp}
+
+            #return {'ntype': ntype(node), 'kind' : kind, 'lhs' : lhs, 'op' : op, 'condition' : rhs['condition'], 'true_exp' : rhs['true_exp'], 'false_exp' : rhs['false_exp']}
     elif isinstance(rhs, ET.Element) or isinstance(rhs, str):
         exp = wmodify_assignment(lhs, op, rhs)
     #exp = wmodify_assignment(lhs, op, rhs)
@@ -313,6 +328,8 @@ def handleConditional(node):
     false_exp = lookup_table[ntype(node['falseExpression'])](node['falseExpression'])
     true_exp = lookup_table[ntype(node['trueExpression'])](node['trueExpression'])
     #return  str("(" + condition + ")" + "? " + true_exp + " : " + false_exp + ";")
+    print('true_exp:', true_exp)
+    print('false_exp:', false_exp)
     return {'ntype': ntype(node), 'condition' : condition, 'true_exp' : true_exp, 'false_exp' : false_exp}
 
 
@@ -320,6 +337,7 @@ def handleTupleExpression(node):
     assert ntype(node)  == 'TupleExpression', "Node not TupleExpression"
         # assumption - there is only expression here
     comp = lookup_table[ntype(node['components'][0])](node['components'][0])
+    print(comp)
     return comp
 
 def handleIfStatement(node):

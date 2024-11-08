@@ -49,6 +49,7 @@ def process_contract_in_memory(contract_file):
     # Proceed if the JSON data was successfully generated and loaded
     if clean_json:
         # Extract the relevant nodes
+        print(json.dumps(clean_json))
         sol_list = clean_json['nodes'][1]['nodes']
 
         # # Collect the final results in a list

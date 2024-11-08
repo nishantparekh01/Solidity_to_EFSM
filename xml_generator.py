@@ -135,7 +135,8 @@ add_events_to_xml('assignSev')
 
 
 print('______________________________________________________')
-
+#print(VariableComponent['AddressVariables'])
+#print(asdf)
 
 
 timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")

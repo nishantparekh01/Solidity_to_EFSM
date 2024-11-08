@@ -90,6 +90,38 @@ def wmodify_assignment(lhs, op, rhs, **info):
                 #print(print(ET.tostring(BinaryExpression, encoding='unicode', method='xml')))
                 return BinaryExpression
 
+        elif info['ntype'] == 'Assignment':
+            if info['kind'] == 'conditional':
+                # lhs = name, secret
+                # op = ==
+                # rhs = HEADS
+                true_condition = info['condition']
+
+                # creating false condition by appending true condition to unaryOperator = "!"
+                false_condition = ET.Element("UnaryExpression", Operator = "!")
+                false_condition.append(true_condition)
+
+                lhs_trueAssignment = wmodify_assignment(true_condition, "&", info['true_exp'], **{'ntype': 'Assignment', 'kind': 'AssignmentCheck', 'variableAssigned' : info['name']})
+
+                rhs_falseAssignment = wmodify_assignment(false_condition, "&", info['false_exp'], **{'ntype': 'Assignment', 'kind': 'AssignmentCheck', 'variableAssigned' : info['name']})
+
+                final_exp = wmodify_assignment(lhs_trueAssignment, "|", rhs_falseAssignment)
+
+                #print(print(ET.tostring(final_exp, encoding='unicode', method='xml')))
+                return final_exp
+
+            if info['kind'] == 'AssignmentCheck':
+                BinaryExpression = ET.Element("BinaryExpression", Operator=str(op))
+                BinaryExpression.append(lhs)
+
+                lhs_assignment = ET.Element("UnaryExpression", Operator = "'")
+                SimpleIdentifier = ET.SubElement(lhs_assignment, "SimpleIdentifier", Name = str(info['variableAssigned']))
+
+                rhs_wmod = wmodify_assignment(lhs_assignment, "==", str(rhs))
+                BinaryExpression.append(rhs_wmod)
+                #print(print(ET.tostring(BinaryExpression, encoding='unicode', method='xml')))
+                return BinaryExpression
+
         elif info['ntype'] == 'ParameterDeclarationStatement':
 
             if info['kind'] == 'AssignmentCheck':

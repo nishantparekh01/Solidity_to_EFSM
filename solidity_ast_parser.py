@@ -343,6 +343,10 @@ def handleTupleExpression(node):
 def handleIfStatement(node):
     assert ntype(node) == 'IfStatement', "Node not IfStatement"
     true_condition = lookup_table[ntype(node['condition'])](node['condition'])
+    if isinstance(true_condition, str): # if the condition is a string then check if it is a boolean variable. Example: if(isBuyerIn)
+        if true_condition in VariableComponent['BooleanVariables']:
+            true_condition = wmodify_assignment(true_condition, "==", "true")
+
     false_condition = ET.Element("UnaryExpression", Operator = "!")
     false_condition.append(true_condition)
 
@@ -355,7 +359,7 @@ def handleIfStatement(node):
     if 'falseBody' in node:
         return {'ntype': ntype(node), 'true_condition' : true_condition,'false_condition': false_condition, 'true_body' : true_body, 'false_body' : false_body}
     else:
-        return {'ntype': ntype(node), 'true_condition' : true_condition,'true_body' : true_body}
+        return {'ntype': ntype(node), 'true_condition' : true_condition,'true_body' : true_body, 'false_condition': false_condition}
 
 
 def handleStructDefinition(node):

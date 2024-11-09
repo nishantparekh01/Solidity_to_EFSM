@@ -26,10 +26,13 @@ contract RawMaterialEscrow{
     }
 
     function initContract() isCostMatched currentState(State.NOT_INITIATED) payable public{
-        isBuyerIn = ( msg.sender == buyer ) ? true : false ;
-        isSupplierIn = ( msg.sender == supplier ) ? true : false ;
-
-        if(isBuyerIn && isSupplierIn){
+        if(msg.sender == buyer){
+            isBuyerIn = true;
+        }
+        if(msg.sender == supplier){
+            isSupplierIn = true;
+        }
+        if(isBuyerIn){
             state = State.AWAITING_PAYMENT;
         }
     }

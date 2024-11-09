@@ -467,19 +467,28 @@ def superFunctionDefinition(packet):
 
         elif exp['ntype'] == 'IfStatement':
             true_condition = exp['true_condition']
-            if 'false_condition' in exp:
-                false_condition = exp['false_condition']
+            false_condition = exp['false_condition']
+            # if 'false_condition' in exp:
+            #     false_condition = exp['false_condition'] # always present
 
             true_body = exp['true_body']
 
             if 'false_body' in exp:
                 false_body = exp['false_body']
-
             true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
                                    'guard_exp': true_condition, 'type': 'true_body_start'}
+            # if len(true_body) == 1:
+            #     print('True body has only one statement')
+            #     true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
+            #                            'guard_exp': true_condition, 'type': 'true_body_last'}
+            # else:
+            #     true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
+            #                        'guard_exp': true_condition, 'type': 'true_body_start'}
             if 'false_body' in exp:
                 false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
                                     'guard_exp': false_condition, 'type': 'false_body_start'}
+            else:
+                false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false','guard_exp': false_condition, 'type': 'false_body_absent'}
 
             function.addTransition(true_exp_transition)
             for index, stmnt in enumerate(true_body):
@@ -488,6 +497,8 @@ def superFunctionDefinition(packet):
                     if index == len(true_body) - 1:
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
                         function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                        print('transition added', function_complete)
+                        print('fail transition added', function_fail)
                         function.addTransition(function_fail)
                         function.addTransition(function_complete)
                     else:
@@ -496,8 +507,11 @@ def superFunctionDefinition(packet):
                         function.addTransition(function_fail)
                         function.addTransition(function_complete)
 
-            if 'false_body' in exp:
-                function.addTransition(false_exp_transition)
+            # if 'false_body' in exp:
+            #     function.addTransition(false_exp_transition)
+            function.addTransition(false_exp_transition)
+
+
 
             if 'false_body' in exp:
                 for index, stmnt in enumerate(false_body):

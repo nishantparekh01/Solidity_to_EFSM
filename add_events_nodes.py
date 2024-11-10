@@ -230,6 +230,15 @@ for efsm in pre_supremica['Components']:
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'false_body_last':
+                            print('found some false last here')
+                            target_node = true_last_node
+                            node_id = int(target_node[-1])
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(condition_node, target_node)
+
                         elif processing_transition['transition_type'] == 'false_body_absent':
                             print('found some false_absent body here, last transition')
                             print(efsm, processing_transition)
@@ -313,6 +322,7 @@ for efsm in pre_supremica['Components']:
                             source_node = condition_node
 
                             target_node = get_new_node('target')
+                            print(efsm, processing_transition)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)

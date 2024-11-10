@@ -146,6 +146,8 @@ class EFSM:
                     # else:
                     #     action_exp = None
                     action_exp = expression['exp']
+                if 'type' in expression:
+                    transition_type = expression['type']
                     # action_exp = ET.tostring(expression['exp'], encoding='unicode', method='xml')
 
 
@@ -513,7 +515,15 @@ def superFunctionDefinition(packet):
 
             if 'false_body' in exp: # if false body is present
                 for index, stmnt in enumerate(false_body): # add transitions for each statement in the false body
-                    function.addTransition(stmnt)
+                    if index == len(false_body) - 1:  # if it is the last statement in the false body
+                        stmnt['type'] = 'false_body_last'
+                        function.addTransition(stmnt)
+                        if exp_index == len(body) - 1: # and if it is the last transition in the body
+                            function_complete = {'ntype': 'Simple','name': name + 'X', 'type': 'function_complete'}
+                            function.addTransition(function_complete)
+
+                    else:
+                        function.addTransition(stmnt)
                     if stmnt['ntype'] == 'FunctionCall':
                         if index == len(false_body) - 1: # flag the last statement in the false body, if statement is a function call
                             function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}

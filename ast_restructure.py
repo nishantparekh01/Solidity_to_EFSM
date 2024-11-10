@@ -31,8 +31,11 @@ def restructure(pre_supremica):
                 processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
                 if i != 0:
                     previous_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i - 1}']
+                if i != len(pre_supremica['Components'][efsm]['edge_list']) - 1:
+                    next_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i + 1}']
 
                 if processing_transition['transition_type'] == 'false_body_absent' or processing_transition['transition_type'] == 'false_body_last':
+                    print('false body last/absent here',processing_transition )
                     continue
 
                 if processing_transition['action_exp'] == None:

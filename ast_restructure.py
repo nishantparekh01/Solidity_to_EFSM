@@ -29,15 +29,21 @@ def restructure(pre_supremica):
         if efsm != 'VariableComponent':
             for i in range(len(pre_supremica['Components'][efsm]['edge_list'])):
                 processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
+                if i != 0:
+                    previous_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i - 1}']
+
+                if processing_transition['transition_type'] == 'false_body_absent' or processing_transition['transition_type'] == 'false_body_last':
+                    continue
+
                 if processing_transition['action_exp'] == None:
                     # check ntype of evaluate_expression
-                    if get_ntype_eval_exp(processing_transition) == 'VariableDeclarationStatement':
+                    if get_ntype_eval_exp(processing_transition) == 'VariableDeclarationStatement':   #or processing_transition['transition_type'] == 'false_body_absent' or processing_transition['transition_type'] == 'false_body_last':
                         break
 
-                    if not check_action_present(processing_transition):
+                    if not check_action_present(processing_transition): # isn't this the same as the above if statement?
                         processing_node = processing_transition
                 else:
-                    if processing_node != {}:
+                    if processing_node != {}: # I don't understand this condition and what it does
                         processing_node['action_exp'] = processing_transition['action_exp']
                         processing_transition['evaluate_exp'] = False
                         processing_transition['action_exp'] = None

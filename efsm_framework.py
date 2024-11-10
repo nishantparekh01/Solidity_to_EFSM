@@ -491,10 +491,10 @@ def superFunctionDefinition(packet):
                 false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false','guard_exp': false_condition, 'type': 'false_body_absent'}
 
             function.addTransition(true_exp_transition)
-            for index, stmnt in enumerate(true_body):
+            for index, stmnt in enumerate(true_body): # add transitions for each statement in the true body
                 function.addTransition(stmnt)
                 if stmnt['ntype'] == 'FunctionCall':
-                    if index == len(true_body) - 1:
+                    if index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
                         function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
                         print('transition added', function_complete)
@@ -507,17 +507,15 @@ def superFunctionDefinition(packet):
                         function.addTransition(function_fail)
                         function.addTransition(function_complete)
 
-            # if 'false_body' in exp:
-            #     function.addTransition(false_exp_transition)
-            function.addTransition(false_exp_transition)
+
+            function.addTransition(false_exp_transition) # add transition for false condition. For both cases when false body is present/absent
 
 
-
-            if 'false_body' in exp:
-                for index, stmnt in enumerate(false_body):
+            if 'false_body' in exp: # if false body is present
+                for index, stmnt in enumerate(false_body): # add transitions for each statement in the false body
                     function.addTransition(stmnt)
                     if stmnt['ntype'] == 'FunctionCall':
-                        if index == len(false_body) - 1:
+                        if index == len(false_body) - 1: # flag the last statement in the false body, if statement is a function call
                             function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
                             function_call_name = stmnt['name']
                             if check_transfer_in_function(function_call_name):
@@ -533,6 +531,11 @@ def superFunctionDefinition(packet):
                             function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
                             function.addTransition(function_fail)
                             function.addTransition(function_complete)
+            else:
+                # if false body is absent and it was the last transition
+                if exp_index == len(body) - 1:
+                    function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
+                    function.addTransition(function_complete)
 
         elif exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
             # exp_node = exp['args']

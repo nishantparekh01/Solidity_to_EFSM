@@ -108,6 +108,10 @@ for efsm in pre_supremica['Components']:
             else:
                 condition_node = str()
                 true_last_node = str()
+                sender_transfer_node = str()
+                transfer_success_source_node = str()
+                sender_transfer_merge_node = str()
+                temporary_source_node = str()
                 for i in range(n_transitions): # if there are multiple transitions
                     #print('========',condition_node, true_last_node)
                     processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
@@ -200,7 +204,10 @@ for efsm in pre_supremica['Components']:
 
 
                     elif i == n_transitions - 1: # if it is the last transition
-                        source_node = get_new_node('source')
+                        if temporary_source_node != "":
+                            source_node = temporary_source_node
+                        else:
+                            source_node = get_new_node('source')
                         if processing_transition['transition_type'] == 'self_loop':
                             target_node = source_node
 
@@ -251,6 +258,41 @@ for efsm in pre_supremica['Components']:
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'sender_transfer_initial':
+
+                            print('sender transfer found in add_events_nodes.py')
+                            source_node = get_new_node('source')
+                            sender_transfer_node = source_node
+                            target_node = get_new_node('target')
+                            print('sender transfer node : ',sender_transfer_node)
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'sender_transfer':
+                            print('sender transfer found in add_events_nodes.py-----')
+                            source_node = sender_transfer_node
+                            target_node = get_new_node('target')
+                            print('source node: ', source_node)
+                            print('target node: ', target_node)
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'sender_transfer_success':
+                            print('sender transfer found in add_events_nodes.py-----')
+                            source_node = transfer_success_source_node
+                            #target_node = get_new_node('target')
+                            target_node = sender_transfer_merge_node
+                            print('source node: ', source_node)
+                            print('target node: ', target_node)
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+
+
 
                         else:
                             target_node = INITIAL_NODE
@@ -336,6 +378,52 @@ for efsm in pre_supremica['Components']:
                             source_node = condition_node
 
                             target_node = true_last_node
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'sender_transfer_initial':
+
+                            print('sender transfer found in add_events_nodes.py')
+                            source_node = get_new_node('source')
+                            sender_transfer_node = source_node
+                            target_node = get_new_node('target')
+                            transfer_success_source_node = target_node
+                            print('sender transfer node : ', sender_transfer_node)
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'sender_transfer':
+                            print('sender transfer found in add_events_nodes.py-----')
+                            source_node = sender_transfer_node
+                            target_node = get_new_node('target')
+                            transfer_success_source_node = target_node
+                            print('source node: ', source_node)
+                            print('target node: ', target_node)
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'sender_transfer_success_initial':
+                            print('sender transfer found in add_events_nodes.py-----')
+                            source_node = transfer_success_source_node
+                            target_node = get_new_node('target')
+                            sender_transfer_merge_node = target_node
+                            temporary_source_node = sender_transfer_merge_node
+                            print('source node: ', source_node)
+                            print('target node: ', target_node)
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'sender_transfer_success':
+                            print('sender transfer found in add_events_nodes.py-----')
+                            source_node = transfer_success_source_node
+                            #target_node = get_new_node('target')
+                            target_node = sender_transfer_merge_node
+                            print('source node: ', source_node)
+                            print('target node: ', target_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)

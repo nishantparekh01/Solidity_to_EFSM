@@ -27,8 +27,8 @@ contract Casino {
 
   // The player is allowed to register a win if the operator does not
   // resolve a wager within this timeout
-  uint public timeout;
-  uint constant DEFAULT_TIMEOUT = 30 minutes;
+  // uint public timeout;
+  // uint constant DEFAULT_TIMEOUT = 30 minutes;
 
   // The current pot of money which the operator is making available
   uint256 public pot;
@@ -39,6 +39,7 @@ contract Casino {
   // Identity of the player (if any)
   address  public player;
 
+
   // The current wager (if any)
   enum Coin { HEADS, TAILS }
 
@@ -48,7 +49,7 @@ contract Casino {
   struct Wager {
     uint256 bet;
     Coin guess;
-    uint timestamp;
+    // uint timestamp;
   }
 
   Wager private wager;
@@ -85,7 +86,7 @@ contract Casino {
   constructor()  {
     operator = payable(msg.sender);
     state = State.IDLE;
-    timeout = DEFAULT_TIMEOUT;
+    // timeout = DEFAULT_TIMEOUT;
     pot = 0;
     wager.bet = 0;
   }
@@ -146,8 +147,8 @@ contract Casino {
 
     wager = Wager({
       bet: msg.value,
-      guess: _guess,
-      timestamp: block.timestamp
+      guess: _guess
+      // timestamp: block.timestamp
     });
   }
 

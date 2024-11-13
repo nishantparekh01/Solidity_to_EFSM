@@ -7,7 +7,9 @@ sol_list = final_sol_list # final_sol_list is from json_contract.py
 
 final_result = []
 for n_id in range(len(sol_list)):
-            print('ID PROCESSING: ', n_id)
+            print('ID PROCESSING: ', n_id, )
+            if ntype(sol_list[n_id]) == 'FunctionDefinition':
+                print(sol_list[n_id]['name'])
             final_result = lookup_table[ntype(sol_list[n_id])](sol_list[n_id])
             # final_result.append(final_result)  # Store each result
 

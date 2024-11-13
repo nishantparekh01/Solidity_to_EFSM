@@ -13,7 +13,7 @@ bytes32 public hashedNumber ;
 uint public timeout;
 uint256 public pot;
 uint256 public tmp;
-uint constant DEFAULT_TIMEOUT = 30 minutes;
+// uint constant DEFAULT_TIMEOUT = 30 minutes;
 enum Coin { HEADS, TAILS }
 struct Wager { uint bet ; Coin guess ; }
 Wager private wager;
@@ -37,7 +37,7 @@ require (state == State.IDLE || state == State.GAME_AVAILABLE);
 constructor()  {
     operator = payable(msg.sender);
     state = State.IDLE;
-    timeout = DEFAULT_TIMEOUT;
+    // timeout = DEFAULT_TIMEOUT;
     pot = 0;
     wager.bet = 0;
 }

@@ -126,7 +126,7 @@ file_path_assignSender = r'C:\Users\nishantp\PyCharmProjects\Casino conversion\v
 
 assignSender_string = ET.parse(file_path_assignSender)
 
-print('hello')
+
 
 ComponentList.append(assignSender_string.getroot())
 add_events_to_xml('assignSev')
@@ -136,7 +136,8 @@ add_events_to_xml('assignSev')
 
 print('______________________________________________________')
 #print(VariableComponent['AddressVariables'])
-#print(asdf)
+print(transfer_efsm_list)
+print(asdf)
 
 
 timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")

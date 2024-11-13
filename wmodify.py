@@ -122,7 +122,7 @@ def wmodify_assignment(lhs, op, rhs, **info):
                 #print(print(ET.tostring(BinaryExpression, encoding='unicode', method='xml')))
                 return BinaryExpression
 
-        elif info['ntype'] == 'ParameterDeclarationStatement':
+        elif info['ntype'] == 'ParameterDeclarationStatement' or info['ntype'] == 'VariableDeclarationStatement':
 
             if info['kind'] == 'AssignmentCheck':
                 # lhs = param
@@ -230,11 +230,95 @@ def wmodify_assignment(lhs, op, rhs, **info):
             #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml'))
             return BinaryExpression
 
+        elif isinstance(rhs, list) and isinstance(lhs, str):
+            print('rhs is a list')
+            print(asdf)
+
+
         #return str(ET.tostring(BinaryExpression, encoding='unicode', method='xml')) # thanks copilot
 
         return BinaryExpression
 
 
+
+def generate_mapping_expression(mapping_dict, lhs_address, lhs_var):
+    """
+    Generates an XML expression for conditions based on a mapping of addresses to corresponding variables.
+    mapping_dict: Dictionary mapping addresses to their corresponding variables.
+    lhs_address: The left-hand side variable (e.g., 'sender').
+    """
+    import xml.etree.ElementTree as ET
+
+    previous_expr = None  # Used to build the final expression
+
+    for address, corresponding_var in mapping_dict.items():
+        # Create lhs_address == address condition
+        binary_expr1 = ET.Element("BinaryExpression", Operator="==")
+        ET.SubElement(binary_expr1, "SimpleIdentifier", Name=lhs_address)
+        ET.SubElement(binary_expr1, "SimpleIdentifier", Name=address)
+
+        # Create tmp' == corresponding_var condition
+        binary_expr2 = ET.Element("BinaryExpression", Operator="==")
+        tmp_assignment = ET.SubElement(binary_expr2, "UnaryExpression", Operator="'")
+        ET.SubElement(tmp_assignment, "SimpleIdentifier", Name=lhs_var)
+        ET.SubElement(binary_expr2, "SimpleIdentifier", Name=corresponding_var)
+
+        # Combine the two conditions with AND (&)
+        and_expr = ET.Element("BinaryExpression", Operator="&")
+        and_expr.append(binary_expr1)
+        and_expr.append(binary_expr2)
+
+        # Combine the current AND expression with the previous one using OR (|), if present
+        if previous_expr is None:
+            previous_expr = and_expr
+        else:
+            or_expr = ET.Element("BinaryExpression", Operator="|")
+            or_expr.append(previous_expr)
+            or_expr.append(and_expr)
+            previous_expr = or_expr
+
+    return previous_expr
+
+
+def generate_mapping_assignment_expression(mapping_dict, lhs_address, lhs_var):
+    """
+    Generates a reversed XML expression where conditions are based on a mapping of addresses
+    to corresponding variables but with the assignment reversed.
+
+    mapping_dict: Dictionary mapping addresses to their corresponding variables.
+    lhs_var: The left-hand side variable (e.g., 'sender') for the initial comparison.
+    """
+    import xml.etree.ElementTree as ET
+
+    previous_expr = None  # Used to build the final expression
+
+    for address, corresponding_var in mapping_dict.items():
+        # Create sender == address condition
+        binary_expr1 = ET.Element("BinaryExpression", Operator="==")
+        ET.SubElement(binary_expr1, "SimpleIdentifier", Name=lhs_address)
+        ET.SubElement(binary_expr1, "SimpleIdentifier", Name=address)
+
+        # Create corresponding_var' == tmp condition
+        binary_expr2 = ET.Element("BinaryExpression", Operator="==")
+        tmp_assignment = ET.SubElement(binary_expr2, "UnaryExpression", Operator="'")
+        ET.SubElement(tmp_assignment, "SimpleIdentifier", Name=corresponding_var)
+        ET.SubElement(binary_expr2, "SimpleIdentifier", Name=lhs_var)
+
+        # Combine the two conditions with AND (&)
+        and_expr = ET.Element("BinaryExpression", Operator="&")
+        and_expr.append(binary_expr1)
+        and_expr.append(binary_expr2)
+
+        # Combine the current AND expression with the previous one using OR (|), if present
+        if previous_expr is None:
+            previous_expr = and_expr
+        else:
+            or_expr = ET.Element("BinaryExpression", Operator="|")
+            or_expr.append(previous_expr)
+            or_expr.append(and_expr)
+            previous_expr = or_expr
+
+    return previous_expr
 
 
 def replace_identifier(root, old_name, new_name):

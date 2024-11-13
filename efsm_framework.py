@@ -41,6 +41,9 @@ VariableComponent['AddressVariables'] = {}
 # creating a dictionary to store all generated boolean variables
 VariableComponent['BooleanVariables'] = {}
 
+# creating a dictionary to store Mapping variables
+VariableComponent['MappingVariables'] = {}
+
 # declaring address_index to keep track of address variables
 address_index = 0
 
@@ -126,6 +129,18 @@ class EFSM:
                         transition_type = 'self_loop'
                         guard_exp = expression['guard_exp']
 
+                    elif expression['type'] == 'sender_transfer_initial':
+                        transition_type = 'sender_transfer_initial'
+
+                    elif expression['type'] == 'sender_transfer':
+                        transition_type = 'sender_transfer'
+
+                    elif expression['type'] == 'sender_transfer_success_initial':
+                        transition_type = 'sender_transfer_success_initial'
+
+                    elif expression['type'] == 'sender_transfer_success':
+                        transition_type = 'sender_transfer_success'
+
                 elif 'type' in expression and expression['type'] == 'param_assignment':
                     guard_exp = expression['guard_exp']
 
@@ -146,6 +161,11 @@ class EFSM:
                     # else:
                     #     action_exp = None
                     action_exp = expression['exp']
+
+                elif expression['kind'] == 'mapping_assignment_check':
+                    print('Mapping Assignment Check')
+                    guard_exp = expression['expression']
+
                 if 'type' in expression:
                     transition_type = expression['type']
                     # action_exp = ET.tostring(expression['exp'], encoding='unicode', method='xml')
@@ -159,6 +179,13 @@ class EFSM:
                     # guard_exp = str("(" + condition + " & " + true_body + ") | (" + "!" + "(" + condition + ")" + " & " + false_body + ")")
                     guard_exp = expression['expression']
                     # guard_exp = ET.tostring(expression['expression'], encoding='unicode', method='xml')
+
+                elif expression['kind'] == 'mapping_assignment_check':
+                    print('Mapping Assignment Check')
+                    guard_exp = expression['expression']
+                    #print(asdf)
+
+
             elif expression['ntype'] == 'IfStatement':
 
                 if 'kind' in expression and expression['kind'] == 'internal':
@@ -327,10 +354,17 @@ def superVariableDeclaration(packet):
         if mapping_key_value == 'address_uint':
             AddressVariables = VariableComponent['AddressVariables']
             # generate variable names combining address and mapping name
+
+            # Store the generated mapping variables in the dictionary MappingVariables with mapping variable name as the key
+            VariableComponent['MappingVariables'][mapping_name] = {}
             for declared_address in AddressVariables.keys():
                 print(mapping_name + '_'+ declared_address)
+                mapping_variable = mapping_name + '_'+ declared_address
+                VariableComponent['MappingVariables'][mapping_name][declared_address] = mapping_variable
+                print(VariableComponent['MappingVariables'])
 
-        gyg = gyg - 2
+
+        #gyg = gyg - 2
     elif type == 'bool':
         members =['false', 'true']
 
@@ -385,6 +419,29 @@ def superModifierDefinition(packet):
     addAutomata(modifier)
     return Supremica
 
+def add_transfer_efsm(efsm_name):
+    efsm_name = efsm_name
+    if efsm_name not in transfer_efsm_list:
+
+        transfer_efsm_name = efsm_name + 'transfer'
+        transfer_efsm = EFSM(transfer_efsm_name)
+        transfer_efsm_list.append(transfer_efsm_name)
+        # transfer_efsm.add_transfer(exp)
+
+        # transition for transfer event
+        transfer_event = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + '1', 'type': 'transfer_event'}
+        transfer_efsm.addTransition(transfer_event)
+
+        # transition for transfer fail
+        transfer_fail = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + 'Fail', 'type': 'transfer_efsm_fail'}
+        transfer_efsm.addTransition(transfer_fail)
+
+        # transition for transfer success
+        transfer_success = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + 'X', 'type': 'transfer_efsm_success'}
+        transfer_efsm.addTransition(transfer_success)
+
+        addAutomata(transfer_efsm)
+
 
 def superFunctionDefinition(packet):
     global false_body
@@ -405,50 +462,52 @@ def superFunctionDefinition(packet):
     # Add transitions to the function based on parameters and its respective values
 
     for exp_index, exp in enumerate(body):
-
+        print(exp_index)
         if 'type' in exp and exp['type'] == 'transfer':
             if exp_index == 0:
                 first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
                 function.addTransition(first_transition)
-                if exp['name'] not in transfer_efsm_list:
-                    transfer_efsm = EFSM(exp['name'])
-                    transfer_efsm_list.append(exp['name'])
-                    # transfer_efsm.add_transfer(exp)
-
-                    # transition for transfer event
-                    transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
-                    transfer_efsm.addTransition(transfer_event)
-
-                    # transition for transfer fail
-                    transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_efsm_fail'}
-                    transfer_efsm.addTransition(transfer_fail)
-
-                    # transition for transfer success
-                    transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_efsm_success'}
-                    transfer_efsm.addTransition(transfer_success)
-
-                    addAutomata(transfer_efsm)
+                add_transfer_efsm(exp['name'])
+                # if exp['name'] not in transfer_efsm_list:
+                #     transfer_efsm = EFSM(exp['name'])
+                #     transfer_efsm_list.append(exp['name'])
+                #     # transfer_efsm.add_transfer(exp)
+                #
+                #     # transition for transfer event
+                #     transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
+                #     transfer_efsm.addTransition(transfer_event)
+                #
+                #     # transition for transfer fail
+                #     transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_efsm_fail'}
+                #     transfer_efsm.addTransition(transfer_fail)
+                #
+                #     # transition for transfer success
+                #     transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_efsm_success'}
+                #     transfer_efsm.addTransition(transfer_success)
+                #
+                #     addAutomata(transfer_efsm)
 
             else:
+                add_transfer_efsm(exp['name'])
                 # Create a transfer efsm if it already does not exist
-                if exp['name'] not in transfer_efsm_list:
-                    transfer_efsm = EFSM(exp['name'])
-                    transfer_efsm_list.append(exp['name'])
-                    # transfer_efsm.add_transfer(exp)
-
-                    # transition for transfer event
-                    transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
-                    transfer_efsm.addTransition(transfer_event)
-
-                    # transition for transfer fail
-                    transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_efsm_fail'}
-                    transfer_efsm.addTransition(transfer_fail)
-
-                    # transition for transfer success
-                    transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_efsm_success'}
-                    transfer_efsm.addTransition(transfer_success)
-
-                    addAutomata(transfer_efsm)
+                # if exp['name'] not in transfer_efsm_list:
+                #     transfer_efsm = EFSM(exp['name'])
+                #     transfer_efsm_list.append(exp['name'])
+                #     # transfer_efsm.add_transfer(exp)
+                #
+                #     # transition for transfer event
+                #     transfer_event = {'ntype': 'Simple', 'name': exp['name'] + '1', 'type': 'transfer_event'}
+                #     transfer_efsm.addTransition(transfer_event)
+                #
+                #     # transition for transfer fail
+                #     transfer_fail = {'ntype': 'Simple', 'name': exp['name'] + 'Fail', 'type': 'transfer_efsm_fail'}
+                #     transfer_efsm.addTransition(transfer_fail)
+                #
+                #     # transition for transfer success
+                #     transfer_success = {'ntype': 'Simple', 'name': exp['name'] + 'X', 'type': 'transfer_efsm_success'}
+                #     transfer_efsm.addTransition(transfer_success)
+                #
+                #     addAutomata(transfer_efsm)
 
 
 
@@ -466,6 +525,77 @@ def superFunctionDefinition(packet):
             function.addTransition(efsm_fail)
             function.addTransition(transfer_success_exp)
             function.addTransition(next_statement)
+
+        elif 'type' in exp and exp['type'] == 'mapping_transfer': # check issue #49 in nishantparekh01/test
+            #print('Mapping Transfer reached in superFunctionDefinition')
+            #print(exp)
+            sender_list = exp['sender_list']
+
+            if exp_index == 0:
+                first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
+                function.addTransition(first_transition)
+                for sender_address in sender_list: # add transfer_efsm for each address if it is not already present
+                    add_transfer_efsm(sender_address)
+
+
+
+            else:
+                for sender_address in sender_list: # add transfer_efsm for each address if it is not already present
+                    add_transfer_efsm(sender_address)
+
+            for sender_id, sender_address in enumerate(sender_list):
+                    transfer_event = sender_address + 'transfer'
+                    transfer_event_initial = transfer_event + '1'
+                    transfer_event_fail = transfer_event + 'Fail'
+                    transfer_event_success = transfer_event + 'X'
+                    print('sender id ====', sender_id)
+
+                    if sender_id == 0:
+                        transfer_attempt_type = 'sender_transfer_initial'
+
+                        transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial, 'sender_index' : sender_id, 'type' : transfer_attempt_type}
+                        function.addTransition(transfer_attempt)
+
+                        transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail, 'type': 'transfer_fail'}
+                        efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+                        function.addTransition(transfer_fail_exp)
+                        function.addTransition(efsm_fail)
+
+                        transfer_success_type = 'sender_transfer_success_initial'
+                        transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success, 'type': transfer_success_type}
+                        function.addTransition(transfer_success_exp)
+
+
+                    else:
+                        transfer_attempt_type = 'sender_transfer'
+
+                        transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
+                                            'sender_index': sender_id, 'type': transfer_attempt_type}
+                        function.addTransition(transfer_attempt)
+
+                        transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail, 'type': 'transfer_fail'}
+                        efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+                        function.addTransition(transfer_fail_exp)
+                        function.addTransition(efsm_fail)
+
+                        transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
+                                                'type': 'sender_transfer_success'}
+                        function.addTransition(transfer_success_exp)
+
+        if exp_index == len(body) - 1:
+            function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
+            function.addTransition(function_complete)
+
+
+
+
+
+
+
+
+
+
+
 
         elif exp['ntype'] == 'IfStatement':
             true_condition = exp['true_condition']
@@ -499,14 +629,14 @@ def superFunctionDefinition(packet):
                     if index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
                         function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                        print('transition added', function_complete)
-                        print('fail transition added', function_fail)
+                        #print('transition added', function_complete)
+                        #print('fail transition added', function_fail)
                         function.addTransition(function_fail)
                         function.addTransition(function_complete)
                     else:
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
                         function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                        function.addTransition(function_fail)
+                        # function.addTransition(function_fail)
                         function.addTransition(function_complete)
 
 
@@ -573,15 +703,15 @@ def superFunctionDefinition(packet):
                         param_assigned = True
 
         elif exp['ntype'] == 'Assignment' and exp['kind'] == 'structConstructorCall':
-            print('Struct Constructor Call')
+            #print('Struct Constructor Call')
             for attr_assignments in exp['exp']:
                 #function.addTransition(attr_assignments)
                 #print(attr_assignments)
                  exp = {'ntype': 'Assignment', 'kind': 'simple', 'exp': attr_assignments}
-                 print(exp)
+                 #print(exp)
                  process_in_ignore_list(    exp, 'exp', ignore_list, function)
                  #function.addTransition(exp)
-                 print('assignment added')
+                 #print('assignment added')
             #print(asdf)
 
         else:
@@ -614,7 +744,7 @@ def superFunctionDefinition(packet):
     addAutomata(function)
     return Supremica
 
-ignore_list = ['pot', 'tmp', 'bet']
+ignore_list = ['pot', 'tmp', 'bet', 'withdrawable_operator']
 
 
 def superVariableDeclarationStatement(packet):
@@ -669,12 +799,12 @@ def check_transfer_in_function(function_name):
             node_string = str(node) # convert the node into a string
             # check if the function name is present in the node_string
             if 'transfer' in node_string:
-                print('Hurrah! Transfer present in the function: ', function_name)
-                print(node['name'])
+                #print('Hurrah! Transfer present in the function: ', function_name)
+                #print(node['name'])
                 return True
             else:
-                print('Transfer not present in the function: ', function_name)
-                print(node['name'])
+                #print('Transfer not present in the function: ', function_name)
+                #print(node['name'])
                 return False
 
 

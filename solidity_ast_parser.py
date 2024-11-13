@@ -12,11 +12,21 @@ def ntype(node):
 def handleMemberAccess(node):
     assert ntype(node) == 'MemberAccess', "Node not MemberAccess"
 
-    memberName = node['memberName']
+    name = str()
+    memberName = node['memberName'] # transfer
     #name = lookup_table[ntype(node['expression'])](node['expression']) # name = {'ntype': 'FunctionCall', 'name' : name, 'args' : 'msg.sender'} or name = wager
 
     if ntype(node['expression']) == 'FunctionCall' and node['expression']['kind'] == 'typeConversion':
-        name = node['expression']['arguments'][0]['name']
+        name_node  = node['expression']['arguments'][0]
+        if 'name' in name_node: # name = sender
+            name = name_node['name']
+            print('Sender found here---------', name)
+            #print(asdf)
+        elif 'memberName' in name_node:
+            name = name_node['memberName']
+            print('MemberName found here---------', name)
+            #print(asdf)
+
 
     else:
         name = lookup_table[ntype(node['expression'])](node['expression'])
@@ -32,6 +42,19 @@ def handleMemberAccess(node):
         return name['args'] + "." + memberName
         # example:
         #return memberName
+    elif name == 'sender':
+        print('Sender found:', name)
+        if memberName == 'transfer':
+ # Building on the assumption that the function call is msg.sender.transfer()
+
+ # get the list of all declared addresses
+            sender_dict = VariableComponent['AddressVariables']
+            sender_list = list(sender_dict.keys())
+            print('Sender list:', sender_list)
+            return {'name': name, 'type': 'mapping_transfer', 'sender_list': sender_list}
+ # {'name': 'sender', 'type': 'transfer', 'sender_list': ['operator', 'player']}
+            asdf
+
     else:
         #return str(name + '.' + memberName)
         if memberName == 'transfer':
@@ -50,23 +73,26 @@ def handleVariableDeclaration(node):
     var_type = lookup_table[ntype(node['typeName'])](node['typeName'])
 
     # checking if var_type is already defined as a struct
-    if var_type in VariableComponent['StructVariables']:
-        #print('Struct found', var_type)
-        #print(VariableComponent['StructVariables'][var_type])
-        struct_var_attributes = VariableComponent['StructVariables'][var_type]
+    print('Variable name:', name)
+    print('Variable type:', var_type)
+    if not isinstance(var_type, dict):
+        if var_type in VariableComponent['StructVariables'] :
+            #print('Struct found', var_type)
+            #print(VariableComponent['StructVariables'][var_type])
+            struct_var_attributes = VariableComponent['StructVariables'][var_type]
 
-        # Now generating the names for object of the struct
-        for attr in struct_var_attributes:
-            var_struct = name + "_" + attr
-            print('Struct variable:', var_struct)
-            # Now adding the struct variable to the VariableComponent with value as the attribute of the struct
+            # Now generating the names for object of the struct
+            for attr in struct_var_attributes:
+                var_struct = name + "_" + attr
+                print('Struct variable:', var_struct)
+                # Now adding the struct variable to the VariableComponent with value as the attribute of the struct
 
-            # replace the attr with var_struct
-            base_attr_xml = copy.deepcopy(VariableComponent[attr])
-            base_attr_xml_updated = replace_identifier(base_attr_xml, attr, var_struct)
+                # replace the attr with var_struct
+                base_attr_xml = copy.deepcopy(VariableComponent[attr])
+                base_attr_xml_updated = replace_identifier(base_attr_xml, attr, var_struct)
 
-            VariableComponent[var_struct] = base_attr_xml_updated
-            print('Struct variable added to VariableComponent:', VariableComponent[var_struct])
+                VariableComponent[var_struct] = base_attr_xml_updated
+                print('Struct variable added to VariableComponent:', VariableComponent[var_struct])
 
 
 
@@ -183,7 +209,13 @@ def handleFunctionCall(node):
             #print(ET.tostring(arg, encoding='utf-8', method='xml').decode('utf-8'))
 
     if isinstance(name, dict):
-        return {'ntype': ntype(node), 'name' : name['name'], 'args' : arg, 'type': name['type']}
+        if 'sender_list' in name:
+            return_dict = {'ntype': ntype(node), 'name' : name['name'], 'args' : arg, 'type': name['type'], 'sender_list': name['sender_list']}
+            print(return_dict)
+            #asdf
+            return return_dict
+        else:
+            return {'ntype': ntype(node), 'name' : name['name'], 'args' : arg, 'type': name['type']}
     else:
         return {'ntype': ntype(node), 'name' : name, 'args' : arg} # args value : msg.sender
 
@@ -242,11 +274,27 @@ def handleFunctionDefinition(node):
 
 def handleAssignment(node):
     assert ntype(node) == 'Assignment', "Node not Assignment"
-    lhs = lookup_table[ntype(node['leftHandSide'])](node['leftHandSide'])
+    lhs = lookup_table[ntype(node['leftHandSide'])](node['leftHandSide'])  # lhs can be indexAccess returning this  {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'}
     op = node['operator']
     rhs = lookup_table[ntype(node['rightHandSide'])](node['rightHandSide'])
     node_rhs = node['rightHandSide']
     kind = 'simple'
+
+    if isinstance(lhs,dict):
+        print('lhs is dict:', lhs)
+        if ntype(node['leftHandSide']) == 'IndexAccess':
+            print('lhs is IndexAccess')
+
+            index_node = node['leftHandSide']
+            index_node_expression = lookup_table[ntype(index_node['indexExpression'])](index_node['indexExpression'])
+
+            if index_node_expression == 'sender':
+
+
+                exp = generate_mapping_assignment_expression(lhs, 'sender', rhs)
+                print('Mapping expression:', exp)
+                #print(asdf)
+                return {'ntype': ntype(node), 'kind': 'mapping_assignment_check', 'expression': exp}
 
     if isinstance(rhs, dict):
         if rhs['ntype'] == 'FunctionCall' and node_rhs['kind'] != 'structConstructorCall':
@@ -310,15 +358,35 @@ def handleVariableDeclarationStatement(node):
 
     # assumption - there is only one variable declaration here
     #name = "".join([lookup_table[ntype(d)](d) for d in node['declarations']])
-    name = lookup_table[ntype(node['declarations'][0])](node['declarations'][0])
-    init_value = lookup_table[ntype(node['initialValue'])](node['initialValue'])
+    name = lookup_table[ntype(node['declarations'][0])](node['declarations'][0]) # has tmp
+    init_value = lookup_table[ntype(node['initialValue'])](node['initialValue']) # nodeType == 'IndexAccess' value = {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'}
     if isinstance(init_value, dict):
-        if init_value['ntype'] == 'Conditional':
+        print('Dict found:', init_value)
+        if 'ntype' in init_value and init_value['ntype'] == 'Conditional':
 
             exp = wmodify_assignment(name,"==", init_value['true_exp'], **{'ntype': ntype(node), 'kind': 'conditional', 'name' : name, 'condition': init_value['condition'], 'true_exp': init_value['true_exp'], 'false_exp': init_value['false_exp']})
 
 
             return {'ntype': ntype(node), 'kind' : 'conditional', 'expression' : exp}
+
+        elif ntype(node['initialValue']) == 'IndexAccess':
+            index_node = node['initialValue']
+            index_node_expression = lookup_table[ntype(index_node['indexExpression'])](index_node['indexExpression'])
+
+            if index_node_expression == 'sender':
+               exp = generate_mapping_expression(init_value, 'sender', name)
+               print('Mapping expression:', exp)
+               #print(asdf)
+               return {'ntype': ntype(node), 'kind': 'mapping_assignment_check', 'expression': exp}
+
+    elif isinstance(init_value, list):
+        print('List found:', init_value)
+        exp = wmodify_assignment(name, "==", init_value)
+
+
+        print(asdf)
+
+
     else:
         return str (name + " = " + init_value)  # need to convert this to xml as well. For later.
 
@@ -393,8 +461,20 @@ def handleMapping(node):
 
 def handleIndexAccess(node):
     assert ntype(node) == 'IndexAccess' , "Node not IndexAccess"
-    base = lookup_table[ntype(node['baseExpression'])](node['baseExpression'])
-    index = lookup_table[ntype(node['indexExpression'])](node['indexExpression'])
+    base = lookup_table[ntype(node['baseExpression'])](node['baseExpression']) # has withdrawable
+    if base in VariableComponent['MappingVariables']:
+        print(base + ' : ' ,VariableComponent['MappingVariables'][base])
+        print('Mapping variable found:', base)
+        index = lookup_table[ntype(node['indexExpression'])](node['indexExpression'])
+        print('Index:', index)
+        if index == 'sender': # Building on the assumption that sender is an address
+            mapping_variable_dict = VariableComponent['MappingVariables'][base] # has {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'}
+            for sender_address in mapping_variable_dict.keys():
+                print('Sender Address: ', sender_address)
+            return mapping_variable_dict
+
+
+
     return  str( base + "[" + index + "]")
 
 

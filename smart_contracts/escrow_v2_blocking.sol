@@ -34,9 +34,6 @@ contract RawMaterialEscrow{
         }
         if(isBuyerIn){
             state = State.AWAITING_PAYMENT;
-        } else {
-            state = State.AWAITING_DELIVERY;
-            cost = 2 * cost;
         }
 
 

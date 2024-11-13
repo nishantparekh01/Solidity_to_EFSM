@@ -636,7 +636,7 @@ def superFunctionDefinition(packet):
                     else:
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
                         function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                        # function.addTransition(function_fail)
+                        function.addTransition(function_fail)
                         function.addTransition(function_complete)
 
 

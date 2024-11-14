@@ -23,7 +23,7 @@ contract Casino {
 
 
   // Identity of who is running the casino
-  address public operator;
+  address payable public operator;
 
   // The player is allowed to register a win if the operator does not
   // resolve a wager within this timeout
@@ -115,13 +115,14 @@ contract Casino {
     byOperator
     noActiveBet
   {
-    // The operator may reduce the pot (by withdrawing the requested amount)
-    // as long as there is no bet which is active
+     // The operator may reduce the pot (by withdrawing the requested amount)
+     // as long as there is no bet which is active
     require (amount > 0 && amount <= pot);
 
-    pot = pot - amount;
+   pot = pot - amount;
     payable(operator).transfer(amount);
   }
+
 
   // Operator opens a bet
   function createGame(bytes32 _hashedNumber) public

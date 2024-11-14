@@ -420,24 +420,28 @@ def superModifierDefinition(packet):
     return Supremica
 
 def add_transfer_efsm(efsm_name):
-    efsm_name = efsm_name
-    if efsm_name not in transfer_efsm_list:
+    #efsm_name = efsm_name
+    transfer_efsm_name = efsm_name  # operatortransfer
+    if  transfer_efsm_name not in transfer_efsm_list:
 
-        transfer_efsm_name = efsm_name + 'transfer'
+
         transfer_efsm = EFSM(transfer_efsm_name)
         transfer_efsm_list.append(transfer_efsm_name)
         # transfer_efsm.add_transfer(exp)
 
         # transition for transfer event
-        transfer_event = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + '1', 'type': 'transfer_event'}
+        #transfer_event = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + '1', 'type': 'transfer_event'}
+        transfer_event = {'ntype': 'Simple', 'name': efsm_name  + '1', 'type': 'transfer_event'}
         transfer_efsm.addTransition(transfer_event)
 
         # transition for transfer fail
-        transfer_fail = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + 'Fail', 'type': 'transfer_efsm_fail'}
+        #transfer_fail = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + 'Fail', 'type': 'transfer_efsm_fail'}
+        transfer_fail = {'ntype': 'Simple', 'name': efsm_name + 'Fail', 'type': 'transfer_efsm_fail'}
         transfer_efsm.addTransition(transfer_fail)
 
         # transition for transfer success
-        transfer_success = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + 'X', 'type': 'transfer_efsm_success'}
+        #transfer_success = {'ntype': 'Simple', 'name': efsm_name + 'transfer' + 'X', 'type': 'transfer_efsm_success'}
+        transfer_success = {'ntype': 'Simple', 'name': efsm_name + 'X', 'type': 'transfer_efsm_success'}
         transfer_efsm.addTransition(transfer_success)
 
         addAutomata(transfer_efsm)
@@ -464,10 +468,13 @@ def superFunctionDefinition(packet):
     for exp_index, exp in enumerate(body):
         print(exp_index)
         if 'type' in exp and exp['type'] == 'transfer':
+            transfer_in_function_name = str()
+
             if exp_index == 0:
                 first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
                 function.addTransition(first_transition)
-                add_transfer_efsm(exp['name'])
+                transfer_in_function_name = name + exp['name']
+                add_transfer_efsm(transfer_in_function_name)
                 # if exp['name'] not in transfer_efsm_list:
                 #     transfer_efsm = EFSM(exp['name'])
                 #     transfer_efsm_list.append(exp['name'])
@@ -488,7 +495,8 @@ def superFunctionDefinition(packet):
                 #     addAutomata(transfer_efsm)
 
             else:
-                add_transfer_efsm(exp['name'])
+                transfer_in_function_name = name + exp['name']
+                add_transfer_efsm(transfer_in_function_name)
                 # Create a transfer efsm if it already does not exist
                 # if exp['name'] not in transfer_efsm_list:
                 #     transfer_efsm = EFSM(exp['name'])
@@ -509,12 +517,11 @@ def superFunctionDefinition(packet):
                 #
                 #     addAutomata(transfer_efsm)
 
-
-
+            exp['name'] = name + exp['name'] # transfer name is now function name + transfer name to distinguish between same address transfers in different functions
             function.addTransition(exp)
 
-            transfer_success = exp['name'] + 'X'
-            transfer_fail = exp['name'] + 'Fail'
+            transfer_success = transfer_in_function_name + 'X'
+            transfer_fail = transfer_in_function_name + 'Fail'
 
             transfer_success_exp = {'ntype': 'Simple', 'name': transfer_success, 'type': 'transfer_success'}
             transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_fail, 'type': 'transfer_fail'}
@@ -535,16 +542,18 @@ def superFunctionDefinition(packet):
                 first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
                 function.addTransition(first_transition)
                 for sender_address in sender_list: # add transfer_efsm for each address if it is not already present
-                    add_transfer_efsm(sender_address)
+                    sender_address_check = name +sender_address + 'transfer'
+                    add_transfer_efsm(sender_address_check)
 
 
 
             else:
                 for sender_address in sender_list: # add transfer_efsm for each address if it is not already present
-                    add_transfer_efsm(sender_address)
+                    sender_address_check = name + sender_address + 'transfer'
+                    add_transfer_efsm(sender_address_check)
 
             for sender_id, sender_address in enumerate(sender_list):
-                    transfer_event = sender_address + 'transfer'
+                    transfer_event = name +sender_address + 'transfer'
                     transfer_event_initial = transfer_event + '1'
                     transfer_event_fail = transfer_event + 'Fail'
                     transfer_event_success = transfer_event + 'X'
@@ -582,9 +591,9 @@ def superFunctionDefinition(packet):
                                                 'type': 'sender_transfer_success'}
                         function.addTransition(transfer_success_exp)
 
-        if exp_index == len(body) - 1:
-            function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
-            function.addTransition(function_complete)
+                        if exp_index == len(body) - 1:
+                            function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
+                            function.addTransition(function_complete)
 
 
 
@@ -628,15 +637,23 @@ def superFunctionDefinition(packet):
                 if stmnt['ntype'] == 'FunctionCall':
                     if index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
-                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                        #function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
                         #print('transition added', function_complete)
                         #print('fail transition added', function_fail)
-                        function.addTransition(function_fail)
+                        #function.addTransition(function_fail)
+                        function_call_name = stmnt['name']
+                        if check_transfer_in_function(function_call_name):
+                            function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                            function.addTransition(function_fail)
                         function.addTransition(function_complete)
                     else:
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
                         function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                        function.addTransition(function_fail)
+                        #function.addTransition(function_fail)
+                        if check_transfer_in_function(function_call_name):
+                            function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                            function.addTransition(function_fail)
+
                         function.addTransition(function_complete)
 
 
@@ -744,7 +761,7 @@ def superFunctionDefinition(packet):
     addAutomata(function)
     return Supremica
 
-ignore_list = ['pot', 'tmp', 'bet', 'withdrawable_operator']
+ignore_list = ['pot', 'bet', 'value', 'withdrawable_player', 'withdrawable_operator', 'amount', 'tmp']
 
 
 def superVariableDeclarationStatement(packet):

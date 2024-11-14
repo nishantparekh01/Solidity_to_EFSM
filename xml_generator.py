@@ -122,9 +122,16 @@ for efsm in pre_supremica['Components']:
 #############################################################################################################
 
 # Adding assignSender from string format to xml
-file_path_assignSender = r'C:\Users\nishantp\PyCharmProjects\Casino conversion\venv\Scripts\test\assignSender.xml'
-
+file_path_assignSender = r'assignSender_casino_blocking.xml'
 assignSender_string = ET.parse(file_path_assignSender)
+
+
+CASINO_NONBLOCKING ='smart_contracts/casino_nonblocking.sol'
+
+if contract_file == CASINO_NONBLOCKING:
+    print('casino_nonblocking')
+    file_path_assignSender = r'assignSender_casino_nonblocking.xml'
+    assignSender_string = ET.parse(file_path_assignSender)
 
 
 
@@ -137,7 +144,7 @@ add_events_to_xml('assignSev')
 print('______________________________________________________')
 #print(VariableComponent['AddressVariables'])
 print(transfer_efsm_list)
-print(asdf)
+#print(asdf)
 
 
 timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")

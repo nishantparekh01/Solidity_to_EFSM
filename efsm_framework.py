@@ -421,6 +421,7 @@ def superModifierDefinition(packet):
 
 def add_transfer_efsm(efsm_name):
     #efsm_name = efsm_name
+    print('ADding efsm-----------', efsm_name)
     transfer_efsm_name = efsm_name  # operatortransfer
     if  transfer_efsm_name not in transfer_efsm_list:
 
@@ -537,6 +538,8 @@ def superFunctionDefinition(packet):
             #print('Mapping Transfer reached in superFunctionDefinition')
             #print(exp)
             sender_list = exp['sender_list']
+            print(sender_list)
+            #asdf
 
             if exp_index == 0:
                 first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
@@ -591,9 +594,10 @@ def superFunctionDefinition(packet):
                                                 'type': 'sender_transfer_success'}
                         function.addTransition(transfer_success_exp)
 
-                        if exp_index == len(body) - 1:
+                        if exp_index == len(body) - 1 and sender_id == len(sender_list) - 1:
                             function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
                             function.addTransition(function_complete)
+
 
 
 
@@ -633,7 +637,34 @@ def superFunctionDefinition(packet):
 
             function.addTransition(true_exp_transition)
             for index, stmnt in enumerate(true_body): # add transitions for each statement in the true body
-                function.addTransition(stmnt)
+                if index == len(true_body) - 1:
+                    stmnt['type'] = 'true_body_last'
+                    function.addTransition(stmnt)
+                else:
+                    if 'exp' or 'expression' in stmnt:
+                        if 'exp' in exp:
+                            #     exp_node = exp['exp']
+                            # # elif 'expression' in exp:
+                            # #     exp_node = exp['expression']
+                            #
+                            #     for ignore_var in ignore_list:
+                            #         if in_ignore_list(exp_node, ignore_var):
+                            #             exp['exp'] = None
+                            #             function.addTransition(exp)
+                            #         else:
+                            #             function.addTransition(exp)
+                            process_in_ignore_list(stmnt, 'exp', ignore_list, function)
+
+                        elif 'expression' in exp:
+                            # exp_node = exp['expression']
+                            # for ignore_var in ignore_list:
+                            #     if in_ignore_list(exp_node, ignore_var):
+                            #         exp['expression'] = None
+                            #         function.addTransition(exp)
+                            #     else:
+                            #         function.addTransition(exp)
+                            process_in_ignore_list(stmnt, 'expression', ignore_list, function)
+                    #function.addTransition(stmnt)
                 if stmnt['ntype'] == 'FunctionCall':
                     if index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
@@ -761,7 +792,7 @@ def superFunctionDefinition(packet):
     addAutomata(function)
     return Supremica
 
-ignore_list = ['pot', 'bet', 'value', 'withdrawable_player', 'withdrawable_operator', 'amount', 'tmp']
+ignore_list = ['pot', 'bet', 'value', 'withdrawable_player', 'withdrawable_operator', 'amount', 'tmp', 'withdrawable_buyer', 'withdrawable_supplier']
 
 
 def superVariableDeclarationStatement(packet):

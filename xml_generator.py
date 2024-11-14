@@ -127,12 +127,21 @@ assignSender_string = ET.parse(file_path_assignSender)
 
 
 CASINO_NONBLOCKING ='smart_contracts/casino_nonblocking.sol'
+ESCROW_BLOCKING = 'smart_contracts/escrow_v2_blocking.sol'
+ESCROW_NONBLOCKING = 'smart_contracts/escrow_v2_nonblocking.sol'
 
 if contract_file == CASINO_NONBLOCKING:
     print('casino_nonblocking')
     file_path_assignSender = r'assignSender_casino_nonblocking.xml'
     assignSender_string = ET.parse(file_path_assignSender)
-
+elif contract_file == ESCROW_BLOCKING:
+    print('escrow_blocking')
+    file_path_assignSender = r'assignSender_escrow_blocking.xml'
+    assignSender_string = ET.parse(file_path_assignSender)
+elif contract_file == ESCROW_NONBLOCKING:
+    print('escrow_nonblocking')
+    file_path_assignSender = r'assignSender_escrow_nonblocking.xml'
+    assignSender_string = ET.parse(file_path_assignSender)
 
 
 ComponentList.append(assignSender_string.getroot())

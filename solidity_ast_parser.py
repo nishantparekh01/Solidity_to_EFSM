@@ -475,7 +475,7 @@ def handleIndexAccess(node):
 
 
 
-    return  str( base + "[" + index + "]")
+    return  str( base + "_" + index)
 
 
 

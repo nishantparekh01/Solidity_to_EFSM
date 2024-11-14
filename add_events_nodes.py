@@ -134,6 +134,7 @@ for efsm in pre_supremica['Components']:
                             target_node = get_new_node('target')
                             if next_transition_type ==  'false_body_start' or next_transition_type == 'false_body_absent':
                                 true_last_node = target_node
+                                print('true last node: ', true_last_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
@@ -346,6 +347,7 @@ for efsm in pre_supremica['Components']:
                             #condition_node = source_node
                             target_node = get_new_node('target')
                             true_last_node = target_node
+                            print('true last node: ', true_last_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)

@@ -25,8 +25,8 @@
                     <Edge Source="S0" Target="S1">
                         <LabelBlock>
                             <SimpleIdentifier Name="initContract1"/>
-                            <SimpleIdentifier Name="confirmDelivery1"/>
-                            <SimpleIdentifier Name="initContract2"/>
+                            <SimpleIdentifier Name="initContract3"/>
+                            <SimpleIdentifier Name="withdraw1"/>
                             <LabelGeometry Anchor="NW">
                                 <Point X="38" Y="-36"/>
                             </LabelGeometry>
@@ -38,8 +38,8 @@
                     <Edge Source="S1" Target="S0">
                         <LabelBlock>
                             <SimpleIdentifier Name="initContractX"/>
-                            <SimpleIdentifier Name="confirmDeliveryFail"/>
-                            <SimpleIdentifier Name="confirmDeliveryX"/>
+                            <SimpleIdentifier Name="withdrawX"/>
+                            <SimpleIdentifier Name="withdrawFail"/>
                             <LabelGeometry Anchor="NW">
                                 <Point X="-57" Y="13"/>
                             </LabelGeometry>

@@ -32,7 +32,7 @@ contract RawMaterialEscrow{
         if(msg.sender == supplier){
             isSupplierIn = true;
         }
-        if(isBuyerIn){
+        if(isBuyerIn && isSupplierIn){
             state = State.AWAITING_PAYMENT;
         }
 

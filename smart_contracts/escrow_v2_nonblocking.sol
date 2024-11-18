@@ -37,7 +37,7 @@ contract RawMaterialEscrow{
             withdrawable[supplier] = withdrawable[supplier] + cost;
             isSupplierIn = true;
         }
-        if(isBuyerIn){
+        if(isBuyerIn && isSupplierIn){
             state = State.AWAITING_PAYMENT;
         }
 

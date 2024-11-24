@@ -1,4 +1,4 @@
-<SimpleComponent Kind="PLANT" Name="assignSender">
+<SimpleComponent Kind="PLANT" Name="assignMsg">
             <Graph>
                 <NodeList>
                     <SimpleNode Initial="true" Name="S0">
@@ -62,18 +62,34 @@
                         </LabelBlock>
                         <GuardActionBlock>
                             <Guards>
-                                <BinaryExpression Operator="|" Text="sender' == x0001 | sender' == x0002">
-                                    <BinaryExpression Operator="==">
-                                        <UnaryExpression Operator="'">
-                                            <SimpleIdentifier Name="sender"/>
-                                        </UnaryExpression>
-                                        <SimpleIdentifier Name="x0001"/>
+                                <BinaryExpression Operator="&amp;" Text="(sender' == x0001 | sender' == x0002)&amp;((value' == 0 | value' == 1))">
+                                    <BinaryExpression Operator="|">
+                                        <BinaryExpression Operator="==">
+                                            <UnaryExpression Operator="'">
+                                                <SimpleIdentifier Name="sender"/>
+                                            </UnaryExpression>
+                                            <SimpleIdentifier Name="x0001"/>
+                                        </BinaryExpression>
+                                        <BinaryExpression Operator="==">
+                                            <UnaryExpression Operator="'">
+                                                <SimpleIdentifier Name="sender"/>
+                                            </UnaryExpression>
+                                            <SimpleIdentifier Name="x0002"/>
+                                        </BinaryExpression>
                                     </BinaryExpression>
-                                    <BinaryExpression Operator="==">
-                                        <UnaryExpression Operator="'">
-                                            <SimpleIdentifier Name="sender"/>
-                                        </UnaryExpression>
-                                        <SimpleIdentifier Name="x0002"/>
+                                    <BinaryExpression Operator="|">
+                                        <BinaryExpression Operator="==">
+                                            <UnaryExpression Operator="'">
+                                                <SimpleIdentifier Name="value"/>
+                                            </UnaryExpression>
+                                            <IntConstant Value="0"/>
+                                        </BinaryExpression>
+                                        <BinaryExpression Operator="==">
+                                            <UnaryExpression Operator="'">
+                                                <SimpleIdentifier Name="value"/>
+                                            </UnaryExpression>
+                                            <IntConstant Value="1"/>
+                                        </BinaryExpression>
                                     </BinaryExpression>
                                 </BinaryExpression>
                             </Guards>

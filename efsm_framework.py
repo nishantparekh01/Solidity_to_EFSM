@@ -423,7 +423,11 @@ def superModifierDefinition(packet):
         modifier.guard_transition_template = body
     else:
         for exp in body:
-            modifier.addTransition(exp)
+            #modifier.addTransition(exp)
+            print(exp)
+            if exp != False:
+             process_in_ignore_list(exp, 'args', ignore_list, modifier)
+
 
 
     # Add modifier to the global dictionary
@@ -916,7 +920,7 @@ def superFunctionDefinition(packet):
     addAutomata(function)
     return Supremica
 
-ignore_list = ['pot', 'bet', 'value', 'withdrawable_player', 'withdrawable_operator', 'amount', 'tmp', 'withdrawable_buyer', 'withdrawable_supplier']
+ignore_list = ['pot', 'bet',  'withdrawable_player', 'withdrawable_operator', 'amount', 'tmp', 'withdrawable_buyer', 'withdrawable_supplier']
 
 
 def superVariableDeclarationStatement(packet):
@@ -955,13 +959,18 @@ def process_in_ignore_list(exp, exp_key, ignore_list, function, **kwargs):
     efsm_name = kwargs.get('efsm_name', None)
 
     false_exp = {}
-
+    print('Expression:--',exp)
+    print(exp)
+    print(exp[exp_key])
     exp_node = exp[exp_key]
-    print('Exp Node', exp_node)
+    print('Exp Node---', exp_node)
+
     for ignore_var in ignore_list:
         if in_ignore_list(exp_node, ignore_var):
+            print('Im hereeee')
             exp[exp_key] = None
             break
+
     if transition_type  and initial_statement_added == True and exp[exp_key] != None:
             exp['type'] = transition_type
             print('Transition Type-----------', transition_type)

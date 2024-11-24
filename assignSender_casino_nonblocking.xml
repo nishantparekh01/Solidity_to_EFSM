@@ -46,6 +46,8 @@
                             <SimpleIdentifier Name="withdrawX"/>
                             <SimpleIdentifier Name="removeFromPotoperatortransferFail"/>
                             <SimpleIdentifier Name="withdrawFail"/>
+                                                        <SimpleIdentifier Name="decideBetFail"/>
+
                             <LabelGeometry Anchor="NW">
                                 <Point X="-57" Y="13"/>
                             </LabelGeometry>

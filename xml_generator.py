@@ -152,7 +152,7 @@ add_events_to_xml('assignSev')
 
 print('______________________________________________________')
 #print(VariableComponent['AddressVariables'])
-print(transfer_efsm_list)
+#print(transfer_efsm_list)
 #print(asdf)
 
 

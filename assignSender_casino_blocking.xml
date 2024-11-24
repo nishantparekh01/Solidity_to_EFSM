@@ -44,6 +44,7 @@
                             <SimpleIdentifier Name="removeFromPotX"/>
                             <SimpleIdentifier Name="removeFromPotoperatortransferFail"/>
                             <SimpleIdentifier Name="playerWinsFail"/>
+                            <SimpleIdentifier Name="decideBetFail"/>
                             <LabelGeometry Anchor="NW">
                                 <Point X="-57" Y="13"/>
                             </LabelGeometry>

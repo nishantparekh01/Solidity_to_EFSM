@@ -89,6 +89,7 @@ class EFSM:
                 if expression['name'] == 'require':
                     # assuming that require has only one argument
                     guard_exp = expression['args']
+                    transition_type = 'require_true'
                     # guard_exp = ET.tostring(expression['args'], encoding='unicode', method='xml')
                 # elif expression['name'] == 'keccak256':
                 elif 'type' in expression and expression['type'] == 'transfer':
@@ -141,8 +142,20 @@ class EFSM:
                     elif expression['type'] == 'sender_transfer_success':
                         transition_type = 'sender_transfer_success'
 
+                    elif expression['type'] == 'require_false':
+                        guard_exp = expression['guard_exp']
+                        transition_type = expression['type']
+
                 elif 'type' in expression and expression['type'] == 'param_assignment':
                     guard_exp = expression['guard_exp']
+
+                # elif 'type' in expression and expression['type'] == 'require_false':
+                #     guard_exp = expression['guard_exp']
+                #     transition_type  = expression['type']
+
+
+
+
 
 
             elif expression['ntype'] == 'Assignment':
@@ -163,7 +176,7 @@ class EFSM:
                     action_exp = expression['exp']
 
                 elif expression['kind'] == 'mapping_assignment_check':
-                    print('Mapping Assignment Check')
+                    #print('Mapping Assignment Check')
                     guard_exp = expression['expression']
 
                 if 'type' in expression:
@@ -181,7 +194,7 @@ class EFSM:
                     # guard_exp = ET.tostring(expression['expression'], encoding='unicode', method='xml')
 
                 elif expression['kind'] == 'mapping_assignment_check':
-                    print('Mapping Assignment Check')
+                    #print('Mapping Assignment Check')
                     guard_exp = expression['expression']
                     #print(asdf)
 
@@ -358,10 +371,10 @@ def superVariableDeclaration(packet):
             # Store the generated mapping variables in the dictionary MappingVariables with mapping variable name as the key
             VariableComponent['MappingVariables'][mapping_name] = {}
             for declared_address in AddressVariables.keys():
-                print(mapping_name + '_'+ declared_address)
+                #print(mapping_name + '_'+ declared_address)
                 mapping_variable = mapping_name + '_'+ declared_address
                 VariableComponent['MappingVariables'][mapping_name][declared_address] = mapping_variable
-                print(VariableComponent['MappingVariables'])
+                #print(VariableComponent['MappingVariables'])
 
 
         #gyg = gyg - 2
@@ -382,7 +395,7 @@ def superVariableDeclaration(packet):
 
         # Add this to the dictionary AddressVariables
         VariableComponent['BooleanVariables'][name] = members
-        print('Boolean Variables: ', VariableComponent['BooleanVariables'])
+        #print('Boolean Variables: ', VariableComponent['BooleanVariables'])
 
 def addAutomata(efsm):
     global Components
@@ -421,7 +434,7 @@ def superModifierDefinition(packet):
 
 def add_transfer_efsm(efsm_name):
     #efsm_name = efsm_name
-    print('ADding efsm-----------', efsm_name)
+    #print('ADding efsm-----------', efsm_name)
     transfer_efsm_name = efsm_name  # operatortransfer
     if  transfer_efsm_name not in transfer_efsm_list:
 
@@ -448,17 +461,113 @@ def add_transfer_efsm(efsm_name):
         addAutomata(transfer_efsm)
 
 
+def check_require_in_function(body):
+    for exp in body:
+        if 'ntype' in exp and exp['ntype'] == 'FunctionCall':
+            if exp['name'] == 'require':
+                return True
+    return False
+
+
+def check_parameter_in_require( body, search_string):
+    # check for all parameter if they are present in any require statement
+    # Check if the search string is in the element's text
+    for exp in body:
+        if 'ntype' in exp and exp['ntype'] == 'FunctionCall':
+            if exp['name'] == 'require':
+                element = exp['args']
+
+                if element.text and search_string in element.text:
+                    return True
+
+                # Check if the search string is in the element's tail text
+                if element.tail and search_string in element.tail:
+                    return True
+
+                # Check if the search string is in any of the element's attributes
+                for attribute in element.attrib.values():
+                    if search_string in attribute:
+                        return True
+
+                # Recursively check all child elements
+                for child in element:
+                    if in_ignore_list(child, search_string):
+                        return True
+
+                # If none of the conditions are met
+                return False
+
+        return False
+
+
+
+
 def superFunctionDefinition(packet):
     global false_body
     name = packet['name']
     params = packet['params']
+    print('params', params)
     global param_assigned
     param_assigned = False
     body = packet['body']
     modifiers = packet['modifiers']
+    global initial_statement_added
+    initial_statement_added = False
+
 
     # Create EFSM instance of function
     function = EFSM(name)
+
+    require_in_function = check_require_in_function(body)
+    if require_in_function:
+        print('Require in function', name)
+
+        for param, param_type in params.items():
+            # check if the parameter is present in the require statement
+            if check_parameter_in_require(body, param):
+                # Add parameter to the function
+                print('Parameter present in require statement', param, param_type)
+
+                if param_type in VariableComponent['EnumVariables']:
+                    # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+                    guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
+                                                   **{'ntype': 'ParameterDeclarationStatement',
+                                                      'kind': 'AssignmentCheck'})
+                    # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
+                    param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                    function.addTransition(param_assignment)
+                    param_assigned = True
+                    initial_statement_added = True
+
+                elif param_type == 'uint' or param_type == 'uint256' or param_type == 'bytes32':
+                    rhs_list = ['0', '1']
+                    guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
+                                                                             'kind': 'AssignmentCheck'})
+                    param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                    function.addTransition(param_assignment)
+                    param_assigned = True
+                    initial_statement_added = True
+    else:
+        # add parameters to the function
+        for param, param_type in params.items():
+            # print(param, param_type, 'param and param_type')
+            if param_type in VariableComponent['EnumVariables']:
+                # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+                guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
+                                               **{'ntype': 'ParameterDeclarationStatement',
+                                                  'kind': 'AssignmentCheck'})
+                # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
+                param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                function.addTransition(param_assignment)
+                param_assigned = True
+
+            elif param_type == 'uint' or param_type == 'uint256' or param_type == 'bytes32':
+                rhs_list  = ['0','1']
+                guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
+                                                                  'kind': 'AssignmentCheck'})
+                param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                function.addTransition(param_assignment)
+                param_assigned = True
 
     # Add function name to invoked modifiers
     if modifiers:
@@ -467,7 +576,7 @@ def superFunctionDefinition(packet):
     # Add transitions to the function based on parameters and its respective values
 
     for exp_index, exp in enumerate(body):
-        print(exp_index)
+        #print(exp_index)
         if 'type' in exp and exp['type'] == 'transfer':
             transfer_in_function_name = str()
 
@@ -538,7 +647,7 @@ def superFunctionDefinition(packet):
             #print('Mapping Transfer reached in superFunctionDefinition')
             #print(exp)
             sender_list = exp['sender_list']
-            print(sender_list)
+            #print(sender_list)
             #asdf
 
             if exp_index == 0:
@@ -560,7 +669,7 @@ def superFunctionDefinition(packet):
                     transfer_event_initial = transfer_event + '1'
                     transfer_event_fail = transfer_event + 'Fail'
                     transfer_event_success = transfer_event + 'X'
-                    print('sender id ====', sender_id)
+                    #print('sender id ====', sender_id)
 
                     if sender_id == 0:
                         transfer_attempt_type = 'sender_transfer_initial'
@@ -733,7 +842,13 @@ def superFunctionDefinition(packet):
             #         function.addTransition(exp)
             #     else:
             #         function.addTransition(exp)
-            process_in_ignore_list(exp, 'args', ignore_list, function)
+            # if exp_index != 0:
+            #     print('exp_index', exp_index)
+            process_in_ignore_list(exp, 'args', ignore_list, function, transition_type = 'require_true', efsm_name = name)
+
+
+            # else:
+            #     process_in_ignore_list(exp, 'args', ignore_list, function)
             #function.addTransition(exp)
 
             # Parameter assignment place here so that it is called after the require statement if any require statement is present
@@ -748,7 +863,16 @@ def superFunctionDefinition(packet):
                        # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
                         param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
                         function.addTransition(param_assignment)
-                        param_assigned = True
+
+                    # work on this part later
+                    elif param_type == 'uint' or param_type == 'uint256' or param_type == 'bytes32':
+                        rhs_list  = ['0','1']
+                        guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
+                                                                          'kind': 'AssignmentCheck'})
+                        param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                        function.addTransition(param_assignment)
+                    param_assigned = True
+
 
         elif exp['ntype'] == 'Assignment' and exp['kind'] == 'structConstructorCall':
             #print('Struct Constructor Call')
@@ -826,14 +950,33 @@ def in_ignore_list(element, search_string):
 
 ################ Processing if in in_ignore_list ################################################
 
-def process_in_ignore_list(exp, exp_key, ignore_list, function):
+def process_in_ignore_list(exp, exp_key, ignore_list, function, **kwargs):
+    transition_type = kwargs.get('transition_type', None)
+    efsm_name = kwargs.get('efsm_name', None)
+
+    false_exp = {}
+
     exp_node = exp[exp_key]
+    print('Exp Node', exp_node)
     for ignore_var in ignore_list:
         if in_ignore_list(exp_node, ignore_var):
             exp[exp_key] = None
             break
+    if transition_type  and initial_statement_added == True and exp[exp_key] != None:
+            exp['type'] = transition_type
+            print('Transition Type-----------', transition_type)
+            require_condition = exp['args']
+            require_condition_false = ET.Element("UnaryExpression", Operator="!")
+            require_condition_false.append(require_condition)
+            function_fail = efsm_name + 'Fail'
+            false_exp = {'ntype': 'Simple','name':function_fail, 'guard_exp': require_condition_false, 'type': 'require_false' }
+
 
     function.addTransition(exp)
+    if false_exp != {}:
+        print("False Exp", false_exp)
+        function.addTransition(false_exp)
+
 
 
 ################ Checking through final_sol_list ################################################

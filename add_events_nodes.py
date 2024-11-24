@@ -112,6 +112,7 @@ for efsm in pre_supremica['Components']:
                 transfer_success_source_node = str()
                 sender_transfer_merge_node = str()
                 temporary_source_node = str()
+                require_node = str()
                 for i in range(n_transitions): # if there are multiple transitions
                     #print('========',condition_node, true_last_node)
                     processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
@@ -127,34 +128,34 @@ for efsm in pre_supremica['Components']:
                             target_node = source_node
 
                         elif processing_transition['transition_type'] == 'true_body_start':
-                            print('found some true body start here+++++++++++++++++++++++++++++')
-                            print(efsm, processing_transition)
+                            #print('found some true body start here+++++++++++++++++++++++++++++')
+                            #print(efsm, processing_transition)
                             source_node = get_new_node('source')
                             condition_node = source_node
                             target_node = get_new_node('target')
                             if next_transition_type ==  'false_body_start' or next_transition_type == 'false_body_absent':
                                 true_last_node = target_node
-                                print('true last node: ', true_last_node)
+                                #print('true last node: ', true_last_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'true_body_last':
-                            print('found some true last here')
+                            #print('found some true last here')
                             if source_node == "S0":
                                 source_node = get_new_node('source')
                                 condition_node = source_node
-                                print('condition node: ', condition_node)
+                                #print('condition node: ', condition_node)
                             target_node = get_new_node('target')
                             true_last_node = target_node
-                            print('transition number, source node, true_last node: ', i, source_node, true_last_node)
+                            #print('transition number, source node, true_last node: ', i, source_node, true_last_node)
 
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_last':
-                            print('found some false last here')
+                            #print('found some false last here')
                             target_node = true_last_node
                             node_id = int(target_node[-1])
                             processing_transition['source_index'] = source_node
@@ -172,10 +173,10 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_absent':
-                            print('found some false body start here at i = 0')
-                            print(efsm, processing_transition)
-                            print('source node: ', condition_node)
-                            print('target node: ', true_last_node)
+                            #print('found some false body start here at i = 0')
+                            #print(efsm, processing_transition)
+                            #print('source node: ', condition_node)
+                            #print('target node: ', true_last_node)
                             #print(asdf)
                             source_node = condition_node
 
@@ -222,7 +223,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'true_body_start':
-                            print('found some true body start here')
+                            #print('found some true body start here')
                             source_node = get_new_node('source')
                             condition_node = source_node
                             target_node = get_new_node('target')
@@ -240,7 +241,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_last':
-                            print('found some false last here')
+                            #print('found some false last here')
                             target_node = true_last_node
                             node_id = int(target_node[-1])
                             processing_transition['source_index'] = source_node
@@ -248,10 +249,10 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(condition_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_absent':
-                            print('found some false_absent body here, last transition')
-                            print(efsm, processing_transition)
-                            print('source node: ', condition_node)
-                            print('target node: ', true_last_node)
+                            #print('found some false_absent body here, last transition')
+                            #print(efsm, processing_transition)
+                            #print('source node: ', condition_node)
+                            #print('target node: ', true_last_node)
                             # print(asdf)
                             source_node = condition_node
 
@@ -262,32 +263,32 @@ for efsm in pre_supremica['Components']:
 
                         elif processing_transition['transition_type'] == 'sender_transfer_initial':
 
-                            print('sender transfer found in add_events_nodes.py')
+                            #print('sender transfer found in add_events_nodes.py')
                             source_node = get_new_node('source')
                             sender_transfer_node = source_node
                             target_node = get_new_node('target')
-                            print('sender transfer node : ',sender_transfer_node)
+                            #print('sender transfer node : ',sender_transfer_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'sender_transfer':
-                            print('sender transfer found in add_events_nodes.py-----')
+                            #print('sender transfer found in add_events_nodes.py-----')
                             source_node = sender_transfer_node
                             target_node = get_new_node('target')
-                            print('source node: ', source_node)
-                            print('target node: ', target_node)
+                            #print('source node: ', source_node)
+                            #print('target node: ', target_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'sender_transfer_success':
-                            print('sender transfer found in add_events_nodes.py-----')
+                            #print('sender transfer found in add_events_nodes.py-----')
                             source_node = transfer_success_source_node
                             #target_node = get_new_node('target')
                             target_node = sender_transfer_merge_node
-                            print('source node: ', source_node)
-                            print('target node: ', target_node)
+                            #print('source node: ', source_node)
+                            #print('target node: ', target_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
@@ -326,8 +327,8 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'true_body_start':
-                            print('found some true body start here----------------------------------')
-                            print(efsm, processing_transition)
+                            #print('found some true body start here----------------------------------')
+                            #print(efsm, processing_transition)
                             source_node = get_new_node('source')
                             condition_node = source_node
                             target_node = get_new_node('target')
@@ -338,8 +339,8 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'true_body_last':
-                            print('found some true last here, transaction not first not last')
-                            print(efsm, processing_transition)
+                            #print('found some true last here, transaction not first not last')
+                            #print(efsm, processing_transition)
                             # if condition_node == "":
                             #     print('condition node is empty')
                             #     #print(asdf)
@@ -347,13 +348,13 @@ for efsm in pre_supremica['Components']:
                             #condition_node = source_node
                             target_node = get_new_node('target')
                             true_last_node = target_node
-                            print('true last node: ', true_last_node)
+                            #print('true last node: ', true_last_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_last':
-                            print('found some false last here')
+                            #print('found some false last here')
                             target_node = true_last_node
                             node_id = int(target_node[-1])
                             processing_transition['source_index'] = source_node
@@ -362,20 +363,20 @@ for efsm in pre_supremica['Components']:
                             #print(asdf)
 
                         elif processing_transition['transition_type'] == 'false_body_start':
-                            print('found some false body start here ---------')
+                            #print('found some false body start here ---------')
                             source_node = condition_node
 
                             target_node = get_new_node('target')
-                            print(efsm, processing_transition)
+                            #print(efsm, processing_transition)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_absent':
-                            print('found some false_absent body here')
-                            print(efsm, processing_transition)
-                            print('source node: ', condition_node)
-                            print('target node: ', true_last_node)
+                            #print('found some false_absent body here')
+                            #print(efsm, processing_transition)
+                            #print('source node: ', condition_node)
+                            #print('target node: ', true_last_node)
                             #print(asdf)
                             source_node = condition_node
 
@@ -386,46 +387,61 @@ for efsm in pre_supremica['Components']:
 
                         elif processing_transition['transition_type'] == 'sender_transfer_initial':
 
-                            print('sender transfer found in add_events_nodes.py')
+                            #print('sender transfer found in add_events_nodes.py')
                             source_node = get_new_node('source')
                             sender_transfer_node = source_node
                             target_node = get_new_node('target')
                             transfer_success_source_node = target_node
-                            print('sender transfer node : ', sender_transfer_node)
+                            #print('sender transfer node : ', sender_transfer_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'sender_transfer':
-                            print('sender transfer found in add_events_nodes.py-----')
+                            #print('sender transfer found in add_events_nodes.py-----')
                             source_node = sender_transfer_node
                             target_node = get_new_node('target')
                             transfer_success_source_node = target_node
-                            print('source node: ', source_node)
-                            print('target node: ', target_node)
+                            #print('source node: ', source_node)
+                            #print('target node: ', target_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'sender_transfer_success_initial':
-                            print('sender transfer found in add_events_nodes.py-----')
+                            #print('sender transfer found in add_events_nodes.py-----')
                             source_node = transfer_success_source_node
                             target_node = get_new_node('target')
                             sender_transfer_merge_node = target_node
                             temporary_source_node = sender_transfer_merge_node
-                            print('source node: ', source_node)
-                            print('target node: ', target_node)
+                            #print('source node: ', source_node)
+                            #print('target node: ', target_node)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'sender_transfer_success':
-                            print('sender transfer found in add_events_nodes.py-----')
+                            #print('sender transfer found in add_events_nodes.py-----')
                             source_node = transfer_success_source_node
                             #target_node = get_new_node('target')
                             target_node = sender_transfer_merge_node
-                            print('source node: ', source_node)
-                            print('target node: ', target_node)
+                            #print('source node: ', source_node)
+                            #print('target node: ', target_node)
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+                        elif processing_transition['transition_type'] == 'require_true':
+                            source_node = get_new_node('source')
+                            target_node = get_new_node('target')
+                            require_node = source_node
+
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'require_false':
+                            source_node = require_node
+                            target_node = INITIAL_NODE
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)

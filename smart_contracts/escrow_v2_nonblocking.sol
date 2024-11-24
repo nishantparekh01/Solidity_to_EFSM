@@ -56,7 +56,7 @@ contract RawMaterialEscrow{
     }
 
     // Anyone can withdraw, i.p. operator and (current/former) players
-    function withdraw() public{
+    function withdraw() currentState(State.COMPLETE) public{
         uint tmp = withdrawable[msg.sender];
         withdrawable[msg.sender] = 0;
         payable(msg.sender).transfer(tmp);

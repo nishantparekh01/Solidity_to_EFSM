@@ -26,6 +26,7 @@ def restructure(pre_supremica):
     for efsm in pre_supremica['Components']:
         processing_node = {}
         processing_transition = {}
+        previous_transition = {}
         if efsm != 'VariableComponent':
             for i in range(len(pre_supremica['Components'][efsm]['edge_list'])):
                 processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
@@ -41,6 +42,13 @@ def restructure(pre_supremica):
                 if processing_transition['transition_type'] == 'true_body_last':
                     #print('true_body last here', processing_transition)
                     continue
+                # if 'transition_type' in previous_transition and previous_transition['transition_type'] == 'param_assignment':
+                #     print('param_assignment here', processing_transition)
+                #     continue
+
+                if processing_transition['transition_type'] == 'param_assignment':
+                    #print('param_assignment here', processing_transition)
+                    continue
 
                 if processing_transition['action_exp'] == None:
                     # check ntype of evaluate_expression
@@ -49,6 +57,8 @@ def restructure(pre_supremica):
 
                     if not check_action_present(processing_transition): # isn't this the same as the above if statement?
                         processing_node = processing_transition
+
+
                 else:
                     if processing_node != {}: # I don't understand this condition and what it does
                         processing_node['action_exp'] = processing_transition['action_exp']

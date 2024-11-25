@@ -148,6 +148,7 @@ class EFSM:
 
                 elif 'type' in expression and expression['type'] == 'param_assignment':
                     guard_exp = expression['guard_exp']
+                    transition_type = expression['type']
 
                 # elif 'type' in expression and expression['type'] == 'require_false':
                 #     guard_exp = expression['guard_exp']
@@ -920,7 +921,7 @@ def superFunctionDefinition(packet):
     addAutomata(function)
     return Supremica
 
-ignore_list = ['pot', 'bet',  'withdrawable_player', 'withdrawable_operator', 'amount', 'tmp', 'withdrawable_buyer', 'withdrawable_supplier']
+ignore_list = ['pot', 'bet',  'withdrawable_player', 'withdrawable_operator',  'tmp', 'withdrawable_buyer', 'withdrawable_supplier']
 
 
 def superVariableDeclarationStatement(packet):

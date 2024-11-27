@@ -37,12 +37,17 @@ VariableComponent['StructVariables'] = {}
 
 # creating a dictionary to store all generated addresses
 VariableComponent['AddressVariables'] = {}
+AddressVariables = VariableComponent['AddressVariables']
 
 # creating a dictionary to store all generated boolean variables
 VariableComponent['BooleanVariables'] = {}
 
 # creating a dictionary to store Mapping variables
 VariableComponent['MappingVariables'] = {}
+
+# creating a dictionary to store integer variables
+VariableComponent['IntegerVariables'] = {}
+IntegerVariables = VariableComponent['IntegerVariables']
 
 # declaring address_index to keep track of address variables
 address_index = 0
@@ -149,6 +154,8 @@ class EFSM:
                 elif 'type' in expression and expression['type'] == 'param_assignment':
                     guard_exp = expression['guard_exp']
                     transition_type = expression['type']
+                elif 'type' in expression and (expression['type'] == 'true_body_last' or expression['type'] == 'false_body_last'):
+                    transition_type = expression['type']
 
                 # elif 'type' in expression and expression['type'] == 'require_false':
                 #     guard_exp = expression['guard_exp']
@@ -198,6 +205,11 @@ class EFSM:
                     #print('Mapping Assignment Check')
                     guard_exp = expression['expression']
                     #print(asdf)
+                elif expression['kind'] == 'address_variable_assignment':
+                    action_exp = expression['expression']
+
+                elif expression['kind'] == 'integer_variable_assignment':
+                    action_exp = expression['expression']
 
 
             elif expression['ntype'] == 'IfStatement':
@@ -299,10 +311,12 @@ def get_address_index():
     return address_index
 
 
-def superVariableDeclaration(packet):
+def superVariableDeclaration(packet, **kwargs):
     global VariableComponent
     name = packet['name']
     type = packet['type']
+
+    initial_value =  kwargs.get('initial_value', None )
 
     if type in VariableComponent['EnumVariables']:
         members = VariableComponent['EnumVariables'][type]
@@ -322,6 +336,8 @@ def superVariableDeclaration(packet):
         # VariableComponent.append(str_xml_VariableComponent)
 
     elif type == 'uint' or type == 'uint256' or type == 'bytes32':
+
+        VariableComponent['IntegerVariables'][name] = [0, 1]
 
         xml_VariableComponent = ET.Element("VariableComponent", Name=name)
         xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
@@ -358,7 +374,7 @@ def superVariableDeclaration(packet):
         xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
         xml_initialValue = wmodify_assignment(name, "==", address_name)
         xml_VariableInitial.append(xml_initialValue)
-        VariableComponent[name] = xml_VariableComponent
+        VariableComponent[name] = xml_VariableComponent # store the xml element in VariableComponent dictionary
 
     elif type == 'Mapping':
         #print(packet)
@@ -389,7 +405,14 @@ def superVariableDeclaration(packet):
             ET.SubElement(xml_EnumSetExpression, "SimpleIdentifier", Name=mem)
 
         xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
-        xml_initialValue = wmodify_assignment(name, "==", members[0])
+        #initial_value = initial_value if not initial_value  else members[0]
+        if not initial_value:
+            initial_value = members[0]
+        print('initial value', initial_value, name, type)
+
+
+        #xml_initialValue = wmodify_assignment(name, "==", members[0])
+        xml_initialValue = wmodify_assignment(name, "==",initial_value)
         xml_VariableInitial.append(xml_initialValue)
         VariableComponent[name] = xml_VariableComponent
         #print('bool variable added', name)
@@ -581,7 +604,7 @@ def superFunctionDefinition(packet):
     # Add transitions to the function based on parameters and its respective values
 
     for exp_index, exp in enumerate(body):
-        #print(exp_index)
+        print(exp_index)
         if 'type' in exp and exp['type'] == 'transfer':
             transfer_in_function_name = str()
 
@@ -751,10 +774,46 @@ def superFunctionDefinition(packet):
 
             function.addTransition(true_exp_transition)
             for index, stmnt in enumerate(true_body): # add transitions for each statement in the true body
-                if index == len(true_body) - 1:
-                    stmnt['type'] = 'true_body_last'
-                    function.addTransition(stmnt)
-                else:
+                if index == len(true_body) - 1: # if it is the only statement / last statement in true body
+                    #stmnt['type'] = 'true_body_last'
+                    print('true body last statement', stmnt)
+                    if 'type' in stmnt and stmnt['type'] == 'transfer':
+                        transfer_in_function_name = str()
+                        print('Transfer in function name', transfer_in_function_name)
+
+
+                        if exp_index == 0:
+                            first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
+                            function.addTransition(first_transition)
+                            transfer_in_function_name = name + stmnt['name']
+                            add_transfer_efsm(transfer_in_function_name)
+
+
+                        else:
+                            transfer_in_function_name = name + stmnt['name']
+                            add_transfer_efsm(transfer_in_function_name)
+
+
+                        stmnt['name'] = name + stmnt[
+                            'name']  # transfer name is now function name + transfer name to distinguish between same address transfers in different functions
+                        function.addTransition(stmnt)
+
+                        transfer_success = transfer_in_function_name + 'X'
+                        transfer_fail = transfer_in_function_name + 'Fail'
+
+                        transfer_success_exp = {'ntype': 'Simple', 'name': transfer_success, 'type': 'transfer_success'}
+                        transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_fail, 'type': 'transfer_fail'}
+                        next_statement = {'ntype': 'Simple', 'type': 'true_body_last'}
+                        efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+
+                        function.addTransition(transfer_fail_exp)
+                        function.addTransition(efsm_fail)
+                        function.addTransition(transfer_success_exp)
+                        function.addTransition(next_statement)
+                    else:
+                        stmnt['type'] = 'true_body_last'
+                        function.addTransition(stmnt)
+                else: # transfer not added here, can be added later
                     if 'exp' or 'expression' in stmnt:
                         if 'exp' in exp:
                             #     exp_node = exp['exp']
@@ -780,7 +839,12 @@ def superFunctionDefinition(packet):
                             process_in_ignore_list(stmnt, 'expression', ignore_list, function)
                     #function.addTransition(stmnt)
                 if stmnt['ntype'] == 'FunctionCall':
-                    if index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
+                    if stmnt['type'] == 'transfer':
+                        print('-----------------Transfer in function call-----------------')
+
+                        continue
+                    elif index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
+
                         function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
                         #function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
                         #print('transition added', function_complete)
@@ -849,7 +913,17 @@ def superFunctionDefinition(packet):
             #         function.addTransition(exp)
             # if exp_index != 0:
             #     print('exp_index', exp_index)
+
+            if isinstance(exp['args'], str): # case where require statement has a single variable of boolean type, example: require(auctionOpen)
+                    if exp['args'] in VariableComponent['BooleanVariables']:
+                        exp['args'] = wmodify_assignment(exp['args'], "==", "true")
+
+
+
             process_in_ignore_list(exp, 'args', ignore_list, function, transition_type = 'require_true', efsm_name = name)
+            if exp_index == 0:
+                initial_statement_added = True
+
 
 
             # else:
@@ -922,7 +996,7 @@ def superFunctionDefinition(packet):
     return Supremica
 
 ignore_list = ['pot', 'bet',  'withdrawable_player', 'withdrawable_operator',  'tmp', 'withdrawable_buyer', 'withdrawable_supplier']
-
+#ignore_list = []
 
 def superVariableDeclarationStatement(packet):
     pass
@@ -960,11 +1034,11 @@ def process_in_ignore_list(exp, exp_key, ignore_list, function, **kwargs):
     efsm_name = kwargs.get('efsm_name', None)
 
     false_exp = {}
-    print('Expression:--',exp)
-    print(exp)
-    print(exp[exp_key])
+    #print('Expression:--',exp)
+    #print(exp)
+    #print(exp[exp_key])
     exp_node = exp[exp_key]
-    print('Exp Node---', exp_node)
+    #print('Exp Node---', exp_node)
 
     for ignore_var in ignore_list:
         if in_ignore_list(exp_node, ignore_var):

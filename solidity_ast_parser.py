@@ -71,6 +71,13 @@ def handleVariableDeclaration(node):
     assert ntype(node) == 'VariableDeclaration', " Node not VariableDeclaration"
     name = node['name']
     var_type = lookup_table[ntype(node['typeName'])](node['typeName'])
+    initial_value = str()
+    if var_type == 'bool':
+        if 'value' in node:
+            #print('Boolean variable found:', name)
+            initial_value = lookup_table[ntype(node['value'])](node['value'])
+            #print('Initial value:', initial_value)
+
 
     # checking if var_type is already defined as a struct
     #print('Variable name:', name)
@@ -102,6 +109,7 @@ def handleVariableDeclaration(node):
             # print("Mapping found")
             # print(var_type['key_value'])
             packet = {'name': name, 'type': var_type['ntype'], 'key_value': var_type['key_value']}
+
             #print(packet)
 
 
@@ -109,7 +117,7 @@ def handleVariableDeclaration(node):
         packet = {'name': name, 'type': var_type}
     #print(packet)
 
-    if superVariableDeclaration(packet):
+    if superVariableDeclaration(packet, initial_value = initial_value):
         return  True
     return(name)
 
@@ -358,8 +366,9 @@ def handleVariableDeclarationStatement(node):
 
     # assumption - there is only one variable declaration here
     #name = "".join([lookup_table[ntype(d)](d) for d in node['declarations']])
-    name = lookup_table[ntype(node['declarations'][0])](node['declarations'][0]) # has tmp
-    init_value = lookup_table[ntype(node['initialValue'])](node['initialValue']) # nodeType == 'IndexAccess' value = {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'}
+    name = lookup_table[ntype(node['declarations'][0])](node['declarations'][0]) # has oldBidder
+    init_value = lookup_table[ntype(node['initialValue'])](node['initialValue']) # nodeType == 'IndexAccess' value = {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'} # currentBidde
+
     if isinstance(init_value, dict):
         #print('Dict found:', init_value)
         if 'ntype' in init_value and init_value['ntype'] == 'Conditional':
@@ -385,6 +394,24 @@ def handleVariableDeclarationStatement(node):
 
 
         #print(asdf)
+    elif init_value in AddressVariables:
+        #print('Address variable found:', init_value)
+        #print('Value for address variable:', AddressVariables[init_value])
+        #print(VariableComponent)
+
+        #address_variable_value = AddressVariables[init_value]
+        address_variable_value = init_value
+        exp = wmodify_assignment(name, "=", address_variable_value)
+        return {'ntype': ntype(node), 'kind': 'address_variable_assignment', 'expression': exp}
+
+
+    elif init_value in IntegerVariables:
+        print('Integer variable found:', init_value)
+        init_value = str(init_value)
+        exp = wmodify_assignment(name, "=", init_value)
+        return {'ntype': ntype(node), 'kind': 'integer_variable_assignment', 'expression': exp}
+
+
 
 
     else:

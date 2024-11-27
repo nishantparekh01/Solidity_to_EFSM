@@ -89,11 +89,46 @@ ComponentList.append(VariableComponent_sender)
 
 #############################################################################################################
 
-# Adding transfer efsm for each address variable
+# Replacing address domain for all address variables
+# Do we have an address list ?:
+print(AddressVariables)
 
+for address_name, address_value in VariableComponent['AddressVariables'].items():
+    if address_name in VariableComponent:
+        print(f'Updating address: {address_name}')
 
+        # Get the VariableComponent for the address
+        xml_VariableComponent = VariableComponent[address_name]
 
+        # Remove existing VariableRange (if required)
+        existing_ranges = xml_VariableComponent.findall("VariableRange")
+        for existing_range in existing_ranges:
+            xml_VariableComponent.remove(existing_range)
 
+        # Remove existing VariableInitial (to ensure correct order when re-adding)
+        existing_initial = xml_VariableComponent.find("VariableInitial")
+        if existing_initial is not None:
+            xml_VariableComponent.remove(existing_initial)
+
+        # Add VariableRange first
+        xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
+        xml_EnumSetExpression = ET.SubElement(xml_variableRange, "EnumSetExpression")
+
+        # Copy the EnumSetExpression from sender
+        for child in EnumSetExpression_sender:
+            xml_EnumSetExpression.append(ET.Element("SimpleIdentifier", Name=child.attrib["Name"]))
+
+        # Add VariableInitial second
+        xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
+        xml_initialValue = wmodify_assignment(address_name, "==", address_value)
+        xml_VariableInitial.append(xml_initialValue)
+
+#############################################################################################################
+
+# Print the updated VariableComponent for verification
+# for address_name, xml_component in VariableComponent.items():
+#     print(f"Updated VariableComponent for {address_name}:")
+#     ET.dump(xml_component)
 
 #############################################################################################################
 
@@ -151,6 +186,7 @@ add_events_to_xml('assignSev')
 
 
 print('______________________________________________________')
+print( Supremica)
 #print(VariableComponent['AddressVariables'])
 #print(transfer_efsm_list)
 #print(asdf)
@@ -189,5 +225,6 @@ with open(filename_txt, 'w') as file:
     print(summary, file=file)
 
 print(f"Output written to {output_folder}")
+
 
 #print(ET.tostring(Module, encoding='utf8').decode('utf8'))

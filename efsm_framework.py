@@ -45,6 +45,10 @@ VariableComponent['BooleanVariables'] = {}
 # creating a dictionary to store Mapping variables
 VariableComponent['MappingVariables'] = {}
 
+# creating a dictionary to store Mapping variables
+VariableComponent['FunctionVariablesTEMP'] = {}
+FunctionVariablesTEMP = VariableComponent['FunctionVariablesTEMP']
+
 # creating a dictionary to store integer variables
 VariableComponent['IntegerVariables'] = {}
 IntegerVariables = VariableComponent['IntegerVariables']
@@ -137,9 +141,11 @@ class EFSM:
 
                     elif expression['type'] == 'sender_transfer_initial':
                         transition_type = 'sender_transfer_initial'
+                        guard_exp = expression['guard_exp']
 
                     elif expression['type'] == 'sender_transfer':
                         transition_type = 'sender_transfer'
+                        guard_exp = expression['guard_exp']
 
                     elif expression['type'] == 'sender_transfer_success_initial':
                         transition_type = 'sender_transfer_success_initial'
@@ -699,10 +705,12 @@ def superFunctionDefinition(packet):
                     transfer_event_success = transfer_event + 'X'
                     #print('sender id ====', sender_id)
 
+                    sender_guard = get_sender_guard(sender_address)
+
                     if sender_id == 0:
                         transfer_attempt_type = 'sender_transfer_initial'
 
-                        transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial, 'sender_index' : sender_id, 'type' : transfer_attempt_type}
+                        transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial, 'sender_index' : sender_id, 'guard_exp': sender_guard ,'type' : transfer_attempt_type}
                         function.addTransition(transfer_attempt)
 
                         transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail, 'type': 'transfer_fail'}
@@ -719,7 +727,7 @@ def superFunctionDefinition(packet):
                         transfer_attempt_type = 'sender_transfer'
 
                         transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
-                                            'sender_index': sender_id, 'type': transfer_attempt_type}
+                                            'sender_index': sender_id, 'guard_exp': sender_guard , 'type': transfer_attempt_type}
                         function.addTransition(transfer_attempt)
 
                         transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail, 'type': 'transfer_fail'}
@@ -967,18 +975,23 @@ def superFunctionDefinition(packet):
 
         else:
             if 'exp' in exp or 'expression' in exp:
+                print('Expression in here', exp)
+# do some processing here where lhs is replaced with lhsTEMP
+
                 #exp_string = ET.tostring(exp['exp'], encoding='unicode', method='xml')
                 if 'exp' in exp:
-                #     exp_node = exp['exp']
-                # # elif 'expression' in exp:
-                # #     exp_node = exp['expression']
-                #
-                #     for ignore_var in ignore_list:
-                #         if in_ignore_list(exp_node, ignore_var):
-                #             exp['exp'] = None
-                #             function.addTransition(exp)
-                #         else:
-                #             function.addTransition(exp)
+                    print('Expression in here', exp)
+                    #do some processing here where lhs is replaced with lhsTEMP
+                    if name not in FunctionVariablesTEMP:
+                        FunctionVariablesTEMP[name] = {}
+                        assignment_xml = exp['exp']
+                        print('Assignment XML', assignment_xml)
+                        lhs_variable = get_lhs_variable(assignment_xml)
+                        print('lhs_variable', lhs_variable)
+
+                    else:
+                        pass
+
                     process_in_ignore_list(exp, 'exp', ignore_list, function)
 
                 elif 'expression' in exp:
@@ -1086,6 +1099,19 @@ def check_transfer_in_function(function_name):
 
 #check_transfer_in_function('operatorWins')
 
+################ Definition for get_lhs_variable ################################################
 
+def get_lhs_variable(root):
+    print(ET.tostring(root, encoding='unicode', method='xml'))
 
+    variable = root.find("./SimpleIdentifier")
+    if variable is not None and "Name" in variable.attrib:
+        print(variable.attrib["Name"])
+        return variable.attrib["Name"]  # Return the name of the variable
+    return None
 
+################ Definition for get_sender_guard ################################################
+
+def get_sender_guard(sender_address):
+    sender_guard = wmodify_assignment('sender', "==", sender_address)
+    return sender_guard

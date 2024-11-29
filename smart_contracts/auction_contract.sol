@@ -47,9 +47,8 @@ function closeAuction() public {
       // The auction must still be open
       require (auctionOpen);
 
-      //auctionOpen = false;
+      auctionOpen = false;
       payable(auctionOwner).transfer(currentBid);
-      //auctionOpen = false;
 
     }
 

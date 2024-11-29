@@ -335,6 +335,9 @@ def handleAssignment(node):
             #return {'ntype': ntype(node), 'kind' : kind, 'lhs' : lhs, 'op' : op, 'condition' : rhs['condition'], 'true_exp' : rhs['true_exp'], 'false_exp' : rhs['false_exp']}
     elif isinstance(rhs, ET.Element) or isinstance(rhs, str):
         exp = wmodify_assignment(lhs, op, rhs)
+
+
+
     #exp = wmodify_assignment(lhs, op, rhs)
     return  {'ntype': ntype(node), 'kind' : kind, 'exp' : exp}
 

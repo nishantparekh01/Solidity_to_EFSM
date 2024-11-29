@@ -380,6 +380,8 @@ def generate_assignMsg_efsm(source_s0, target_s0):
 
     # Add SimpleNode S1
     s1_node = ET.SubElement(node_list, "SimpleNode", Name="S1")
+    event_list = ET.SubElement(s1_node, "EventList")
+    ET.SubElement(event_list, "SimpleIdentifier", Name=":accepting")
     point_geom = ET.SubElement(s1_node, "PointGeometry")
     ET.SubElement(point_geom, "Point", X="496", Y="304")
     label_geom = ET.SubElement(s1_node, "LabelGeometry", Anchor="NW")
@@ -450,6 +452,7 @@ add_events_to_xml('assignSev')
 
 #print(VariableComponent['AddressVariables'])
 #print(transfer_efsm_list)
+print(FunctionVariablesTEMP)
 #print(asdf)
 
 

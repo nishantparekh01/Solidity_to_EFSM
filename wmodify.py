@@ -22,11 +22,15 @@ def add_nodes_to_xml(node_list):
     NodeList = ET.Element("NodeList")
     for node in node_list:
         if node == INITIAL_NODE:
+            print('INITIAL NODE---', node)
             SimpleNode = ET.SubElement(NodeList, "SimpleNode", Initial = "true",  Name = node) # Initial = "true" is added to the first node
             EventList = ET.SubElement(SimpleNode, "EventList")
             SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name = ":accepting")
         else:
+            print('not initial nodes---', node)
             SimpleNode = ET.SubElement(NodeList, "SimpleNode",  Name = node)
+            EventList = ET.SubElement(SimpleNode, "EventList")
+            SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name=":accepting")
 
     return  NodeList
 

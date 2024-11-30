@@ -285,6 +285,7 @@ def handleAssignment(node):
     lhs = lookup_table[ntype(node['leftHandSide'])](node['leftHandSide'])  # lhs can be indexAccess returning this  {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'}
     op = node['operator']
     rhs = lookup_table[ntype(node['rightHandSide'])](node['rightHandSide'])
+    print('RRHHSS ----', rhs)
     node_rhs = node['rightHandSide']
     kind = 'simple'
 
@@ -297,8 +298,7 @@ def handleAssignment(node):
             index_node_expression = lookup_table[ntype(index_node['indexExpression'])](index_node['indexExpression'])
 
             if index_node_expression == 'sender':
-
-
+                print('RRHHSS ----', rhs)
                 exp = generate_mapping_assignment_expression(lhs, 'sender', rhs)
                 #print('Mapping expression:', exp)
                 #print(asdf)

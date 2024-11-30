@@ -82,7 +82,8 @@ sender_list = VariableComponent ['AddressVariables']
 # sender_list is a dictionary of address variables
 # {'operator': 'x0001', 'player': 'x0002'}
 
-for address in sender_list.values():
+
+for address in list(set(sender_list.values())):
     EnumSetExpression_sender.append(ET.Element("SimpleIdentifier", Name = address))
 
 # adding initial value to 'sender'
@@ -101,7 +102,7 @@ print(AddressVariables)
 
 for address_name, address_value in VariableComponent['AddressVariables'].items():
     if address_name in VariableComponent:
-        print(f'Updating address: {address_name}')
+        #print(f'Updating address: {address_name}')
 
         # Get the VariableComponent for the address
         xml_VariableComponent = VariableComponent[address_name]
@@ -228,7 +229,7 @@ def extract_events_ending_with(edge_list, suffix):
     :return: A list of event names ending with '1'.
     """
     events = set()
-    print(edge_list)
+    #print(edge_list)
     for edge in ET.ElementTree(edge_list).findall("./Edge/LabelBlock/SimpleIdentifier"):
         event_name = edge.get("Name")
         if event_name and event_name.endswith(suffix):
@@ -332,6 +333,8 @@ def generate_address_xml(address_list):
 
     if not address_list:
         raise ValueError("Address list cannot be empty.")
+
+    address_list  = list(set(address_list))
 
     # Start with the first address as the initial root of the expression
     current = ET.Element("BinaryExpression", {"Operator": "=="})
@@ -452,7 +455,7 @@ add_events_to_xml('assignSev')
 
 #print(VariableComponent['AddressVariables'])
 #print(transfer_efsm_list)
-print(FunctionVariablesTEMP)
+#print(FunctionVariablesTEMP)
 #print(asdf)
 
 

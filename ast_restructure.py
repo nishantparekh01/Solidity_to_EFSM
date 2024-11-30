@@ -50,6 +50,10 @@ def restructure(pre_supremica):
                     #print('param_assignment here', processing_transition)
                     continue
 
+                if processing_transition['transition_type'] == 'final_transition':
+                    #print('final_transition here', processing_transition)
+                    continue
+
                 if processing_transition['transition_type'] == 'require_false' or processing_transition['transition_type'] == 'require_true':
                     #print('param_assignment here', processing_transition)
                     continue

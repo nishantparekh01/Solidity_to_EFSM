@@ -22,12 +22,12 @@ def add_nodes_to_xml(node_list):
     NodeList = ET.Element("NodeList")
     for node in node_list:
         if node == INITIAL_NODE:
-            print('INITIAL NODE---', node)
+            #print('INITIAL NODE---', node)
             SimpleNode = ET.SubElement(NodeList, "SimpleNode", Initial = "true",  Name = node) # Initial = "true" is added to the first node
             EventList = ET.SubElement(SimpleNode, "EventList")
             SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name = ":accepting")
         else:
-            print('not initial nodes---', node)
+            #print('not initial nodes---', node)
             SimpleNode = ET.SubElement(NodeList, "SimpleNode",  Name = node)
             EventList = ET.SubElement(SimpleNode, "EventList")
             SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name=":accepting")
@@ -52,9 +52,21 @@ def add_transition_to_xml(transition):
         guard_exp_xml = transition['guard_exp']
         Guard.append(guard_exp_xml)
     if transition['action_exp'] is not None:
+        #print('ACtion Expression------:', transition['action_exp'])
+        #print(ET.tostring(transition['action_exp'],  encoding='unicode', method='xml'))
         Action = ET.SubElement(GuardActionBlock, "Actions")
         action_exp_xml = transition['action_exp']
-        Action.append(action_exp_xml)
+        # if len(action_exp_xml) > 1:
+        #     for action in action_exp_xml:
+        #         Action.append(action)
+        # else:
+        #  Action.append(action_exp_xml)
+        if action_exp_xml.tag == 'Container' :
+            if len(action_exp_xml) != 0:
+                for action in action_exp_xml:
+                    Action.append(action)
+        else:
+            Action.append(action_exp_xml)
 
     return Edge
 def wmodify_assignment(lhs, op, rhs, **info):
@@ -307,6 +319,11 @@ def generate_mapping_expression(mapping_dict, lhs_address, lhs_var):
         binary_expr2 = ET.Element("BinaryExpression", Operator="==")
         tmp_assignment = ET.SubElement(binary_expr2, "UnaryExpression", Operator="'")
         ET.SubElement(tmp_assignment, "SimpleIdentifier", Name=lhs_var)
+        # print('CORRESPONDING VAR---',corresponding_var)
+        # if is_integer(corresponding_var):
+        #     ET.SubElement(binary_expr2, "IntConstant", Value=str(corresponding_var))
+        # else:
+        #     ET.SubElement(binary_expr2, "SimpleIdentifier", Name=corresponding_var)
         ET.SubElement(binary_expr2, "SimpleIdentifier", Name=corresponding_var)
 
         # Combine the two conditions with AND (&)
@@ -348,7 +365,11 @@ def generate_mapping_assignment_expression(mapping_dict, lhs_address, lhs_var):
         binary_expr2 = ET.Element("BinaryExpression", Operator="==")
         tmp_assignment = ET.SubElement(binary_expr2, "UnaryExpression", Operator="'")
         ET.SubElement(tmp_assignment, "SimpleIdentifier", Name=corresponding_var)
-        ET.SubElement(binary_expr2, "SimpleIdentifier", Name=lhs_var)
+        if is_integer(lhs_var):
+            ET.SubElement(binary_expr2, "IntConstant", Value=str(lhs_var))
+        else:
+             ET.SubElement(binary_expr2, "SimpleIdentifier", Name=lhs_var)
+        #ET.SubElement(binary_expr2, "SimpleIdentifier", Name=lhs_var)
 
         # Combine the two conditions with AND (&)
         and_expr = ET.Element("BinaryExpression", Operator="&")

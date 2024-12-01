@@ -46,9 +46,14 @@ VariableComponent['BooleanVariables'] = {}
 # creating a dictionary to store Mapping variables
 VariableComponent['MappingVariables'] = {}
 
-# creating a dictionary to store Mapping variables
+# creating a dictionary to store TEMP variables
 VariableComponent['FunctionVariablesTEMP'] = {}
 FunctionVariablesTEMP = VariableComponent['FunctionVariablesTEMP']
+
+# creating a dictionary to store TEMP variables for expressions genearted in solidity_ast_parser
+# because function name is unkown
+VariableComponent['GeneralVariablesTEMP'] = {}
+GeneralVariablesTEMP = VariableComponent['GeneralVariablesTEMP']
 
 # creating a dictionary to store integer variables
 VariableComponent['IntegerVariables'] = {}
@@ -688,24 +693,34 @@ def superFunctionDefinition(packet):
             #print('Mapping Transfer reached in superFunctionDefinition')
             #print(exp)
             sender_list = exp['sender_list']
+            #print('SENDER LIST-----', sender_list)
+            #print(AddressVariables)
+            # trialzone4--------------------------------------------------------
             #print(sender_list)
             #asdf
+
+
 
             if exp_index == 0:
                 first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
                 function.addTransition(first_transition)
                 for sender_address in sender_list: # add transfer_efsm for each address if it is not already present
-                    sender_address_check = name +sender_address + 'transfer'
-                    add_transfer_efsm(sender_address_check)
+                    if sender_address not in any(list(FunctionVariablesTEMP.values())):
+                        #print('Check SENDER Address', sender_address)
+                        sender_address_check = name +sender_address + 'transfer'
+                        add_transfer_efsm(sender_address_check)
 
 
 
             else:
                 for sender_address in sender_list: # add transfer_efsm for each address if it is not already present
-                    sender_address_check = name + sender_address + 'transfer'
-                    add_transfer_efsm(sender_address_check)
+                    # trialzone4------------------------------
+                    if not check_address_in_TEMP(sender_address):
+                        sender_address_check = name + sender_address + 'transfer'
+                        add_transfer_efsm(sender_address_check)
 
             for sender_id, sender_address in enumerate(sender_list):
+                if not check_address_in_TEMP(sender_address):
                     transfer_event = name +sender_address + 'transfer'
                     transfer_event_initial = transfer_event + '1'
                     transfer_event_fail = transfer_event + 'Fail'
@@ -744,11 +759,13 @@ def superFunctionDefinition(packet):
 
                         transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
                                                 'type': 'sender_transfer_success'}
+                        print('TRANSFER SUCCESS',sender_address,transfer_success_exp)
                         function.addTransition(transfer_success_exp)
 
                         if exp_index == len(body) - 1 and sender_id == len(sender_list) - 1:
-                            function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
-                            function.addTransition(function_complete)
+                            #function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
+                            extra_transition = {'ntype': 'Simple'}
+                            function.addTransition(extra_transition)
 
 
 
@@ -833,8 +850,8 @@ def superFunctionDefinition(packet):
                                 # print('Variable Component', VariableComponent[lhs_variable])
                                 lhs_variable_temp = lhs_variable + 'TEMP'
 
-                                if lhs_variable in AddressVariables:
-                                    AddressVariables[lhs_variable_temp] = AddressVariables[lhs_variable]
+                                # if lhs_variable in AddressVariables:
+                                #     AddressVariables[lhs_variable_temp] = AddressVariables[lhs_variable]
 
                                 # Add the lhs_variable to the FunctionVariablesTEMP dictionary
                                 FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
@@ -1002,8 +1019,8 @@ def superFunctionDefinition(packet):
                     # print('Variable Component', VariableComponent[lhs_variable])
                     lhs_variable_temp = lhs_variable + 'TEMP'
 
-                    if lhs_variable in AddressVariables:
-                        AddressVariables[lhs_variable_temp] = AddressVariables[lhs_variable]
+                    # if lhs_variable in AddressVariables:
+                    #     AddressVariables[lhs_variable_temp] = AddressVariables[lhs_variable]
 
                     # Add the lhs_variable to the FunctionVariablesTEMP dictionary
                     FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
@@ -1053,8 +1070,8 @@ def superFunctionDefinition(packet):
                                 #print('Variable Component', VariableComponent[lhs_variable])
                                 lhs_variable_temp = lhs_variable + 'TEMP'
 
-                                if lhs_variable in AddressVariables:
-                                    AddressVariables[lhs_variable_temp] = AddressVariables[lhs_variable]
+                                # if lhs_variable in AddressVariables:
+                                #     AddressVariables[lhs_variable_temp] = AddressVariables[lhs_variable]
 
 
                                 # Add the lhs_variable to the FunctionVariablesTEMP dictionary
@@ -1086,7 +1103,7 @@ def superFunctionDefinition(packet):
                     process_in_ignore_list(exp, 'exp', ignore_list, function)
 
                 elif 'expression' in exp:
-                    print('HEREEEEEEEE',exp)
+                    #print('HEREEEEEEEE',exp)
                     # if name not in FunctionVariablesTEMP:
                     #     FunctionVariablesTEMP[name] = {}
                     # assignment_xml = exp['expression']
@@ -1340,3 +1357,12 @@ def get_variable_reassignment(variable_dict):
         return container
     else:
         return None
+
+
+def check_address_in_TEMP(sender_address):
+    for key, value in FunctionVariablesTEMP.items():
+        if sender_address in value.values():
+            #print('SENDER FOUND', sender_address)
+            return True
+
+    return False

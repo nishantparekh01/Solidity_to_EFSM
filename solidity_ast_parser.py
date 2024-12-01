@@ -6,6 +6,9 @@ import xml.etree.ElementTree as ET
 from wmodify import *
 import copy
 
+current_function_name = str()
+
+
 def ntype(node):
     return node['nodeType']
 
@@ -269,10 +272,15 @@ def handleModifierDefinition(node):
 
 def handleFunctionDefinition(node):
     assert ntype(node) == 'FunctionDefinition', "Node not FunctionDefinition"
+    global current_function_name
+    current_function_name = node['name']
+
     packet = {}
     packet['body'] = lookup_table[ntype(node['body'])](node['body'])
     packet['params'] = lookup_table[ntype(node['parameters'])](node['parameters'])
     packet['name'] = node['name']
+
+
     if packet['name'] == "": # The constructor as no name
         # do nothing
         return
@@ -285,7 +293,7 @@ def handleAssignment(node):
     lhs = lookup_table[ntype(node['leftHandSide'])](node['leftHandSide'])  # lhs can be indexAccess returning this  {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'}
     op = node['operator']
     rhs = lookup_table[ntype(node['rightHandSide'])](node['rightHandSide'])
-    print('RRHHSS ----', rhs)
+    #print('RRHHSS ----', rhs)
     node_rhs = node['rightHandSide']
     kind = 'simple'
 
@@ -298,10 +306,37 @@ def handleAssignment(node):
             index_node_expression = lookup_table[ntype(index_node['indexExpression'])](index_node['indexExpression'])
 
             if index_node_expression == 'sender':
-                print('RRHHSS ----', rhs)
-                exp = generate_mapping_assignment_expression(lhs, 'sender', rhs)
+                #print('RRHHSS ----', rhs)
+                #print('LHSSSS------', lhs)
+# trialzone ----------
+
+                lhs_TEMP = {}
+                for address, mapping_address_variable in lhs.items():
+                    mapping_address_variable_TEMP = mapping_address_variable + 'TEMP'
+                    lhs_TEMP[address]  = mapping_address_variable_TEMP
+
+                    if mapping_address_variable_TEMP not in VariableComponent:
+                        print('MAPPING VARIABLE ABSENT', mapping_address_variable_TEMP)
+
+                        lhs_variable_definition = VariableComponent[mapping_address_variable]
+                        mapping_address_variable_TEMP_definition  = copy.deepcopy(lhs_variable_definition)
+                        lhs_variable_temp_definition = replace_with_temp(mapping_address_variable_TEMP_definition, mapping_address_variable,
+                                                                         mapping_address_variable_TEMP)
+
+                        VariableComponent[mapping_address_variable_TEMP] = lhs_variable_temp_definition
+
+    # Add the variable - variableTEMP pair to GeneralVariableTEMP
+                    global current_function_name
+                    #print('FUNCTION NAME-----', current_function_name)
+                    #GeneralVariablesTEMP[mapping_address_variable] = mapping_address_variable_TEMP
+                    if current_function_name not in FunctionVariablesTEMP:
+                        FunctionVariablesTEMP[current_function_name] = {}
+                    FunctionVariablesTEMP[current_function_name][mapping_address_variable] = mapping_address_variable_TEMP
+
+                exp = generate_mapping_assignment_expression(lhs_TEMP, 'sender', rhs)
                 #print('Mapping expression:', exp)
                 #print(asdf)
+
                 return {'ntype': ntype(node), 'kind': 'mapping_assignment_check', 'expression': exp}
 
     if isinstance(rhs, dict):
@@ -384,12 +419,37 @@ def handleVariableDeclarationStatement(node):
         elif ntype(node['initialValue']) == 'IndexAccess':
             index_node = node['initialValue']
             index_node_expression = lookup_table[ntype(index_node['indexExpression'])](index_node['indexExpression'])
-
+# trialzone 6-------
             if index_node_expression == 'sender':
-               exp = generate_mapping_expression(init_value, 'sender', name)
-               #print('Mapping expression:', exp)
+                #print('INITTTTT---------', init_value)
+                #print('NAMEEEE ------', name)
+#                 name_TEMP = name + 'TEMP'
+#                 if name_TEMP not in VariableComponent:
+#
+#                     name_definition = VariableComponent[name]
+#                     name_TEMP_definition = copy.deepcopy(name_definition)
+#                     name_TEMP_definition = replace_with_temp(name_TEMP_definition, name, name_TEMP)
+#
+# # Adding created TEMP variable to VariableComponent
+#                     VariableComponent[name_TEMP] = name_TEMP_definition
+#
+#                 # Adding variable-variableTEMP pair to GeneralVariableTEMP
+#                 global current_function_name
+#                 print('FUNCTION NAME-----', current_function_name)
+#                 #GeneralVariablesTEMP[name] = name_TEMP
+#
+#                 if current_function_name not in FunctionVariablesTEMP:
+#                     FunctionVariablesTEMP[current_function_name] = {}
+#                 FunctionVariablesTEMP[current_function_name][name] = name_TEMP
+#
+#
+#
+#                 exp = generate_mapping_expression(init_value, 'sender', name_TEMP)
+#                #print('Mapping expression:', exp)
                #print(asdf)
-               return {'ntype': ntype(node), 'kind': 'mapping_assignment_check', 'expression': exp}
+                exp = generate_mapping_expression(init_value, 'sender', name)
+                print('NAMEEEEE-------------', name)
+                return {'ntype': ntype(node), 'kind': 'mapping_assignment_check', 'expression': exp}
 
     elif isinstance(init_value, list):
         #print('List found:', init_value)
@@ -499,8 +559,8 @@ def handleIndexAccess(node):
         #print('Index:', index)
         if index == 'sender': # Building on the assumption that sender is an address
             mapping_variable_dict = VariableComponent['MappingVariables'][base] # has {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'}
-            for sender_address in mapping_variable_dict.keys():
-                print('Sender Address: ', sender_address)
+            #for sender_address in mapping_variable_dict.keys():
+                #print('Sender Address: ', sender_address)
             return mapping_variable_dict
 
 

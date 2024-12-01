@@ -420,7 +420,7 @@ for efsm in pre_supremica['Components']:
                             #print('sender transfer found in add_events_nodes.py-----')
                             source_node = sender_transfer_node
                             target_node = get_new_node('target')
-                            transfer_success_source_node = target_node
+                            transfer_success_source_node = target_node #s6
                             #print('source node: ', source_node)
                             #print('target node: ', target_node)
                             processing_transition['source_index'] = source_node

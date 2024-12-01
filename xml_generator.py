@@ -455,7 +455,8 @@ add_events_to_xml('assignSev')
 
 #print(VariableComponent['AddressVariables'])
 #print(transfer_efsm_list)
-#print(FunctionVariablesTEMP)
+print(FunctionVariablesTEMP)
+#print(GeneralVariablesTEMP)
 #print(asdf)
 
 

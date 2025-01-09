@@ -3,7 +3,6 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 import os
 
-
 # pre_supremica is imported from add_events_nodes.py
 # pre_supremica is in the form of a dictionary
 
@@ -18,7 +17,6 @@ Module.append(xml_EventDecl)
 # Adding event Name = ":accepting", kind = "PROPOSITION" to the EventDeclList
 EventDecl_accepting = ET.SubElement(xml_EventDecl, "EventDecl", Kind = "PROPOSITION", Name = ":accepting")
 
-
 ComponentList = ET.SubElement(Module, "ComponentList")
 
 # Here we are specifying the xmlns attribute that we have to add
@@ -30,7 +28,6 @@ xmlns_uris = {"":"http://waters.sourceforge.net/xsd/module",
 ONE = "1"
 EVENT_END = "X"
 EVENT_FAIL = "Fail"
-
 # This is a function to add the xmlns attribute to the root node which is "Module"
 def add_XMLNS_attributes(tree, xmlns_uris_dict):
     if not ET.iselement(tree):
@@ -39,9 +36,6 @@ def add_XMLNS_attributes(tree, xmlns_uris_dict):
         tree.attrib['xmlns' + prefix] = uri
 
 add_XMLNS_attributes(Module, xmlns_uris)
-
-
-
 
 # Loop to add VariableComponent
 for var, val in pre_supremica['Components']['VariableComponent'].items():
@@ -132,14 +126,6 @@ for address_name, address_value in VariableComponent['AddressVariables'].items()
 
 #############################################################################################################
 
-# Print the updated VariableComponent for verification
-# for address_name, xml_component in VariableComponent.items():
-#     print(f"Updated VariableComponent for {address_name}:")
-#     ET.dump(xml_component)
-
-#############################################################################################################
-
-
 for efsm in pre_supremica['Components']:
     SimpleComponent = None
     if efsm != 'VariableComponent':
@@ -152,42 +138,12 @@ for efsm in pre_supremica['Components']:
             SimpleComponent = ET.SubElement(ComponentList, "SimpleComponent",  Kind = "PLANT", Name = efsm)
 
         Graph = ET.SubElement(SimpleComponent, "Graph")
-        #NodeList = ET.SubElement(Graph, "NodeList")
-        #EdgeList = ET.SubElement(Graph, "EdgeList")
 
         xml_NodeList = pre_supremica['Components'][efsm]['node_list']
         xml_EdgeList = pre_supremica['Components'][efsm]['edge_list']
 
         Graph.append(xml_NodeList)
         Graph.append(xml_EdgeList)
-
-#############################################################################################################
-
-# # Adding assignSender from string format to xml
-# file_path_assignSender = r'assignSender_casino_blocking.xml'
-# assignSender_string = ET.parse(file_path_assignSender)
-#
-#
-# CASINO_NONBLOCKING ='smart_contracts/casino_nonblocking.sol'
-# ESCROW_BLOCKING = 'smart_contracts/escrow_v2_blocking.sol'
-# ESCROW_NONBLOCKING = 'smart_contracts/escrow_v2_nonblocking.sol'
-#
-# if contract_file == CASINO_NONBLOCKING:
-#     print('casino_nonblocking')
-#     file_path_assignSender = r'assignSender_casino_nonblocking.xml'
-#     assignSender_string = ET.parse(file_path_assignSender)
-# elif contract_file == ESCROW_BLOCKING:
-#     print('escrow_blocking')
-#     file_path_assignSender = r'assignSender_escrow_blocking.xml'
-#     assignSender_string = ET.parse(file_path_assignSender)
-# elif contract_file == ESCROW_NONBLOCKING:
-#     print('escrow_nonblocking')
-#     file_path_assignSender = r'assignSender_escrow_nonblocking.xml'
-#     assignSender_string = ET.parse(file_path_assignSender)
-#
-#
-# ComponentList.append(assignSender_string.getroot())
-# add_events_to_xml('assignSev')
 
 #############################################################################################################
 
@@ -240,9 +196,6 @@ def extract_events_ending_with(edge_list, suffix):
 
 #############################################################################################################
 
-
-
-
 print('______________________________________________________')
 print( Supremica)
 
@@ -260,33 +213,6 @@ for node in sol_list:
 
 print(function_list)
 
-# # assignMsg_result = count_statements_in_edge_list(Supremica)
-# # print("Functions with more than one statement in edge_list:", assignMsg_result)
-#
-# # Step 1: Identify functions with more than one statement
-# functions_with_multiple_statements = count_statements_in_edge_list(Supremica)
-# print("Functions with more than one statement in edge_list:", functions_with_multiple_statements.keys())
-#
-# # Step 2: Extract events ending with '1' from edge_lists
-# events_ending_with_1 = set()
-# for function_name in functions_with_multiple_statements.keys():
-#     events_ending_with_1.update(extract_events_ending_with(Supremica["Components"][function_name]["edge_list"], ONE))
-#
-# events_ending_with_1 = list(events_ending_with_1)
-#
-# # Step 2: Extract events ending with 'X' from edge_lists
-# events_ending_with_X = set()
-# for function_name in functions_with_multiple_statements.keys():
-#     events_ending_with_X.update(extract_events_ending_with(Supremica["Components"][function_name]["edge_list"], EVENT_END))
-#
-# events_ending_with_X = list(events_ending_with_X)
-#
-# # Step 2: Extract events ending with 'Fail' from edge_lists
-# events_ending_with_Fail = set()
-# for function_name in functions_with_multiple_statements.keys():
-#     events_ending_with_Fail.update(extract_events_ending_with(Supremica["Components"][function_name]["edge_list"], EVENT_FAIL))
-#
-# events_ending_with_Fail = list(events_ending_with_Fail)
 
 def find_events_with_s0(supremica_data, function_names):
 
@@ -452,20 +378,16 @@ add_events_to_xml('assignSev')
 
 #############################################################################################################
 
-
 #print(VariableComponent['AddressVariables'])
 #print(transfer_efsm_list)
 print(FunctionVariablesTEMP)
 #print(GeneralVariablesTEMP)
 #print(asdf)
 
-
 timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
-
 
 # Define the folder where you want to store the output files
 base_folder = r'C:\Users\nishantp\OneDrive - Chalmers\Casino\Casino_Nishant\casino\Output test files'
-
 
 # Create a unique folder name using the current timestamp
 output_folder = os.path.join(base_folder, f"output_{timestamp}")
@@ -473,14 +395,11 @@ output_folder = os.path.join(base_folder, f"output_{timestamp}")
 # Create new output folder
 os.makedirs(f"{output_folder}")
 
-
 # Generate a unique filename using the current timestamp
 filename = os.path.join(base_folder, f"{output_folder}\\output_{timestamp}.wmod")
 
 # Text file containing a short summary of changes made
 filename_txt = os.path.join(base_folder,f"{output_folder}\\output_{timestamp}.txt")
-
-
 
 # Open the file and write the output
 with open(filename, 'w') as file:
@@ -493,6 +412,5 @@ with open(filename_txt, 'w') as file:
     print(summary, file=file)
 
 print(f"Output written to {output_folder}")
-
 
 #print(ET.tostring(Module, encoding='utf8').decode('utf8'))

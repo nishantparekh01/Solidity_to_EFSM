@@ -49,7 +49,6 @@ def handleMemberAccess(node):
         #print('Sender found:', name)
         if memberName == 'transfer':
  # Building on the assumption that the function call is msg.sender.transfer()
-
  # get the list of all declared addresses
             sender_dict = VariableComponent['AddressVariables']
             sender_list = list(sender_dict.keys())
@@ -150,7 +149,6 @@ def handleEnumDefinition(node):
     superEnumDefinition(packet)
     #return str ( name + " : " + str(members))
 
-
 def handleIdentifier(node):
     assert ntype(node) == 'Identifier', "Node not Identifier"
     name = node['name']
@@ -168,8 +166,6 @@ def handleBinaryOperation(node):
     elif op == "&&":
         op = "&"
 
-    #exp = str(lhs + " "  + op + " " + rhs)
-
     # Case when lhs is a boolean value and used in a binary operation like if(isBuyerIn) then convert to isBuyerIn == true
     if isinstance(lhs, str) and (lhs in VariableComponent['BooleanVariables']) and (rhs != 'true' or rhs != 'false'):
         lhs_name = lhs
@@ -180,18 +176,9 @@ def handleBinaryOperation(node):
         rhs = wmodify_assignment(rhs, "==", "true")
 
     exp = wmodify_assignment(lhs, op, rhs)
-    # if isinstance(exp, ET.Element):
-    #     return str(ET.tostring(exp, encoding='utf-8', method='xml').decode('utf-8'))
-    # else:
-    #     return exp
+
     return exp
 
-
-    # if isinstance(rhs, dict):
-    #     return str(lhs + " "  + op + " " + str(rhs['name'] + "(" + rhs['args'] + ")"))
-    # else:
-    #     return exp
-    #return exp
 
 def handleFunctionCall(node):
     assert ntype(node) == 'FunctionCall', "Node not FunctionCall"
@@ -208,22 +195,13 @@ def handleFunctionCall(node):
         else:
             arg_list = []
             arg = lookup_table[ntype(node['arguments'][0])](node['arguments'][0])
-            # for a in node['arguments']:
-            #     arg = lookup_table[ntype(a)](a)
-                # if isinstance(arg, dict):
-                #     arg_list.append(str(arg['name'] + "(" + arg['args'] + ")"))
-                # else:
-                #     arg_list.append(arg) # msg.sender
-            # if argument is a dictionary then convert the dictionary into string with function call
-            #print("arg_list here", arg_list)
-            #args  = ' '.join(arg_list)
-            #print(ET.tostring(arg, encoding='utf-8', method='xml').decode('utf-8'))
+
 
     if isinstance(name, dict):
         if 'sender_list' in name:
             return_dict = {'ntype': ntype(node), 'name' : name['name'], 'args' : arg, 'type': name['type'], 'sender_list': name['sender_list']}
             #print(return_dict)
-            #asdf
+
             return return_dict
         else:
             return {'ntype': ntype(node), 'name' : name['name'], 'args' : arg, 'type': name['type']}
@@ -264,7 +242,7 @@ def handleModifierDefinition(node):
     assert ntype(node) == 'ModifierDefinition', "Node not ModifierDefinition"
     packet = {}
     packet['body'] = lookup_table[ntype(node['body'])](node['body'])
-    #body = "\n".join(body)
+
     packet['params'] = lookup_table[ntype(node['parameters'])](node['parameters'])
     packet['name'] = node['name']
     super_struct = superModifierDefinition(packet)
@@ -308,7 +286,6 @@ def handleAssignment(node):
             if index_node_expression == 'sender':
                 #print('RRHHSS ----', rhs)
                 #print('LHSSSS------', lhs)
-# trialzone ----------
 
                 lhs_TEMP = {}
                 for address, mapping_address_variable in lhs.items():
@@ -328,7 +305,6 @@ def handleAssignment(node):
     # Add the variable - variableTEMP pair to GeneralVariableTEMP
                     global current_function_name
                     #print('FUNCTION NAME-----', current_function_name)
-                    #GeneralVariablesTEMP[mapping_address_variable] = mapping_address_variable_TEMP
                     if current_function_name not in FunctionVariablesTEMP:
                         FunctionVariablesTEMP[current_function_name] = {}
                     FunctionVariablesTEMP[current_function_name][mapping_address_variable] = mapping_address_variable_TEMP
@@ -355,9 +331,6 @@ def handleAssignment(node):
                 exp.append(wmodify_assignment(struct_var, "=", node_rhs_arg_value))
 
             return {'ntype': ntype(node), 'kind' : 'structConstructorCall', 'exp' : exp}
-
-
-
 
 
         elif rhs['ntype'] == 'Conditional':
@@ -403,7 +376,6 @@ def handleVariableDeclarationStatement(node):
     assert ntype(node) == 'VariableDeclarationStatement', "Node not VariableDeclarationStatement"
 
     # assumption - there is only one variable declaration here
-    #name = "".join([lookup_table[ntype(d)](d) for d in node['declarations']])
     name = lookup_table[ntype(node['declarations'][0])](node['declarations'][0]) # has oldBidder
     init_value = lookup_table[ntype(node['initialValue'])](node['initialValue']) # nodeType == 'IndexAccess' value = {'operator': 'withdrawable_operator', 'player': 'withdrawable_player'} # currentBidde
 
@@ -422,31 +394,7 @@ def handleVariableDeclarationStatement(node):
 # trialzone 6-------
             if index_node_expression == 'sender':
                 #print('INITTTTT---------', init_value)
-                #print('NAMEEEE ------', name)
-#                 name_TEMP = name + 'TEMP'
-#                 if name_TEMP not in VariableComponent:
-#
-#                     name_definition = VariableComponent[name]
-#                     name_TEMP_definition = copy.deepcopy(name_definition)
-#                     name_TEMP_definition = replace_with_temp(name_TEMP_definition, name, name_TEMP)
-#
-# # Adding created TEMP variable to VariableComponent
-#                     VariableComponent[name_TEMP] = name_TEMP_definition
-#
-#                 # Adding variable-variableTEMP pair to GeneralVariableTEMP
-#                 global current_function_name
-#                 print('FUNCTION NAME-----', current_function_name)
-#                 #GeneralVariablesTEMP[name] = name_TEMP
-#
-#                 if current_function_name not in FunctionVariablesTEMP:
-#                     FunctionVariablesTEMP[current_function_name] = {}
-#                 FunctionVariablesTEMP[current_function_name][name] = name_TEMP
-#
-#
-#
-#                 exp = generate_mapping_expression(init_value, 'sender', name_TEMP)
-#                #print('Mapping expression:', exp)
-               #print(asdf)
+
                 exp = generate_mapping_expression(init_value, 'sender', name)
                 print('NAMEEEEE-------------', name)
                 return {'ntype': ntype(node), 'kind': 'mapping_assignment_check', 'expression': exp}
@@ -462,7 +410,6 @@ def handleVariableDeclarationStatement(node):
         #print('Value for address variable:', AddressVariables[init_value])
         #print(VariableComponent)
 
-        #address_variable_value = AddressVariables[init_value]
         address_variable_value = init_value
         exp = wmodify_assignment(name, "=", address_variable_value)
         return {'ntype': ntype(node), 'kind': 'address_variable_assignment', 'expression': exp}
@@ -473,8 +420,6 @@ def handleVariableDeclarationStatement(node):
         init_value = str(init_value)
         exp = wmodify_assignment(name, "=", init_value)
         return {'ntype': ntype(node), 'kind': 'integer_variable_assignment', 'expression': exp}
-
-
 
 
     else:
@@ -566,10 +511,6 @@ def handleIndexAccess(node):
 
 
     return  str( base + "_" + index)
-
-
-
-
 
 
 lookup_table = {}

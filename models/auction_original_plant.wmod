@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<Module xmlns="http://waters.sourceforge.net/xsd/module" xmlns:B="http://waters.sourceforge.net/xsd/base" Name="Casino-blocking">
+<EventDeclList>
+<EventDecl Kind="CONTROLLABLE" Name="placeBidoldBiddertransfer1"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBidoldBiddertransferFail"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBidoldBiddertransferX"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid1"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid2"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBidFail"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid4"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid6"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid7"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid8"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid9"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid10"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid15"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBid16"/>
+<EventDecl Kind="CONTROLLABLE" Name="placeBidX"/>
+<EventDecl Kind="CONTROLLABLE" Name="closeAuctionauctionOwnertransfer1"/>
+<EventDecl Kind="CONTROLLABLE" Name="closeAuctionauctionOwnertransferFail"/>
+<EventDecl Kind="CONTROLLABLE" Name="closeAuctionauctionOwnertransferX"/>
+<EventDecl Kind="CONTROLLABLE" Name="closeAuction1"/>
+<EventDecl Kind="CONTROLLABLE" Name="closeAuction2"/>
+<EventDecl Kind="CONTROLLABLE" Name="closeAuctionFail"/>
+<EventDecl Kind="CONTROLLABLE" Name="closeAuction4"/>
+<EventDecl Kind="CONTROLLABLE" Name="closeAuctionX"/>
+<EventDecl Kind="PROPOSITION" Name=":accepting"/>
+<EventDecl Kind="CONTROLLABLE" Name="assignSev"/>
+</EventDeclList>
+<ComponentList>
+<VariableComponent Name="auctionOpen">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="false"/>
+<SimpleIdentifier Name="true"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="auctionOpen"/>
+<SimpleIdentifier Name="true"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="currentBid">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="0"/>
+<IntConstant Value="4"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="currentBid"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="auctionOwner">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0001"/>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0003"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="auctionOwner"/>
+<SimpleIdentifier Name="x0001"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="currentBidder">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0001"/>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0003"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="currentBidder"/>
+<SimpleIdentifier Name="x0002"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="oldBidder">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0001"/>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0003"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="oldBidder"/>
+<SimpleIdentifier Name="x0003"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="oldBid">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="0"/>
+<IntConstant Value="4"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="oldBid"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="currentBidderTEMP">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0001"/>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0003"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="currentBidderTEMP"/>
+<SimpleIdentifier Name="x0002"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="currentBidTEMP">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="0"/>
+<IntConstant Value="4"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="currentBidTEMP"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="auctionOpenTEMP">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="false"/>
+<SimpleIdentifier Name="true"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="auctionOpenTEMP"/>
+<SimpleIdentifier Name="true"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="value">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="0"/>
+<IntConstant Value="4"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="value"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="sender">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0001"/>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0003"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="x0001"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<SimpleComponent Kind="PLANT" Name="placeBidoldBiddertransfer">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S1">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidoldBiddertransfer1"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidoldBiddertransferFail"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidoldBiddertransferX"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="placeBid">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S1">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S2">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S3">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S4">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S5">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S6">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S7">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S8">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S9">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S10">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S11">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid1"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="!=">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="auctionOwner"/>
+</BinaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S1" Target="S2">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid2"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="auctionOpen"/>
+<SimpleIdentifier Name="true"/>
+</BinaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidFail"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<UnaryExpression Operator="!">
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="auctionOpen"/>
+<SimpleIdentifier Name="true"/>
+</BinaryExpression>
+</UnaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S2" Target="S3">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid4"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="&gt;">
+<SimpleIdentifier Name="value"/>
+<SimpleIdentifier Name="currentBid"/>
+</BinaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S2" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidFail"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<UnaryExpression Operator="!">
+<BinaryExpression Operator="&gt;">
+<SimpleIdentifier Name="value"/>
+<SimpleIdentifier Name="currentBid"/>
+</BinaryExpression>
+</UnaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S3" Target="S4">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid6"/>
+</LabelBlock>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=">
+<SimpleIdentifier Name="oldBidder"/>
+<SimpleIdentifier Name="currentBidder"/>
+</BinaryExpression>
+</Actions>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S4" Target="S5">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid7"/>
+</LabelBlock>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=">
+<SimpleIdentifier Name="oldBid"/>
+<SimpleIdentifier Name="currentBid"/>
+</BinaryExpression>
+</Actions>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S5" Target="S6">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid8"/>
+</LabelBlock>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=">
+<SimpleIdentifier Name="currentBidderTEMP"/>
+<SimpleIdentifier Name="sender"/>
+</BinaryExpression>
+</Actions>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S6" Target="S7">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid9"/>
+</LabelBlock>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=">
+<SimpleIdentifier Name="currentBidTEMP"/>
+<SimpleIdentifier Name="value"/>
+</BinaryExpression>
+</Actions>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S7" Target="S8">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid10"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="!=">
+<SimpleIdentifier Name="oldBid"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S8" Target="S8">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidoldBiddertransfer1"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S8" Target="S9">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidoldBiddertransferFail"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S9" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidFail"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S8" Target="S10">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidoldBiddertransferX"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S10" Target="S11">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid15"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S7" Target="S11">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid16"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<UnaryExpression Operator="!">
+<BinaryExpression Operator="!=">
+<SimpleIdentifier Name="oldBid"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</UnaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S11" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidX"/>
+</LabelBlock>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=" Text="currentBidder = currentBidderTEMP">
+<SimpleIdentifier Name="currentBidder"/>
+<SimpleIdentifier Name="currentBidderTEMP"/>
+</BinaryExpression>
+<BinaryExpression Operator="=" Text="currentBid = currentBidTEMP">
+<SimpleIdentifier Name="currentBid"/>
+<SimpleIdentifier Name="currentBidTEMP"/>
+</BinaryExpression>
+</Actions>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="closeAuctionauctionOwnertransfer">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S1">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionauctionOwnertransfer1"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionauctionOwnertransferFail"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionauctionOwnertransferX"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="closeAuction">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S1">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S2">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S3">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S4">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+<SimpleNode Name="S5">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuction1"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="auctionOwner"/>
+</BinaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S1" Target="S2">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuction2"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="auctionOpen"/>
+<SimpleIdentifier Name="true"/>
+</BinaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionFail"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<UnaryExpression Operator="!">
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="auctionOpen"/>
+<SimpleIdentifier Name="true"/>
+</BinaryExpression>
+</UnaryExpression>
+</Guards>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S2" Target="S3">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuction4"/>
+</LabelBlock>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=">
+<SimpleIdentifier Name="auctionOpenTEMP"/>
+<SimpleIdentifier Name="false"/>
+</BinaryExpression>
+</Actions>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S3" Target="S3">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionauctionOwnertransfer1"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S3" Target="S4">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionauctionOwnertransferFail"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S4" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionFail"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S3" Target="S5">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionauctionOwnertransferX"/>
+</LabelBlock>
+<GuardActionBlock>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S5" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="closeAuctionX"/>
+</LabelBlock>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=" Text="auctionOpen = auctionOpenTEMP">
+<SimpleIdentifier Name="auctionOpen"/>
+<SimpleIdentifier Name="auctionOpenTEMP"/>
+</BinaryExpression>
+</Actions>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="assignMsg">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="208" Y="128"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S1">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="496" Y="304"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="placeBid1"/>
+<SimpleIdentifier Name="closeAuction1"/>
+<LabelGeometry Anchor="NW">
+<Point X="-6" Y="-37"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="380" Y="182"/>
+</SplineGeometry>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="placeBidFail"/>
+<SimpleIdentifier Name="closeAuctionX"/>
+<SimpleIdentifier Name="closeAuctionFail"/>
+<SimpleIdentifier Name="placeBidX"/>
+<LabelGeometry Anchor="NW">
+<Point X="-112" Y="-28"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="315" Y="256"/>
+</SplineGeometry>
+</Edge>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="assignSev"/>
+<LabelGeometry Anchor="NW">
+<Point X="12" Y="-2"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="&amp;" Text="(sender'==x0001|sender'==x0002|sender'==x0003)&amp;
+(value'==0|value'==1|value'==2|value'==3|value'==4)">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="sender"/>
+</UnaryExpression>
+<SimpleIdentifier Name="x0001"/>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="sender"/>
+</UnaryExpression>
+<SimpleIdentifier Name="x0002"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="sender"/>
+</UnaryExpression>
+<SimpleIdentifier Name="x0003"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="0"/>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="1"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="2"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="3"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="4"/>
+</BinaryExpression>
+</BinaryExpression>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="9" Y="13"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+</ComponentList>
+</Module>

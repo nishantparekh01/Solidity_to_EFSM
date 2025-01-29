@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="windows-1252"?>
-<Module xmlns="http://waters.sourceforge.net/xsd/module" xmlns:B="http://waters.sourceforge.net/xsd/base" Name="Casino-blocking">
+<Module xmlns="http://waters.sourceforge.net/xsd/module" xmlns:B="http://waters.sourceforge.net/xsd/base" Name="casino_corrected_plant">
 <EventDeclList>
 <EventDecl Kind="CONTROLLABLE" Name="createGame1"/>
 <EventDecl Kind="CONTROLLABLE" Name="placeBet1"/>

@@ -513,6 +513,17 @@ def handleIndexAccess(node):
     return  str( base + "_" + index)
 
 
+def EventDefinition(node):
+    assert ntype(node) == 'EventDefinition', "Node not EventDefinition"
+    name = node['name']
+    return False
+
+
+def EmitStatement(node):
+    assert ntype(node) == 'EmitStatement', "Node not EmitStatement"
+    return False
+
+
 lookup_table = {}
 
 lookup_table['MemberAccess'] = handleMemberAccess
@@ -543,5 +554,9 @@ lookup_table['IfStatement'] = handleIfStatement
 lookup_table['StructDefinition'] = handleStructDefinition
 lookup_table['Mapping'] = handleMapping
 lookup_table['IndexAccess'] = handleIndexAccess
+lookup_table['EventDefinition'] = EventDefinition
+lookup_table['EmitStatement'] = EmitStatement
+
+
 
 

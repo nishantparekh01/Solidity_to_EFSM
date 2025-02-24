@@ -1,6 +1,6 @@
 import subprocess
 import json
-
+contract_file = r'smart_contracts/casino_nonblocking.sol'  # Replace with the path to your contract
 # ############### Function to clean the JSON file by removing the extra string ###############
 
 def clean_json_content(json_content):
@@ -64,7 +64,7 @@ def process_contract_in_memory(contract_file):
 
 final_sol_list = []
 # Example usage
-contract_file = r'smart_contracts/casino_nonblocking.sol'  # Replace with the path to your contract
+
 try:
     final_sol_list = process_contract_in_memory(contract_file)
 except Exception as e:

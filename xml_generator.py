@@ -376,7 +376,7 @@ assignMsg_efsm = generate_assignMsg_efsm(source_s0, target_s0)
 ComponentList.append(assignMsg_efsm)
 add_events_to_xml('assignSev')
 
-#############################################################################################################
+############################## SPECITY OUTPUT DIRECTORY ##############################################
 
 #print(VariableComponent['AddressVariables'])
 #print(transfer_efsm_list)

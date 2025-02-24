@@ -48,6 +48,13 @@
 <EventDecl Kind="CONTROLLABLE" Name="withdrawX"/>
 <EventDecl Kind="PROPOSITION" Name=":accepting"/>
 <EventDecl Kind="CONTROLLABLE" Name="assignSev"/>
+<EventDecl Kind="CONTROLLABLE" Name="playerWinsplayertransferFail"/>
+<EventDecl Kind="CONTROLLABLE" Name="playerWinsplayertransferX"/>
+<EventDecl Kind="CONTROLLABLE" Name="decideBet12"/>
+<EventDecl Kind="CONTROLLABLE" Name="decideBet9"/>
+<EventDecl Kind="CONTROLLABLE" Name="playerWins3"/>
+<EventDecl Kind="CONTROLLABLE" Name="playerWinsFail"/>
+<EventDecl Kind="CONTROLLABLE" Name="playerWinsplayertransfer1"/>
 </EventDeclList>
 <ComponentList>
 <VariableComponent Name="operator">
@@ -737,7 +744,7 @@
 <SimpleIdentifier Name=":accepting"/>
 </EventList>
 <PointGeometry>
-<Point X="263" Y="140"/>
+<Point X="288" Y="128"/>
 </PointGeometry>
 <LabelGeometry Anchor="NW">
 <Point X="5" Y="5"/>
@@ -818,7 +825,7 @@
 </LabelGeometry>
 </LabelBlock>
 <SplineGeometry>
-<Point X="247" Y="90"/>
+<Point X="258" Y="81"/>
 </SplineGeometry>
 <GuardActionBlock>
 <LabelGeometry Anchor="NW">
@@ -834,7 +841,7 @@
 </LabelGeometry>
 </LabelBlock>
 <SplineGeometry>
-<Point X="226" Y="188"/>
+<Point X="244" Y="178"/>
 </SplineGeometry>
 <GuardActionBlock>
 <LabelGeometry Anchor="NW">
@@ -862,7 +869,7 @@
 <LabelBlock>
 <SimpleIdentifier Name="removeFromPotoperatortransferFail"/>
 <LabelGeometry Anchor="NW">
-<Point X="0" Y="10"/>
+<Point X="12" Y="14"/>
 </LabelGeometry>
 </LabelBlock>
 <SplineGeometry>
@@ -1464,7 +1471,7 @@
 <LabelBlock>
 <SimpleIdentifier Name="decideBet1"/>
 <LabelGeometry Anchor="NW">
-<Point X="0" Y="10"/>
+<Point X="5" Y="-17"/>
 </LabelGeometry>
 </LabelBlock>
 <GuardActionBlock>
@@ -1629,7 +1636,7 @@
 <LabelBlock>
 <SimpleIdentifier Name="playerWinsX"/>
 <LabelGeometry Anchor="NW">
-<Point X="0" Y="10"/>
+<Point X="-16" Y="10"/>
 </LabelGeometry>
 </LabelBlock>
 <SplineGeometry>
@@ -1649,7 +1656,7 @@
 </LabelGeometry>
 </LabelBlock>
 <SplineGeometry>
-<Point X="340" Y="248"/>
+<Point X="381" Y="270"/>
 </SplineGeometry>
 <GuardActionBlock>
 <Guards>
@@ -1705,7 +1712,7 @@
 </LabelGeometry>
 </LabelBlock>
 <SplineGeometry>
-<Point X="250" Y="75"/>
+<Point X="264" Y="56"/>
 </SplineGeometry>
 <GuardActionBlock>
 <Actions>
@@ -1792,20 +1799,6 @@
 <SplineGeometry>
 <Point X="48" Y="208"/>
 </SplineGeometry>
-<GuardActionBlock>
-<Actions>
-<BinaryExpression Operator="+=">
-<SimpleIdentifier Name="withdrawable_playerTEMP"/>
-<BinaryExpression Operator="*">
-<SimpleIdentifier Name="wager_bet"/>
-<IntConstant Value="2"/>
-</BinaryExpression>
-</BinaryExpression>
-</Actions>
-<LabelGeometry Anchor="NW">
-<Point X="-228" Y="-2"/>
-</LabelGeometry>
-</GuardActionBlock>
 </Edge>
 <Edge Source="S1" Target="S2">
 <LabelBlock>
@@ -2529,6 +2522,206 @@
 <Point X="0" Y="20"/>
 </LabelGeometry>
 </GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="SPEC" Name="AttackerModel">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="176" Y="192"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S1">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="416" Y="192"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="withdrawplayertransferFail"/>
+<LabelGeometry Anchor="NW">
+<Point X="-74" Y="6"/>
+</LabelGeometry>
+</LabelBlock>
+</Edge>
+<Edge Source="S1" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="withdrawplayertransferFail"/>
+<LabelGeometry Anchor="NW">
+<Point X="-121" Y="-30"/>
+</LabelGeometry>
+</LabelBlock>
+</Edge>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="withdrawplayertransferX"/>
+<LabelGeometry Anchor="NW">
+<Point X="-126" Y="-28"/>
+</LabelGeometry>
+</LabelBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="SPEC" Name="ProgressSpec">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<PointGeometry>
+<Point X="48" Y="-96"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S1">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="192" Y="-96"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="removeFromPotX"/>
+<LabelGeometry Anchor="NW">
+<Point X="-55" Y="-22"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="120" Y="-112"/>
+</SplineGeometry>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="addToPot1"/>
+<SimpleIdentifier Name="assignSev"/>
+<SimpleIdentifier Name="createGame1"/>
+<SimpleIdentifier Name="createGame2"/>
+<SimpleIdentifier Name="createGame3"/>
+<SimpleIdentifier Name="createGameX"/>
+<SimpleIdentifier Name="decideBet1"/>
+<SimpleIdentifier Name="decideBet2"/>
+<SimpleIdentifier Name="decideBet4"/>
+<SimpleIdentifier Name="decideBet5"/>
+<SimpleIdentifier Name="decideBetFail"/>
+<SimpleIdentifier Name="decideBetX"/>
+<SimpleIdentifier Name="operatorWins1"/>
+<SimpleIdentifier Name="operatorWinsX"/>
+<SimpleIdentifier Name="placeBet1"/>
+<SimpleIdentifier Name="placeBet2"/>
+<SimpleIdentifier Name="placeBet3"/>
+<SimpleIdentifier Name="placeBet4"/>
+<SimpleIdentifier Name="placeBet5"/>
+<SimpleIdentifier Name="placeBet6"/>
+<SimpleIdentifier Name="placeBet7"/>
+<SimpleIdentifier Name="placeBetX"/>
+<SimpleIdentifier Name="playerWins1"/>
+<SimpleIdentifier Name="playerWins2"/>
+<SimpleIdentifier Name="playerWinsX"/>
+<SimpleIdentifier Name="removeFromPot1"/>
+<SimpleIdentifier Name="removeFromPot2"/>
+<SimpleIdentifier Name="removeFromPot3"/>
+<SimpleIdentifier Name="removeFromPotFail"/>
+<SimpleIdentifier Name="removeFromPotoperatortransfer1"/>
+<SimpleIdentifier Name="removeFromPotoperatortransferFail"/>
+<SimpleIdentifier Name="removeFromPotoperatortransferX"/>
+<SimpleIdentifier Name="withdraw1"/>
+<SimpleIdentifier Name="withdraw2"/>
+<SimpleIdentifier Name="withdrawplayertransfer1"/>
+<SimpleIdentifier Name="withdrawplayertransferFail"/>
+<SimpleIdentifier Name="withdrawplayertransferX"/>
+<SimpleIdentifier Name="withdrawoperatortransfer1"/>
+<SimpleIdentifier Name="withdrawoperatortransferX"/>
+<SimpleIdentifier Name="withdrawoperatortransferFail"/>
+<LabelGeometry Anchor="NW">
+<Point X="11" Y="0"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="120" Y="-80"/>
+</SplineGeometry>
+</Edge>
+<Edge Source="S1" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="removeFromPotX"/>
+<LabelGeometry Anchor="NW">
+<Point X="-57" Y="-29"/>
+</LabelGeometry>
+</LabelBlock>
+</Edge>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="addToPot1"/>
+<SimpleIdentifier Name="assignSev"/>
+<SimpleIdentifier Name="createGame1"/>
+<SimpleIdentifier Name="createGame2"/>
+<SimpleIdentifier Name="createGame3"/>
+<SimpleIdentifier Name="createGameX"/>
+<SimpleIdentifier Name="decideBet1"/>
+<SimpleIdentifier Name="decideBet2"/>
+<SimpleIdentifier Name="decideBet4"/>
+<SimpleIdentifier Name="decideBet5"/>
+<SimpleIdentifier Name="decideBetFail"/>
+<SimpleIdentifier Name="decideBetX"/>
+<SimpleIdentifier Name="operatorWins1"/>
+<SimpleIdentifier Name="operatorWinsX"/>
+<SimpleIdentifier Name="placeBet1"/>
+<SimpleIdentifier Name="placeBet2"/>
+<SimpleIdentifier Name="placeBet3"/>
+<SimpleIdentifier Name="placeBet4"/>
+<SimpleIdentifier Name="placeBet5"/>
+<SimpleIdentifier Name="placeBet6"/>
+<SimpleIdentifier Name="placeBet7"/>
+<SimpleIdentifier Name="placeBetX"/>
+<SimpleIdentifier Name="playerWins1"/>
+<SimpleIdentifier Name="playerWins2"/>
+<SimpleIdentifier Name="playerWinsX"/>
+<SimpleIdentifier Name="removeFromPot1"/>
+<SimpleIdentifier Name="removeFromPot2"/>
+<SimpleIdentifier Name="removeFromPot3"/>
+<SimpleIdentifier Name="removeFromPotFail"/>
+<SimpleIdentifier Name="removeFromPotoperatortransfer1"/>
+<SimpleIdentifier Name="removeFromPotoperatortransferFail"/>
+<SimpleIdentifier Name="removeFromPotoperatortransferX"/>
+<SimpleIdentifier Name="withdraw1"/>
+<SimpleIdentifier Name="withdraw2"/>
+<SimpleIdentifier Name="withdrawplayertransfer1"/>
+<SimpleIdentifier Name="withdrawplayertransferX"/>
+<SimpleIdentifier Name="withdrawplayertransferFail"/>
+<SimpleIdentifier Name="withdrawoperatortransfer1"/>
+<SimpleIdentifier Name="withdrawoperatortransferX"/>
+<SimpleIdentifier Name="withdrawoperatortransferFail"/>
+<LabelGeometry Anchor="NW">
+<Point X="-73" Y="-272"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="4" Y="-137"/>
+</SplineGeometry>
 </Edge>
 </EdgeList>
 </Graph>

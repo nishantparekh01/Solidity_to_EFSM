@@ -25,6 +25,7 @@ VariableComponent['StructVariables'] = {}
 # creating a dictionary to store all generated addresses
 VariableComponent['AddressVariables'] = {}
 AddressVariables = VariableComponent['AddressVariables']
+AddressVariables['default'] = 'x0'
 
 # creating a dictionary to store all generated boolean variables
 VariableComponent['BooleanVariables'] = {}
@@ -54,6 +55,8 @@ INITIAL_NODE = 'S0'
 # list for transfer efsms
 transfer_efsm_list = []
 
+# defining numerical set
+num_set = {'uint', 'uint8', 'uint16', 'uint32', 'uint64', 'uint128', 'uint256', 'int', 'int8', 'int16', 'int32', 'int64', 'int128', 'int256', 'bytes32'}
 
 class EFSM:
     def __init__(self,
@@ -303,8 +306,8 @@ def superVariableDeclaration(packet, **kwargs):
         VariableComponent[name] = xml_VariableComponent
 
 
-    elif type == 'uint' or type == 'uint256' or type == 'bytes32':
-
+    #elif type == 'uint' or type == 'uint256' or type == 'bytes32':
+    elif type in num_set:
         VariableComponent['IntegerVariables'][name] = [0, 1]
 
         xml_VariableComponent = ET.Element("VariableComponent", Name=name)
@@ -326,6 +329,7 @@ def superVariableDeclaration(packet, **kwargs):
 
         address_index = get_address_index()
         address_name = 'x000' + str(address_index)
+        default_address = 'x0'
 
         # Add this to the dictionary AddressVariables
         VariableComponent['AddressVariables'][name] = address_name
@@ -337,8 +341,9 @@ def superVariableDeclaration(packet, **kwargs):
 
         ET.SubElement(xml_EnumSetExpression, "SimpleIdentifier", Name=address_name)
 
+        # create the xml element for the initial value of the address
         xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
-        xml_initialValue = wmodify_assignment(name, "==", address_name)
+        xml_initialValue = wmodify_assignment(name, "==", default_address)
         xml_VariableInitial.append(xml_initialValue)
         VariableComponent[name] = xml_VariableComponent # store the xml element in VariableComponent dictionary
 
@@ -529,7 +534,7 @@ def superFunctionDefinition(packet):
                     param_assigned = True
                     initial_statement_added = True
 
-                elif param_type == 'uint' or param_type == 'uint256' or param_type == 'bytes32':
+                elif param_type in num_set:
                     rhs_list = ['0', '1']
                     guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
                                                                              'kind': 'AssignmentCheck'})
@@ -551,7 +556,7 @@ def superFunctionDefinition(packet):
                 function.addTransition(param_assignment)
                 param_assigned = True
 
-            elif param_type == 'uint' or param_type == 'uint256' or param_type == 'bytes32':
+            elif param_type in num_set:
                 rhs_list  = ['0','1']
                 guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
                                                                   'kind': 'AssignmentCheck'})
@@ -566,7 +571,9 @@ def superFunctionDefinition(packet):
     # Add transitions to the function based on parameters and its respective values
 
     for exp_index, exp in enumerate(body):
-        #print(exp_index)
+        #print(exp_index, exp)
+        if not exp:
+            exp = {}
         if 'type' in exp and exp['type'] == 'transfer':
             transfer_in_function_name = str()
 
@@ -667,7 +674,7 @@ def superFunctionDefinition(packet):
 
                         transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
                                                 'type': 'sender_transfer_success'}
-                        print('TRANSFER SUCCESS',sender_address,transfer_success_exp)
+                        #print('TRANSFER SUCCESS',sender_address,transfer_success_exp)
                         function.addTransition(transfer_success_exp)
 
                         if exp_index == len(body) - 1 and sender_id == len(sender_list) - 1:
@@ -677,7 +684,7 @@ def superFunctionDefinition(packet):
 
 
 
-        elif exp['ntype'] == 'IfStatement':
+        elif 'ntype' in exp and exp['ntype'] == 'IfStatement':
             true_condition = exp['true_condition']
             false_condition = exp['false_condition']
 
@@ -701,7 +708,7 @@ def superFunctionDefinition(packet):
                     #print('true body last statement', stmnt)
                     if 'type' in stmnt and stmnt['type'] == 'transfer':
                         transfer_in_function_name = str()
-                        print('Transfer in function name', transfer_in_function_name)
+                        #print('Transfer in function name', transfer_in_function_name)
 
 
                         if exp_index == 0:
@@ -808,6 +815,38 @@ def superFunctionDefinition(packet):
                 for index, stmnt in enumerate(false_body): # add transitions for each statement in the false body
                     if index == len(false_body) - 1:  # if it is the last statement in the false body
                         stmnt['type'] = 'false_body_last'
+                        if name not in FunctionVariablesTEMP:
+                            FunctionVariablesTEMP[name] = {}
+                        if 'exp' in stmnt:
+                            assignment_xml = stmnt['exp']
+                            # print('Assignment XML', assignment_xml)
+
+                            # if exp_index != len(body) -1 :
+                            lhs_variable = get_lhs_variable(assignment_xml)
+                            if lhs_variable in VariableComponent:
+                                # print('Variable Component', VariableComponent[lhs_variable])
+                                lhs_variable_temp = lhs_variable + 'TEMP'
+
+                                # Add the lhs_variable to the FunctionVariablesTEMP dictionary
+                                FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+
+                                # Replace and declare the lhs_variable with lhs_variable_temp
+                                variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
+                                                                                 lhs_variable_temp)
+                                # print('Variable Temp XML', variable_temp_xml_expression)
+
+                                # replace var with varTEMP in the expression if it is not the last expression
+
+                                exp['exp'] = variable_temp_xml_expression
+
+                                # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
+                                lhs_variable_definition = VariableComponent[lhs_variable]
+                                lhs_variable_temp_definition = copy.deepcopy(lhs_variable_definition)
+                                lhs_variable_temp_definition = replace_with_temp(lhs_variable_temp_definition, lhs_variable,
+                                                                                 lhs_variable_temp)
+
+                                # Add the lhs_variable_temp to the VariableComponent
+                                VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
                         function.addTransition(stmnt)
                     #     if exp_index == len(body) - 1: # and if it is the last transition in the body
                     #         function_complete = {'ntype': 'Simple','name': name + 'X', 'type': 'function_complete'}
@@ -839,7 +878,7 @@ def superFunctionDefinition(packet):
                     function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
                     function.addTransition(function_complete)
 
-        elif exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
+        elif 'ntype' in exp and exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
 
             if isinstance(exp['args'], str): # case where require statement has a single variable of boolean type, example: require(auctionOpen)
                     if exp['args'] in VariableComponent['BooleanVariables']:
@@ -871,7 +910,7 @@ def superFunctionDefinition(packet):
                         function.addTransition(param_assignment)
 
                     # work on this part later
-                    elif param_type == 'uint' or param_type == 'uint256' or param_type == 'bytes32':
+                    elif param_type in num_set:
                         rhs_list  = ['0','1']
                         guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
                                                                           'kind': 'AssignmentCheck'})
@@ -880,7 +919,7 @@ def superFunctionDefinition(packet):
                     param_assigned = True
 
 
-        elif exp['ntype'] == 'Assignment' and exp['kind'] == 'structConstructorCall':
+        elif 'ntype' in exp and exp['ntype'] == 'Assignment' and exp['kind'] == 'structConstructorCall':
             #print('Struct Constructor Call')
             for attr_assignments in exp['exp']:
                 #function.addTransition(attr_assignments)
@@ -967,6 +1006,10 @@ def superFunctionDefinition(packet):
 
                                     # Add the lhs_variable_temp to the VariableComponent
                                 VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
+
+                                if lhs_variable in AddressVariables:
+                                    AddressVariables[lhs_variable_temp] = AddressVariables[lhs_variable]
+
 
 
                     else:

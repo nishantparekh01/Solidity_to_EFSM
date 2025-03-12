@@ -8,6 +8,9 @@ import copy
 
 current_function_name = str()
 
+# defining numerical set
+num_set = {'uint', 'uint8', 'uint16', 'uint32', 'uint64', 'uint128', 'uint256', 'int', 'int8', 'int16', 'int32', 'int64', 'int128', 'int256', 'bytes32'}
+
 
 def ntype(node):
     return node['nodeType']
@@ -16,8 +19,7 @@ def handleMemberAccess(node):
     assert ntype(node) == 'MemberAccess', "Node not MemberAccess"
 
     name = str()
-    memberName = node['memberName'] # transfer
-    #name = lookup_table[ntype(node['expression'])](node['expression']) # name = {'ntype': 'FunctionCall', 'name' : name, 'args' : 'msg.sender'} or name = wager
+    memberName = node['memberName']
 
     if ntype(node['expression']) == 'FunctionCall' and node['expression']['kind'] == 'typeConversion':
         name_node  = node['expression']['arguments'][0]
@@ -48,19 +50,21 @@ def handleMemberAccess(node):
     elif name == 'sender':
         #print('Sender found:', name)
         if memberName == 'transfer':
- # Building on the assumption that the function call is msg.sender.transfer()
- # get the list of all declared addresses
+    # Building on the assumption that the function call is msg.sender.transfer()
+    # get the list of all declared addresses
             sender_dict = VariableComponent['AddressVariables']
             sender_list = list(sender_dict.keys())
             #print('Sender list:', sender_list)
             return {'name': name, 'type': 'mapping_transfer', 'sender_list': sender_list}
- # {'name': 'sender', 'type': 'transfer', 'sender_list': ['operator', 'player']}
-            asdf
+    # {'name': 'sender', 'type': 'transfer', 'sender_list': ['operator', 'player']}
+
 
     else:
         #return str(name + '.' + memberName)
         if memberName == 'transfer':
             return {'name':name + memberName , 'type': 'transfer'}
+        elif memberName == 'value' and name == 'msg':
+            return name + '_' + memberName
         else:
             return memberName
 
@@ -97,11 +101,16 @@ def handleVariableDeclaration(node):
                 # Now adding the struct variable to the VariableComponent with value as the attribute of the struct
 
                 # replace the attr with var_struct
+                #print(VariableComponent)
+                #print(asdf)
                 base_attr_xml = copy.deepcopy(VariableComponent[attr])
                 base_attr_xml_updated = replace_identifier(base_attr_xml, attr, var_struct)
 
                 VariableComponent[var_struct] = base_attr_xml_updated
                 #print('Struct variable added to VariableComponent:', VariableComponent[var_struct])
+
+                if attr in VariableComponent['AddressVariables']:
+                    VariableComponent['AddressVariables'][var_struct] = VariableComponent['AddressVariables'][attr]
 
 
 
@@ -117,7 +126,7 @@ def handleVariableDeclaration(node):
 
     else:
         packet = {'name': name, 'type': var_type}
-    #print(packet)
+        #print('====================',packet)
 
     if superVariableDeclaration(packet, initial_value = initial_value):
         return  True
@@ -149,16 +158,23 @@ def handleEnumDefinition(node):
     superEnumDefinition(packet)
     #return str ( name + " : " + str(members))
 
-def handleIdentifier(node):
-    assert ntype(node) == 'Identifier', "Node not Identifier"
-    name = node['name']
-    return name
+def UnaryOperation(node):
+    assert ntype(node) == 'UnaryOperation', "Node not UnaryOperation"
+    op = node['operator']
+    sub_exp = lookup_table[ntype(node['subExpression'])](node['subExpression'])
+    exp = wmodify_assignment(sub_exp, op, "true")
+
+    if op == '!':
+        exp = wmodify_assignment(sub_exp, "==", "false")
+    return exp
 
 def handleBinaryOperation(node):
     assert ntype(node) == 'BinaryOperation', "Node not BinaryOperation"
     lhs = lookup_table[ntype(node['leftExpression'])](node['leftExpression'])
     op = node['operator']
     rhs = lookup_table[ntype(node['rightExpression'])](node['rightExpression'])
+    print('rhs:', rhs)
+    #print(asdf)
 
     # if op == "||" then convert to "|" and similarly if op == "&&" then convert to "&"
     if op == "||":
@@ -186,6 +202,20 @@ def handleFunctionCall(node):
     kind = str()
     if 'kind' in node:
         kind = node['kind']
+
+    if kind == 'typeConversion':
+        #conversion_type = lookup_table[ntype(node['expression'])](node['expression'])
+        arg = lookup_table[ntype(node['arguments'][0])](node['arguments'][0])
+        print('Type conversion:', arg)
+        #print(asdf)
+        if name == 'address' and arg == '0':
+            print('Address 0 found')
+            name = 'x0'
+            print('Address conversion:', name)
+
+    print('Function call:', name)
+    #print(asdf)
+
 
     if name == 'keccak256':
         arg = node['arguments'][0]['arguments'][0]['name']
@@ -221,9 +251,12 @@ def handlePlaceholderStatement(node):
 def handleBlock(node):
     assert ntype(node) == 'Block', "Node not Block"
     statements = []
-    for s in node['statements']:
+    for s_index, s in enumerate(node['statements']):
+        #print(s_index)
+        #print(ntype(s))
         stmnt = lookup_table[ntype(s)](s)
         statements.append(stmnt)
+
     return  statements
 
 def handleParameterList(node):
@@ -293,7 +326,7 @@ def handleAssignment(node):
                     lhs_TEMP[address]  = mapping_address_variable_TEMP
 
                     if mapping_address_variable_TEMP not in VariableComponent:
-                        print('MAPPING VARIABLE ABSENT', mapping_address_variable_TEMP)
+                        #print('MAPPING VARIABLE ABSENT', mapping_address_variable_TEMP)
 
                         lhs_variable_definition = VariableComponent[mapping_address_variable]
                         mapping_address_variable_TEMP_definition  = copy.deepcopy(lhs_variable_definition)
@@ -370,6 +403,10 @@ def handleLiteral(node):
 
 def handleElementaryTypeNameExpression(node):
     assert ntype(node) == 'ElementaryTypeNameExpression', "Node not ElementaryTypeNameExpression"
+    type_name = lookup_table[ntype(node['typeName'])](node['typeName'])
+    if type_name == 'address':
+        return 'address'
+
     return ""
 
 def handleVariableDeclarationStatement(node):
@@ -396,7 +433,7 @@ def handleVariableDeclarationStatement(node):
                 #print('INITTTTT---------', init_value)
 
                 exp = generate_mapping_expression(init_value, 'sender', name)
-                print('NAMEEEEE-------------', name)
+                #print('NAMEEEEE-------------', name)
                 return {'ntype': ntype(node), 'kind': 'mapping_assignment_check', 'expression': exp}
 
     elif isinstance(init_value, list):
@@ -416,7 +453,7 @@ def handleVariableDeclarationStatement(node):
 
 
     elif init_value in IntegerVariables:
-        print('Integer variable found:', init_value)
+        #print('Integer variable found:', init_value)
         init_value = str(init_value)
         exp = wmodify_assignment(name, "=", init_value)
         return {'ntype': ntype(node), 'kind': 'integer_variable_assignment', 'expression': exp}
@@ -485,7 +522,8 @@ def handleMapping(node):
     # return  str( key + " => "  + value)
     # Currently only handling the key value pair of type address -> uint
     # We assume that all the variable of 'address' type have been declared in the contract before mapping
-    if key == 'address' and (value == 'uint' or value == 'uint256'):
+    #if key == 'address' and (value == 'uint' or value == 'uint8' or value == 'uint256'):
+    if key == 'address' and (value in num_set):
         key_value  = 'address_uint'
     packet = {'ntype':node_type, 'key_value': key_value}
     #print(packet)
@@ -513,21 +551,26 @@ def handleIndexAccess(node):
     return  str( base + "_" + index)
 
 
-def EventDefinition(node):
+def handleEventDefinition(node):
     assert ntype(node) == 'EventDefinition', "Node not EventDefinition"
     name = node['name']
     return False
 
 
-def EmitStatement(node):
+def handleEmitStatement(node):
     assert ntype(node) == 'EmitStatement', "Node not EmitStatement"
     return False
 
+def handleReturn(node):
+    assert ntype(node) == 'Return', "Node not Return"
+    return_value = lookup_table[ntype(node['expression'])](node['expression'])
+    return return_value
 
 lookup_table = {}
 
 lookup_table['MemberAccess'] = handleMemberAccess
 lookup_table['Identifier'] = handleIdentifier
+lookup_table['UnaryOperation'] = UnaryOperation
 lookup_table['BinaryOperation'] = handleBinaryOperation
 lookup_table['ElementaryTypeName'] = handleElementaryTypeName
 lookup_table['VariableDeclaration'] = handleVariableDeclaration
@@ -554,8 +597,10 @@ lookup_table['IfStatement'] = handleIfStatement
 lookup_table['StructDefinition'] = handleStructDefinition
 lookup_table['Mapping'] = handleMapping
 lookup_table['IndexAccess'] = handleIndexAccess
-lookup_table['EventDefinition'] = EventDefinition
-lookup_table['EmitStatement'] = EmitStatement
+lookup_table['EventDefinition'] = handleEventDefinition
+lookup_table['EmitStatement'] = handleEmitStatement
+lookup_table['Return'] = handleReturn
+
 
 
 

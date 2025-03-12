@@ -1,7 +1,11 @@
 import subprocess
 import json
-contract_file = r'smart_contracts/casino_nonblocking.sol'  # Replace with the path to your contract
-# ############### Function to clean the JSON file by removing the extra string ###############
+#contract_file = r'smart_contracts/casino_blocking.sol'  # Replace with the path to your contract
+#contract_file = r'smart_contracts/game_21_updated.sol'
+#contract_file = r'smart_contracts/escrow_v2_blocking.sol'
+contract_file = r'smart_contracts/game_9.sol'
+
+################ Function to clean the JSON file by removing the extra string ###############
 
 def clean_json_content(json_content):
     # Locate the starting point of the JSON data

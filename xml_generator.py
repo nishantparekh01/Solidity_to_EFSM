@@ -50,8 +50,9 @@ for var, val in pre_supremica['Components']['VariableComponent'].items():
 #############################################################################################################
 
 # Adding variable 'value' to the VariableComponent
+# Variable 'value' changes to 'msg_value'
 
-VariableComponent_value = ET.Element("VariableComponent",  Name = "value")
+VariableComponent_value = ET.Element("VariableComponent",  Name = "msg_value")
 
 VariableRange_value = ET.SubElement(VariableComponent_value, "VariableRange")
 BinaryExpression_value = wmodify_assignment("0", "..", "1")
@@ -59,7 +60,7 @@ VariableRange_value.append(BinaryExpression_value)
 
 
 VariableInitial_value = ET.SubElement(VariableComponent_value, "VariableInitial")
-BinaryExpression_value_init = wmodify_assignment("value", "==", "0")
+BinaryExpression_value_init = wmodify_assignment("msg_value", "==", "0")
 VariableInitial_value.append(BinaryExpression_value_init)
 
 ComponentList.append(VariableComponent_value)
@@ -93,6 +94,7 @@ ComponentList.append(VariableComponent_sender)
 # Replacing address domain for all address variables
 # Do we have an address list ?:
 print(AddressVariables)
+default_address = "x0"
 
 for address_name, address_value in VariableComponent['AddressVariables'].items():
     if address_name in VariableComponent:
@@ -121,7 +123,7 @@ for address_name, address_value in VariableComponent['AddressVariables'].items()
 
         # Add VariableInitial second
         xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
-        xml_initialValue = wmodify_assignment(address_name, "==", address_value)
+        xml_initialValue = wmodify_assignment(address_name, "==", default_address)
         xml_VariableInitial.append(xml_initialValue)
 
 #############################################################################################################
@@ -211,7 +213,7 @@ for node in sol_list:
         if node['name'] != '':
             function_list.append(node['name'])
 
-print(function_list)
+#print(function_list)
 
 
 def find_events_with_s0(supremica_data, function_names):
@@ -249,8 +251,8 @@ def find_events_with_s0(supremica_data, function_names):
     return list(source_s0_events), list(target_s0_events)
 
 source_s0, target_s0 = find_events_with_s0(Supremica, function_list)
-print("Events with source 'S0':", source_s0)
-print("Events with target 'S0':", target_s0)
+#print("Events with source 'S0':", source_s0)
+#print("Events with target 'S0':", target_s0)
 
 #############################################################################################################
 
@@ -351,13 +353,13 @@ def generate_assignMsg_efsm(source_s0, target_s0):
 
     # Add BinaryExpression for value
     sender_expr = ET.SubElement(guards, "BinaryExpression", Operator="&")
-# add address_xml to sender_expr
+    # add address_xml to sender_expr
     sender_expr.append(address_xml)
     value_condition = ET.SubElement(sender_expr, "BinaryExpression", Operator="|")
     for value in [0, 1]:
         value_eq = ET.SubElement(value_condition, "BinaryExpression", Operator="==")
         unary_expr = ET.SubElement(value_eq, "UnaryExpression", Operator="'")
-        ET.SubElement(unary_expr, "SimpleIdentifier", Name="value")
+        ET.SubElement(unary_expr, "SimpleIdentifier", Name="msg_value")
         ET.SubElement(value_eq, "IntConstant", Value=str(value))
 
     label_geom = ET.SubElement(guard_action_block, "LabelGeometry", Anchor="NW")
@@ -376,12 +378,153 @@ assignMsg_efsm = generate_assignMsg_efsm(source_s0, target_s0)
 ComponentList.append(assignMsg_efsm)
 add_events_to_xml('assignSev')
 
-############################## SPECITY OUTPUT DIRECTORY ##############################################
+############################# GENERATE PROGRESS SPEC ########################################################
+
+
+def generate_spec(event_name):
+
+    root = ET.Element("SimpleComponent", Kind="SPEC", Name="ProgressSpec")
+    graph = ET.SubElement(root, "Graph")
+
+    node_list = ET.SubElement(graph, "NodeList")
+
+    # S0 Node
+    s0 = ET.SubElement(node_list, "SimpleNode", Initial="true", Name="S0")
+    point_geometry_s0 = ET.SubElement(s0, "PointGeometry")
+    ET.SubElement(point_geometry_s0, "Point", X="48", Y="-96")
+
+    label_geometry_s0 = ET.SubElement(s0, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_s0, "Point", X="0", Y="10")
+
+    # S1 Node
+    s1 = ET.SubElement(node_list, "SimpleNode", Name="S1")
+    event_list_s1 = ET.SubElement(s1, "EventList")
+    ET.SubElement(event_list_s1, "SimpleIdentifier", Name=":accepting")
+
+    point_geometry_s1 = ET.SubElement(s1, "PointGeometry")
+    ET.SubElement(point_geometry_s1, "Point", X="192", Y="-96")
+
+    label_geometry_s1 = ET.SubElement(s1, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_s1, "Point", X="0", Y="10")
+
+    edge_list = ET.SubElement(graph, "EdgeList")
+
+    # S0 -> S1 Edge
+    edge_0_1 = ET.SubElement(edge_list, "Edge", Source="S0", Target="S1")
+    label_block_0_1 = ET.SubElement(edge_0_1, "LabelBlock")
+    ET.SubElement(label_block_0_1, "SimpleIdentifier", Name=event_name)
+    label_geometry_0_1 = ET.SubElement(label_block_0_1, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_0_1, "Point", X="-55", Y="-22")
+    spline_geometry_0_1 = ET.SubElement(edge_0_1, "SplineGeometry")
+    ET.SubElement(spline_geometry_0_1, "Point", X="120", Y="-112")
+
+    # S1 -> S0 Edge
+    edge_1_0 = ET.SubElement(edge_list, "Edge", Source="S1", Target="S0")
+    label_block_1_0 = ET.SubElement(edge_1_0, "LabelBlock")
+    for event in event_list:
+        if event != event_name:
+            ET.SubElement(label_block_1_0, "SimpleIdentifier", Name=event)
+    label_geometry_1_0 = ET.SubElement(label_block_1_0, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_1_0, "Point", X="11", Y="0")
+    spline_geometry_1_0 = ET.SubElement(edge_1_0, "SplineGeometry")
+    ET.SubElement(spline_geometry_1_0, "Point", X="120", Y="-80")
+
+    # S1 -> S1 Edge
+    edge_1_1 = ET.SubElement(edge_list, "Edge", Source="S1", Target="S1")
+    label_block_1_1 = ET.SubElement(edge_1_1, "LabelBlock")
+    ET.SubElement(label_block_1_1, "SimpleIdentifier", Name=event_name)
+    label_geometry_1_1 = ET.SubElement(label_block_1_1, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_1_1, "Point", X="-57", Y="-29")
+
+    # S0 -> S0 Edge
+    edge_0_0 = ET.SubElement(edge_list, "Edge", Source="S0", Target="S0")
+    label_block_0_0 = ET.SubElement(edge_0_0, "LabelBlock")
+    for event in event_list:
+        if event != event_name:
+            ET.SubElement(label_block_0_0, "SimpleIdentifier", Name=event)
+    label_geometry_0_0 = ET.SubElement(label_block_0_0, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_0_0, "Point", X="-73", Y="-272")
+    spline_geometry_0_0 = ET.SubElement(edge_0_0, "SplineGeometry")
+    ET.SubElement(spline_geometry_0_0, "Point", X="4", Y="-137")
+
+    return root
+
+
+############################# GENERATE ATTACKER MODEL ########################################################
+
+def generate_attacker_model(function_name, address_name):
+    root = ET.Element("SimpleComponent", Kind="SPEC", Name="AttackerModel")
+    graph = ET.SubElement(root, "Graph")
+
+    node_list = ET.SubElement(graph, "NodeList")
+
+    # S0 Node
+    s0 = ET.SubElement(node_list, "SimpleNode", Initial="true", Name="S0")
+    event_list_s0 = ET.SubElement(s0, "EventList")
+    ET.SubElement(event_list_s0, "SimpleIdentifier", Name=":accepting")
+
+    point_geometry_s0 = ET.SubElement(s0, "PointGeometry")
+    ET.SubElement(point_geometry_s0, "Point", X="176", Y="192")
+
+    label_geometry_s0 = ET.SubElement(s0, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_s0, "Point", X="0", Y="10")
+
+    # S1 Node
+    s1 = ET.SubElement(node_list, "SimpleNode", Name="S1")
+    event_list_s1 = ET.SubElement(s1, "EventList")
+    ET.SubElement(event_list_s1, "SimpleIdentifier", Name=":accepting")
+
+    point_geometry_s1 = ET.SubElement(s1, "PointGeometry")
+    ET.SubElement(point_geometry_s1, "Point", X="416", Y="192")
+
+    label_geometry_s1 = ET.SubElement(s1, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_s1, "Point", X="0", Y="10")
+
+    edge_list = ET.SubElement(graph, "EdgeList")
+
+    # S0 -> S1 Edge
+    edge_0_1 = ET.SubElement(edge_list, "Edge", Source="S0", Target="S1")
+    label_block_0_1 = ET.SubElement(edge_0_1, "LabelBlock")
+    ET.SubElement(label_block_0_1, "SimpleIdentifier", Name=f"{function_name}{address_name}transferFail")
+    label_geometry_0_1 = ET.SubElement(label_block_0_1, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_0_1, "Point", X="-74", Y="6")
+
+    # S1 -> S1 Edge
+    edge_1_1 = ET.SubElement(edge_list, "Edge", Source="S1", Target="S1")
+    label_block_1_1 = ET.SubElement(edge_1_1, "LabelBlock")
+    ET.SubElement(label_block_1_1, "SimpleIdentifier", Name=f"{function_name}{address_name}transferFail")
+    label_geometry_1_1 = ET.SubElement(label_block_1_1, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_1_1, "Point", X="-121", Y="-30")
+
+    # S0 -> S0 Edge
+    edge_0_0 = ET.SubElement(edge_list, "Edge", Source="S0", Target="S0")
+    label_block_0_0 = ET.SubElement(edge_0_0, "LabelBlock")
+    ET.SubElement(label_block_0_0, "SimpleIdentifier", Name=f"{function_name}{address_name}transferX")
+    label_geometry_0_0 = ET.SubElement(label_block_0_0, "LabelGeometry", Anchor="NW")
+    ET.SubElement(label_geometry_0_0, "Point", X="-126", Y="-28")
+
+    return root
+
+############################# ATTACKER AND SPEC #############################################################
+
+# generate attacker model
+#attacker_model = generate_attacker_model("playerWins", "player")
+#ComponentList.append(attacker_model)
+
+################################
+
+# generate spec
+#progress_spec_model = generate_spec("removeFromPotX")
+#ComponentList.append(progress_spec_model)
+
+
+############################## SPECITY OUTPUT DIRECTORY #####################################################
 
 #print(VariableComponent['AddressVariables'])
 #print(transfer_efsm_list)
-print(FunctionVariablesTEMP)
+#print(FunctionVariablesTEMP)
 #print(GeneralVariablesTEMP)
+#print(event_list)
 #print(asdf)
 
 timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")

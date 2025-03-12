@@ -197,7 +197,10 @@ def wmodify_assignment(lhs, op, rhs, **info):
 
             BinaryExpression = ET.Element("BinaryExpression", Operator = str(op))
             SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(lhs))
-            SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs['args']))
+            if rhs['name'] == 'x0':
+                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs['name']))
+            else:
+                SimpleIdentifier = ET.SubElement(BinaryExpression, "SimpleIdentifier", Name = str(rhs['args']))
 
 
         # if the binary expression is a simple assignment

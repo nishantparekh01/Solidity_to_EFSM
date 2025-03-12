@@ -35,8 +35,6 @@ contract RawMaterialEscrow{
         if(isBuyerIn && isSupplierIn){
             state = State.AWAITING_PAYMENT;
         }
-
-
     }
 
     function confirmPayment() isCostMatched isBuyer currentState(State.AWAITING_PAYMENT) payable public{

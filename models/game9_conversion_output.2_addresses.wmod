@@ -1,0 +1,1024 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<Module xmlns="http://waters.sourceforge.net/xsd/module" xmlns:B="http://waters.sourceforge.net/xsd/base" Name="game9_conversion_output">
+<B:Comment>Changed state_num and state_numTEMP to be 0..9
+
+Moved the require checks to teh initial events. This blocks in move(), since value is now assigned after the check, so teh check is done on the previously chosen value.
+
+Note that we cannot have "state_whoseTurn == player2" as marking predicate for state_whoseTurn, there must be a specific value from the domain of state_whoseTurn.
+The problem with this is that with three possible addresses we cannot know beforehand which address player2 will be assigned.
+So the marking predicate could maybe be "state_whoseTurn == x0002 | state_whoseTurn == x0003". This could maybe work here, but in general...?
+
+If player1 joins, and thsu plays against him/herself, this will eventually lead to blocking since the marking predicate of state_whoseTurn cannot be true. 
+Synthesizing with this blocking state will lead to an empty supervisor, even if player1's moves are controllable.
+
+Trying with the require checks on teh next-state values instead of current state. This seems to work...
+We get two branches, one for when player2 == x0002, and one for when player2 == x0003; that is as expected.
+Both branches allow player2 to do whatever move it wants, while player1 steers the game towards the win.</B:Comment>
+<EventDeclList>
+<EventDecl Kind="UNCONTROLLABLE" Name="join1"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="join6"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="joinX"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="move2"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="move9"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="move10"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="move12"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="move14"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="move17"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="moveX"/>
+<EventDecl Kind="PROPOSITION" Name=":accepting"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="assignSev"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="move15"/>
+<EventDecl Kind="CONTROLLABLE" Name="move01"/>
+<EventDecl Kind="PROPOSITION" Name=":forbidden"/>
+<EventDecl Kind="UNCONTROLLABLE" Name="move02"/>
+</EventDeclList>
+<ComponentList>
+<VariableComponent Name="player1">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0"/>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0001"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="player1"/>
+<SimpleIdentifier Name="x0001"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="player2">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0"/>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0001"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="player2"/>
+<SimpleIdentifier Name="x0"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="state_whoseTurn">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0"/>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0001"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="state_whoseTurn"/>
+<SimpleIdentifier Name="x0"/>
+</BinaryExpression>
+</VariableInitial>
+<VariableMarking>
+<SimpleIdentifier Name=":accepting"/>
+<BinaryExpression Operator="==" Text="state_whoseTurn == x0002">
+<SimpleIdentifier Name="state_whoseTurn"/>
+<SimpleIdentifier Name="x0002"/>
+</BinaryExpression>
+</VariableMarking>
+</VariableComponent>
+<VariableComponent Name="sender">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="x0002"/>
+<SimpleIdentifier Name="x0001"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="x0001"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="betAmount">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="0"/>
+<IntConstant Value="1"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="betAmount"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="msg_value">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="0"/>
+<IntConstant Value="1"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="msg_value"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="gameOver">
+<VariableRange><EnumSetExpression>
+<SimpleIdentifier Name="false"/>
+<SimpleIdentifier Name="true"/>
+</EnumSetExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="gameOver"/>
+<SimpleIdentifier Name="false"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="num">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="0"/>
+<IntConstant Value="1"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="num"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<VariableComponent Name="state_num">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="0"/>
+<IntConstant Value="9"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="==">
+<SimpleIdentifier Name="state_num"/>
+<IntConstant Value="0"/>
+</BinaryExpression>
+</VariableInitial>
+<VariableMarking>
+<SimpleIdentifier Name=":accepting"/>
+<BinaryExpression Operator="==" Text="state_num == 9">
+<SimpleIdentifier Name="state_num"/>
+<IntConstant Value="9"/>
+</BinaryExpression>
+</VariableMarking>
+</VariableComponent>
+<VariableComponent Name="value">
+<VariableRange><BinaryExpression Operator="..">
+<IntConstant Value="1"/>
+<IntConstant Value="3"/>
+</BinaryExpression>
+</VariableRange>
+<VariableInitial><BinaryExpression Operator="|">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="value"/>
+<IntConstant Value="1"/>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="value"/>
+<IntConstant Value="2"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="value"/>
+<IntConstant Value="3"/>
+</BinaryExpression>
+</BinaryExpression>
+</VariableInitial>
+</VariableComponent>
+<SimpleComponent Kind="PLANT" Name="assignMsg">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="208" Y="128"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S1">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="496" Y="304"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S1">
+<LabelBlock>
+<SimpleIdentifier Name="join1"/>
+<SimpleIdentifier Name="move01"/>
+<SimpleIdentifier Name="move02"/>
+<LabelGeometry Anchor="NW">
+<Point X="38" Y="-36"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="380" Y="182"/>
+</SplineGeometry>
+</Edge>
+<Edge Source="S1" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="moveX"/>
+<SimpleIdentifier Name="joinX"/>
+<LabelGeometry Anchor="NW">
+<Point X="-57" Y="13"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="315" Y="256"/>
+</SplineGeometry>
+</Edge>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="assignSev"/>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="&amp;">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="sender"/>
+</UnaryExpression>
+<SimpleIdentifier Name="x0002"/>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="sender"/>
+</UnaryExpression>
+<SimpleIdentifier Name="x0001"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="msg_value"/>
+</UnaryExpression>
+<IntConstant Value="0"/>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="msg_value"/>
+</UnaryExpression>
+<IntConstant Value="1"/>
+</BinaryExpression>
+</BinaryExpression>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="20"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="join">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="272" Y="32"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S3">
+<PointGeometry>
+<Point X="384" Y="352"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S5">
+<PointGeometry>
+<Point X="400" Y="112"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S3">
+<LabelBlock>
+<SimpleIdentifier Name="join1"/>
+<LabelGeometry Anchor="NW">
+<Point X="-47" Y="-10"/>
+</LabelGeometry>
+</LabelBlock>
+<EndPointGeometry>
+<Point X="384" Y="352"/>
+</EndPointGeometry>
+</Edge>
+<Edge Source="S3" Target="S5">
+<LabelBlock>
+<SimpleIdentifier Name="join6"/>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</LabelBlock>
+<EndPointGeometry>
+<Point X="400" Y="112"/>
+</EndPointGeometry>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=" Text="player2 = sender">
+<SimpleIdentifier Name="player2"/>
+<SimpleIdentifier Name="sender"/>
+</BinaryExpression>
+<BinaryExpression Operator="=" Text="state_whoseTurn = player1">
+<SimpleIdentifier Name="state_whoseTurn"/>
+<SimpleIdentifier Name="player1"/>
+</BinaryExpression>
+</Actions>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="20"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S5" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="joinX"/>
+<LabelGeometry Anchor="NW">
+<Point X="-25" Y="2"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="345" Y="64"/>
+</SplineGeometry>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="move">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="192" Y="96"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S5">
+<PointGeometry>
+<Point X="544" Y="528"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S6">
+<PointGeometry>
+<Point X="720" Y="432"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S8">
+<PointGeometry>
+<Point X="720" Y="96"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S10">
+<PointGeometry>
+<Point X="720" Y="16"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+<SimpleNode Name="S11">
+<PointGeometry>
+<Point X="352" Y="96"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="5" Y="5"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S5">
+<LabelBlock>
+<SimpleIdentifier Name="move01"/>
+<LabelGeometry Anchor="NW">
+<Point X="-44" Y="2"/>
+</LabelGeometry>
+</LabelBlock>
+<StartPointGeometry>
+<Point X="192" Y="96"/>
+</StartPointGeometry>
+<SplineGeometry>
+<Point X="226" Y="445"/>
+</SplineGeometry>
+<EndPointGeometry>
+<Point X="544" Y="528"/>
+</EndPointGeometry>
+</Edge>
+<Edge Source="S5" Target="S6">
+<LabelBlock>
+<SimpleIdentifier Name="move9"/>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="+=" Text="state_num += value">
+<SimpleIdentifier Name="state_num"/>
+<SimpleIdentifier Name="value"/>
+</BinaryExpression>
+</Actions>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="20"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S6" Target="S8">
+<LabelBlock>
+<SimpleIdentifier Name="move10"/>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="590" Y="285"/>
+</SplineGeometry>
+<EndPointGeometry>
+<Point X="720" Y="96"/>
+</EndPointGeometry>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="player1"/>
+</BinaryExpression>
+</Guards>
+<Actions>
+<BinaryExpression Operator="=" Text="state_whoseTurn = player2">
+<SimpleIdentifier Name="state_whoseTurn"/>
+<SimpleIdentifier Name="player2"/>
+</BinaryExpression>
+</Actions>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="20"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S6" Target="S8">
+<LabelBlock>
+<SimpleIdentifier Name="move12"/>
+<LabelGeometry Anchor="NW">
+<Point X="-22" Y="7"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="802" Y="212"/>
+</SplineGeometry>
+<EndPointGeometry>
+<Point X="720" Y="96"/>
+</EndPointGeometry>
+<GuardActionBlock>
+<Guards>
+<UnaryExpression Operator="!">
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="player1"/>
+</BinaryExpression>
+</UnaryExpression>
+</Guards>
+<Actions>
+<BinaryExpression Operator="=" Text="state_whoseTurn = player1">
+<SimpleIdentifier Name="state_whoseTurn"/>
+<SimpleIdentifier Name="player1"/>
+</BinaryExpression>
+</Actions>
+<LabelGeometry Anchor="NW">
+<Point X="-37" Y="24"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S8" Target="S10">
+<LabelBlock>
+<SimpleIdentifier Name="move14"/>
+<LabelGeometry Anchor="NW">
+<Point X="8" Y="-6"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="state_num"/>
+<IntConstant Value="9"/>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="7" Y="10"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S8" Target="S11">
+<LabelBlock>
+<SimpleIdentifier Name="move17"/>
+<LabelGeometry Anchor="NW">
+<Point X="-15" Y="7"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<UnaryExpression Operator="!">
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="state_num"/>
+<IntConstant Value="9"/>
+</BinaryExpression>
+</UnaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="-30" Y="20"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S11" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="moveX"/>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="272" Y="90"/>
+</SplineGeometry>
+</Edge>
+<Edge Source="S10" Target="S11">
+<LabelBlock>
+<SimpleIdentifier Name="move15"/>
+<LabelGeometry Anchor="NW">
+<Point X="103" Y="-20"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="499" Y="43"/>
+</SplineGeometry>
+<EndPointGeometry>
+<Point X="352" Y="96"/>
+</EndPointGeometry>
+<GuardActionBlock>
+<Actions>
+<BinaryExpression Operator="=" Text="gameOver = true">
+<SimpleIdentifier Name="gameOver"/>
+<SimpleIdentifier Name="true"/>
+</BinaryExpression>
+</Actions>
+<LabelGeometry Anchor="NW">
+<Point X="53" Y="-8"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+<Edge Source="S0" Target="S5">
+<LabelBlock>
+<SimpleIdentifier Name="move02"/>
+<LabelGeometry Anchor="NW">
+<Point X="10" Y="-15"/>
+</LabelGeometry>
+</LabelBlock>
+<SplineGeometry>
+<Point X="322" Y="346"/>
+</SplineGeometry>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="reqValueWithinLimits">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="144" Y="80"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="move01"/>
+<SimpleIdentifier Name="move02"/>
+<LabelGeometry Anchor="NW">
+<Point X="18" Y="-20"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="&amp;" Text="1 &lt;= value' &amp; value' &lt;= 3">
+<BinaryExpression Operator="&lt;=">
+<IntConstant Value="1"/>
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="&lt;=">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="3"/>
+</BinaryExpression>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="8" Y="20"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="reqSenderWhosTurn">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="144" Y="112"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="move01"/>
+<SimpleIdentifier Name="move02"/>
+<LabelGeometry Anchor="NW">
+<Point X="14" Y="-13"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="==" Text="sender == state_whoseTurn">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="state_whoseTurn"/>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="7" Y="21"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="reqNoOverflow">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="160" Y="128"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="move01"/>
+<SimpleIdentifier Name="move02"/>
+<LabelGeometry Anchor="NW">
+<Point X="12" Y="-15"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="&lt;=" Text="state_num + value' &lt;= 9">
+<BinaryExpression Operator="+">
+<SimpleIdentifier Name="state_num"/>
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+</BinaryExpression>
+<IntConstant Value="9"/>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="9" Y="18"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="reqNotGameOver">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="128" Y="112"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="join1"/>
+<SimpleIdentifier Name="move01"/>
+<SimpleIdentifier Name="move02"/>
+<LabelGeometry Anchor="NW">
+<Point X="15" Y="-31"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<UnaryExpression Operator="!" Text="!(gameOver == true)">
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="gameOver"/>
+<SimpleIdentifier Name="true"/>
+</BinaryExpression>
+</UnaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="9" Y="19"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="reqPlayer2x0">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="160" Y="128"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="join1"/>
+<LabelGeometry Anchor="NW">
+<Point X="13" Y="3"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="==" Text="player2 == x0">
+<SimpleIdentifier Name="player2"/>
+<SimpleIdentifier Name="x0"/>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="6" Y="20"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="reqBetAmount">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="144" Y="112"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="join1"/>
+<LabelGeometry Anchor="NW">
+<Point X="19" Y="2"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="==" Text="msg_value == betAmount">
+<SimpleIdentifier Name="msg_value"/>
+<SimpleIdentifier Name="betAmount"/>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="8" Y="19"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="NoSelfPlay">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="128" Y="112"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="join1"/>
+<LabelGeometry Anchor="NW">
+<Point X="14" Y="-6"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="!=" Text="sender != player1">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="player1"/>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="12" Y="12"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="player1choose">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="144" Y="144"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="move01"/>
+<LabelGeometry Anchor="NW">
+<Point X="13" Y="1"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="&amp;" Text="sender == player1 &amp;(value'==1|value'==2|value'==3)">
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="player1"/>
+</BinaryExpression>
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="1"/>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="2"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="3"/>
+</BinaryExpression>
+</BinaryExpression>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="9" Y="18"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+<SimpleComponent Kind="PLANT" Name="player2choose">
+<Graph>
+<NodeList>
+<SimpleNode Initial="true" Name="S0">
+<EventList>
+<SimpleIdentifier Name=":accepting"/>
+</EventList>
+<PointGeometry>
+<Point X="128" Y="128"/>
+</PointGeometry>
+<LabelGeometry Anchor="NW">
+<Point X="0" Y="10"/>
+</LabelGeometry>
+</SimpleNode>
+</NodeList>
+<EdgeList>
+<Edge Source="S0" Target="S0">
+<LabelBlock>
+<SimpleIdentifier Name="move02"/>
+<LabelGeometry Anchor="NW">
+<Point X="18" Y="-1"/>
+</LabelGeometry>
+</LabelBlock>
+<GuardActionBlock>
+<Guards>
+<BinaryExpression Operator="&amp;" Text="sender==player2 &amp; (value'==1|value'==2|value'==3)">
+<BinaryExpression Operator="==">
+<SimpleIdentifier Name="sender"/>
+<SimpleIdentifier Name="player2"/>
+</BinaryExpression>
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="|">
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="1"/>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="2"/>
+</BinaryExpression>
+</BinaryExpression>
+<BinaryExpression Operator="==">
+<UnaryExpression Operator="'">
+<SimpleIdentifier Name="value"/>
+</UnaryExpression>
+<IntConstant Value="3"/>
+</BinaryExpression>
+</BinaryExpression>
+</BinaryExpression>
+</Guards>
+<LabelGeometry Anchor="NW">
+<Point X="9" Y="17"/>
+</LabelGeometry>
+</GuardActionBlock>
+</Edge>
+</EdgeList>
+</Graph>
+</SimpleComponent>
+</ComponentList>
+</Module>

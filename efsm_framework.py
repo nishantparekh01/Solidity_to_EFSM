@@ -534,6 +534,9 @@ def superFunctionDefinition(packet):
                     param_assigned = True
                     initial_statement_added = True
 
+
+                #elif
+
                 elif param_type in num_set:
                     rhs_list = ['0', '1']
                     guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
@@ -739,6 +742,8 @@ def superFunctionDefinition(packet):
                         function.addTransition(efsm_fail)
                         function.addTransition(transfer_success_exp)
                         function.addTransition(next_statement)
+
+
                     else:
                         stmnt['type'] = 'true_body_last'
                         if name not in FunctionVariablesTEMP:
@@ -784,6 +789,7 @@ def superFunctionDefinition(packet):
 
                             process_in_ignore_list(stmnt, 'expression', ignore_list, function)
 
+
                 if stmnt['ntype'] == 'FunctionCall':
                     if stmnt['type'] == 'transfer':
                         #print('-----------------Transfer in function call-----------------')
@@ -806,6 +812,7 @@ def superFunctionDefinition(packet):
                             function.addTransition(function_fail)
 
                         function.addTransition(function_complete)
+
 
 
             function.addTransition(false_exp_transition) # add transition for false condition. For both cases when false body is present/absent

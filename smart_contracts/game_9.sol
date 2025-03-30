@@ -37,6 +37,7 @@ contract NineGame {
     function move(uint8 value) public {
         require(!gameOver, "Game has ended");
         require(msg.sender == state.whoseTurn, "Not your turn");
+        require(value >= 1 && value <= 3, "Out of range");
         require(state.num + value <= 9, "Move would exceed 9");
 
         state.num += value;
@@ -47,7 +48,7 @@ contract NineGame {
             state.whoseTurn = player1;
         }
 
-        if (state.num == 21) {
+        if (state.num == 9) {
             gameOver = true;
            payable(msg.sender).transfer(address(this).balance);
         }

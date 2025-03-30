@@ -6,9 +6,9 @@ import os
 # pre_supremica is imported from add_events_nodes.py
 # pre_supremica is in the form of a dictionary
 
-#print(pre_supremica)
+#print(pre_supremica['Events'])
 
-Module = ET.Element("Module", Name = "Casino-blocking")
+Module = ET.Element("Module", Name = "EFSM Model")
 
 # Adding the EventDeclList to the Module
 xml_EventDecl = pre_supremica['Events']

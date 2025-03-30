@@ -26,7 +26,7 @@ def add_events_to_xml(event):  # event is a string
 
     if event not in event_list:
         event_list.append(event)
-        ET.SubElement(EventDeclList, "EventDecl", Kind="CONTROLLABLE", Name=event)
+        ET.SubElement(EventDeclList, "EventDecl", Kind="UNCONTROLLABLE", Name=event)
     else:
         return
 

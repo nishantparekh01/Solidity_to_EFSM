@@ -30,8 +30,8 @@ def add_nodes_to_xml(node_list):
             #print('not initial nodes---', node)
             SimpleNode = ET.SubElement(NodeList, "SimpleNode",  Name = node)
             EventList = ET.SubElement(SimpleNode, "EventList")
-            SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name=":accepting")
-
+            #SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier", Name=":accepting")
+            #SimpleIdentifier_accepting = ET.SubElement(EventList, "SimpleIdentifier")
     return  NodeList
 
 

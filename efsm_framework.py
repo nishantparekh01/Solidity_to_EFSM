@@ -27,6 +27,10 @@ VariableComponent['AddressVariables'] = {}
 AddressVariables = VariableComponent['AddressVariables']
 AddressVariables['default'] = 'x0'
 
+# creating a dictionary to store all declared addresses
+VariableComponent['DeclaredAddressVariables'] = {}
+DeclaredAddressVariables = VariableComponent['DeclaredAddressVariables']
+
 # creating a dictionary to store all generated boolean variables
 VariableComponent['BooleanVariables'] = {}
 
@@ -73,7 +77,7 @@ class EFSM:
         self.edge_list = self.efsm['edge_list']
         self.i = 0
 
-    def addTransition(self, expression):
+    def addTransition(self, expression, *args):
 
         transition_type = str()
         source_index = None
@@ -94,6 +98,13 @@ class EFSM:
                     # assuming that require has only one argument
                     guard_exp = expression['args']
                     transition_type = 'require_true'
+
+                elif expression['name'] == 'require2':
+                    guard_exp = expression['args']
+                    transition_type = 'self_loop'
+                    if args:
+                        print('args here---------------------', args)
+                        events = args[0]
 
                 elif 'type' in expression and expression['type'] == 'transfer':
                     transition_type = 'self_loop'
@@ -147,9 +158,16 @@ class EFSM:
                         guard_exp = expression['guard_exp']
                         transition_type = expression['type']
 
-                elif 'type' in expression and expression['type'] == 'param_assignment':
-                    guard_exp = expression['guard_exp']
-                    transition_type = expression['type']
+                # elif 'type' in expression and expression['type'] == 'param_assignment':
+                #     guard_exp = expression['guard_exp']
+                #     transition_type = expression['type']
+
+                    elif 'type' in expression and expression['type'] == 'parameter_invocation':
+
+                        transition_type = 'self_loop'
+                        guard_exp = expression['guard_exp']
+
+
                 elif 'type' in expression and (expression['type'] == 'true_body_last' or expression['type'] == 'false_body_last'):
                     transition_type = expression['type']
 
@@ -246,6 +264,10 @@ class EFSM:
             else:
                 Components[mod]['edge_list']['t0']['events'].append(self.name + '1')
 
+    def addrequireCreation(self, expression):
+        # Assumption that require has only one statement
+        pass
+
     def addModifierParameter(self, parameters):
 
         for p in parameters:
@@ -333,6 +355,9 @@ def superVariableDeclaration(packet, **kwargs):
 
         # Add this to the dictionary AddressVariables
         VariableComponent['AddressVariables'][name] = address_name
+
+        # Add the declared addresses to the declared address list
+        VariableComponent['DeclaredAddressVariables'][name] = address_name
 
         # create the xml element for the address
         xml_VariableComponent = ET.Element("VariableComponent", Name=name)
@@ -456,11 +481,51 @@ def add_transfer_efsm(efsm_name):
         addAutomata(transfer_efsm)
 
 
+# function to check if there are any requires in the function body
 def check_require_in_function(body):
     for exp in body:
         if 'ntype' in exp and exp['ntype'] == 'FunctionCall':
             if exp['name'] == 'require':
                 return True
+    return False
+
+# function to check if there are any leading requires in the function body
+
+def check_leading_require_in_function(body):
+    leading_require_count = 0
+
+    for exp_index, exp in enumerate(body):
+        if exp_index == leading_require_count:
+            if 'ntype' in exp and exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
+                #print('Leading require at index', exp_index)
+                leading_require_count += 1
+        else:
+            break
+    return leading_require_count
+
+def check_parameter_in_require2(require_arg, search_string):
+    # check for all parameter if they are present in any require statement
+    # Check if the search string is in the element's text
+
+    element = require_arg['args']
+
+    if element.text and search_string in element.text:
+        return True
+
+    # Check if the search string is in the element's tail text
+    if element.tail and search_string in element.tail:
+        return True
+
+    # Check if the search string is in any of the element's attributes
+    for attribute in element.attrib.values():
+        if search_string in attribute:
+            return True
+
+        # Recursively check all child elements
+    for child in element:
+        if in_ignore_list(child, search_string):
+            return True
+
     return False
 
 
@@ -501,7 +566,7 @@ def superFunctionDefinition(packet):
     global false_body
     name = packet['name']
     params = packet['params']
-    #print('params', params)
+    print('params------------------------------', params)
     global param_assigned
     param_assigned = False
     body = packet['body']
@@ -514,58 +579,110 @@ def superFunctionDefinition(packet):
     function = EFSM(name)
 
     require_in_function = check_require_in_function(body)
-    if require_in_function:
-        #print('Require in function', name)
+    leading_require_count = check_leading_require_in_function(body)
+    print('Leading require count', leading_require_count)
+    # if require_in_function: # if there is any require present in the function
+    #     #print('Require in function', name)
+    #
+    #     for param, param_type in params.items():
+    #         # check if the parameter is present in the require statement
+    #         if check_parameter_in_require(body, param):
+    #             # Add parameter to the function
+    #             #print('Parameter present in require statement', param, param_type)
+    #
+    #             if param_type in VariableComponent['EnumVariables']:
+    #                 # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+    #                 guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
+    #                                                **{'ntype': 'ParameterDeclarationStatement',
+    #                                                   'kind': 'AssignmentCheck'})
+    #                 # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
+    #                 param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+    #                 function.addTransition(param_assignment)
+    #                 param_assigned = True
+    #                 initial_statement_added = True
+    #
+    #
+    #             #elif
+    #
+    #             elif param_type in num_set:
+    #                 rhs_list = ['0', '1']
+    #                 guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
+    #                                                                          'kind': 'AssignmentCheck'})
+    #                 param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+    #                 function.addTransition(param_assignment)
+    #                 param_assigned = True
+    #                 initial_statement_added = True
+    # else:
+    #     # add parameters to the function
+    #     for param, param_type in params.items():
+    #         # print(param, param_type, 'param and param_type')
+    #         if param_type in VariableComponent['EnumVariables']:
+    #             # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+    #             guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
+    #                                            **{'ntype': 'ParameterDeclarationStatement',
+    #                                               'kind': 'AssignmentCheck'})
+    #             # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
+    #             param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+    #             function.addTransition(param_assignment)
+    #             param_assigned = True
+    #
+    #         elif param_type in num_set:
+    #             rhs_list  = ['0','1']
+    #             guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
+    #                                                               'kind': 'AssignmentCheck'})
+    #             param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+    #             function.addTransition(param_assignment)
+    #             param_assigned = True
 
-        for param, param_type in params.items():
-            # check if the parameter is present in the require statement
-            if check_parameter_in_require(body, param):
-                # Add parameter to the function
-                #print('Parameter present in require statement', param, param_type)
+    # Adding parameters here
+    # trialzone 6
+    if params:
+
+        # This should be for each parameter as well. So the resulting name of the EFSM could be
+        # function_name + parameter_name + 'choose'. Something like that.
+        for address_name in DeclaredAddressVariables.keys():
+            for param, param_type in params.items():
+                # create an EFSM for each address
+                param_invoke_efsm_name = address_name + '_prm_' + param
+                param_invoke_efsm = EFSM(param_invoke_efsm_name)
+                param_exp = str()
+
+                # generate the self loop transition
+                #param_invoke_efsm.addTransition({'ntype': 'Simple', 'name': param_invoke_efsm_name + '1', 'type': 'self_loop'})
+
+                # generate guard expression
+                sender_exp = wmodify_assignment('sender', '==', address_name)
 
                 if param_type in VariableComponent['EnumVariables']:
-                    # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
-                    guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
-                                                   **{'ntype': 'ParameterDeclarationStatement',
-                                                      'kind': 'AssignmentCheck'})
+                            # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+                    param_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
+                                                           **{'ntype': 'ParameterDeclarationStatement',
+                                                              'kind': 'AssignmentCheck'})
                     # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
-                    param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-                    function.addTransition(param_assignment)
-                    param_assigned = True
-                    initial_statement_added = True
-
-
-                #elif
+                    #param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                    #function.addTransition(param_assignment)
+                    #param_assigned = True
 
                 elif param_type in num_set:
-                    rhs_list = ['0', '1']
-                    guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
-                                                                             'kind': 'AssignmentCheck'})
-                    param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-                    function.addTransition(param_assignment)
-                    param_assigned = True
-                    initial_statement_added = True
-    else:
-        # add parameters to the function
-        for param, param_type in params.items():
-            # print(param, param_type, 'param and param_type')
-            if param_type in VariableComponent['EnumVariables']:
-                # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
-                guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
-                                               **{'ntype': 'ParameterDeclarationStatement',
-                                                  'kind': 'AssignmentCheck'})
-                # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
-                param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-                function.addTransition(param_assignment)
-                param_assigned = True
+                    rhs_list  = ['0','1']
+                    param_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
+                                                                              'kind': 'AssignmentCheck'})
+                    #param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+                    #function.addTransition(param_assignment)
+                    #param_assigned = True
 
-            elif param_type in num_set:
-                rhs_list  = ['0','1']
-                guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
-                                                                  'kind': 'AssignmentCheck'})
-                param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-                function.addTransition(param_assignment)
-                param_assigned = True
+                guard_exp = wmodify_assignment(sender_exp, '&', param_exp)
+
+
+
+                param_invoke_efsm.addTransition(
+                    {'ntype': 'Simple', 'name': name + '_' + address_name, 'type': 'parameter_invocation', 'guard_exp': guard_exp})
+                addAutomata(param_invoke_efsm)
+
+                # Generate the transition for the address
+                # part 1 : sender == address_name
+                # part 2 : assignment of parameter (parameter must be primed)
+
 
     # Add function name to invoked modifiers
     if modifiers:
@@ -711,7 +828,7 @@ def superFunctionDefinition(packet):
                     #print('true body last statement', stmnt)
                     if 'type' in stmnt and stmnt['type'] == 'transfer':
                         transfer_in_function_name = str()
-                        #print('Transfer in function name', transfer_in_function_name)
+                        #print('Transfer here')
 
 
                         if exp_index == 0:
@@ -742,6 +859,88 @@ def superFunctionDefinition(packet):
                         function.addTransition(efsm_fail)
                         function.addTransition(transfer_success_exp)
                         function.addTransition(next_statement)
+
+                    # This is the place where we need to add the msg.sender transfer functionality as well.
+                    elif 'type' in stmnt and stmnt['type'] == 'mapping_transfer':
+                        # trialzone3 start
+                        print('Mapping Transfer reached in superFunctionDefinition')
+                        print(exp)
+                        sender_list = exp['true_body']
+                        print('Total variables here: ',DeclaredAddressVariables)
+                        #asdf
+                        declared_address_list = list(DeclaredAddressVariables.keys())
+                        if exp_index == 0:
+                            first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
+                            function.addTransition(first_transition)
+                            for sender_address in declared_address_list:  # add transfer_efsm for each address if it is not already present
+                                if sender_address not in any(list(FunctionVariablesTEMP.values())):
+                                    # print('Check SENDER Address', sender_address)
+                                    sender_address_check = name + sender_address + 'transfer'
+                                    add_transfer_efsm(sender_address_check)
+
+
+
+                        else:
+                            for sender_address in declared_address_list:  # add transfer_efsm for each address if it is not already present
+
+                                if not check_address_in_TEMP(sender_address):
+                                    sender_address_check = name + sender_address + 'transfer'
+                                    add_transfer_efsm(sender_address_check)
+
+                        for sender_id, sender_address in enumerate(declared_address_list):
+                            if not check_address_in_TEMP(sender_address):
+                                transfer_event = name + sender_address + 'transfer'
+                                transfer_event_initial = transfer_event + '1'
+                                transfer_event_fail = transfer_event + 'Fail'
+                                transfer_event_success = transfer_event + 'X'
+                                # print('sender id ====', sender_id)
+
+                                sender_guard = get_sender_guard(sender_address)
+
+                                if sender_id == 0:
+                                    transfer_attempt_type = 'sender_transfer_initial'
+
+                                    transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
+                                                        'sender_index': sender_id, 'guard_exp': sender_guard,
+                                                        'type': transfer_attempt_type}
+                                    function.addTransition(transfer_attempt)
+
+                                    transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
+                                                         'type': 'transfer_fail'}
+                                    efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+                                    function.addTransition(transfer_fail_exp)
+                                    function.addTransition(efsm_fail)
+
+                                    transfer_success_type = 'sender_transfer_success_initial'
+                                    transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
+                                                            'type': transfer_success_type}
+                                    function.addTransition(transfer_success_exp)
+
+
+                                else:
+                                    transfer_attempt_type = 'sender_transfer'
+
+                                    transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
+                                                        'sender_index': sender_id, 'guard_exp': sender_guard,
+                                                        'type': transfer_attempt_type}
+                                    function.addTransition(transfer_attempt)
+
+                                    transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
+                                                         'type': 'transfer_fail'}
+                                    efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+                                    function.addTransition(transfer_fail_exp)
+                                    function.addTransition(efsm_fail)
+
+                                    transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
+                                                            'type': 'sender_transfer_success'}
+                                    # print('TRANSFER SUCCESS',sender_address,transfer_success_exp)
+                                    function.addTransition(transfer_success_exp)
+
+                                    # if exp_index == len(body) - 1 and sender_id == len(declared_address_list) - 1:
+                                    #     # function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
+                                    #     extra_transition = {'ntype': 'Simple'}
+                                    #     function.addTransition(extra_transition)
+                    # trialzone3 end
 
 
                     else:
@@ -781,13 +980,51 @@ def superFunctionDefinition(packet):
                         function.addTransition(stmnt)
                 else: # transfer not added here, can be added later
                     if 'exp' or 'expression' in stmnt:
-                        if 'exp' in exp:
+                      # trialzone3
+                        if 'exp' in exp or 'exp' in stmnt:
+                            print('Calling process_in_ignore_list')
+                            if 'exp' in stmnt:
+                                assignment_xml = stmnt['exp']
+                                #print('Assignment XML', assignment_xml)
+                                lhs_variable = get_lhs_variable(assignment_xml)
+                                print('lhs_variable', lhs_variable)
+                                if lhs_variable in VariableComponent:
+                                    # print('Variable Component', VariableComponent[lhs_variable])
+                                    lhs_variable_temp = lhs_variable + 'TEMP'
 
+                                    # Add the lhs_variable to the FunctionVariablesTEMP dictionary
+                                    FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+
+                                    # Replace and declare the lhs_variable with lhs_variable_temp
+                                    variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
+                                                                                     lhs_variable_temp)
+                                    # print('Variable Temp XML', variable_temp_xml_expression)
+
+                                    # replace var with varTEMP in the expression if it is not the last expression
+
+                                    exp['exp'] = variable_temp_xml_expression
+
+                                    # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
+                                    lhs_variable_definition = VariableComponent[lhs_variable]
+                                    lhs_variable_temp_definition = copy.deepcopy(lhs_variable_definition)
+                                    lhs_variable_temp_definition = replace_with_temp(lhs_variable_temp_definition,
+                                                                                     lhs_variable,
+                                                                                     lhs_variable_temp)
+
+                                    # Add the lhs_variable_temp to the VariableComponent
+                                    VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
                             process_in_ignore_list(stmnt, 'exp', ignore_list, function)
+                            print('Expression added--------')
+                            # asdf
 
                         elif 'expression' in exp:
 
                             process_in_ignore_list(stmnt, 'expression', ignore_list, function)
+
+                        # elif 'exp' in stmnt:
+                        #     #print(stmnt['exp'])
+                        #     stmnt_exp =
+                        #     asdf
 
 
                 if stmnt['ntype'] == 'FunctionCall':
@@ -886,14 +1123,49 @@ def superFunctionDefinition(packet):
                     function.addTransition(function_complete)
 
         elif 'ntype' in exp and exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
+            #print('Require statement reached in superFunctionDefinition', exp_index)
+            if exp_index < leading_require_count:
+                # trialzone5 start
+                print('Adding separate EFSM for require statement here', exp_index)
 
-            if isinstance(exp['args'], str): # case where require statement has a single variable of boolean type, example: require(auctionOpen)
-                    if exp['args'] in VariableComponent['BooleanVariables']:
-                        exp['args'] = wmodify_assignment(exp['args'], "==", "true")
+                # generating a separate efsm for require statement
+                require_efsm_name = 'req' + name + str(exp_index)
+                require_efsm = EFSM(require_efsm_name)
 
+                # check if parameter is present in the require statement
+                for param, param_type in params.items():
+                    if check_parameter_in_require2(exp, param):
+                        # print('Parameter present in require statement', param, require_efsm_name)
+                        # replace the parameter with parameter' (parameter prime)
+                        pass
 
+                require_efsm_expression = {'ntype': 'FunctionCall', 'name': 'require2', 'args': exp['args']}
+                #declared_address_count = len(DeclaredAddressVariables)
+                declared_address_list = list(DeclaredAddressVariables.keys())
+                #print('declared address count', declared_address_count)
 
-            process_in_ignore_list(exp, 'args', ignore_list, function, transition_type = 'require_true', efsm_name = name)
+                # for leading requires, if params is not empty then we generate event names based on how many addresses are there
+
+                event_names = []
+                if params != {}:
+                    for declared_address in declared_address_list:
+                        event_names.append( name + '_' + declared_address)
+                print('Event names', event_names)
+
+                if event_names != []:
+                    require_efsm.addTransition(require_efsm_expression, event_names)
+                else:
+                    event_names = [name + '1']
+                    require_efsm.addTransition(require_efsm_expression, event_names)
+                addAutomata(require_efsm)
+
+            # if isinstance(exp['args'], str): # case where require statement has a single variable of boolean type, example: require(auctionOpen)
+            #         if exp['args'] in VariableComponent['BooleanVariables']:
+            #             exp['args'] = wmodify_assignment(exp['args'], "==", "true")
+
+            else:
+
+                process_in_ignore_list(exp, 'args', ignore_list, function, transition_type = 'require_true', efsm_name = name)
             if exp_index == 0:
                 initial_statement_added = True
 
@@ -904,26 +1176,26 @@ def superFunctionDefinition(packet):
             #function.addTransition(exp)
 
             # Parameter assignment place here so that it is called after the require statement if any require statement is present
-            if param_assigned == False:
-                for param, param_type in params.items():
-                    #print(param, param_type, 'param and param_type')
-                    if param_type in VariableComponent['EnumVariables']:
-                        # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
-                        guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
-                                                       **{'ntype': 'ParameterDeclarationStatement',
-                                                          'kind': 'AssignmentCheck'})
-                       # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
-                        param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-                        function.addTransition(param_assignment)
-
-                    # work on this part later
-                    elif param_type in num_set:
-                        rhs_list  = ['0','1']
-                        guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
-                                                                          'kind': 'AssignmentCheck'})
-                        param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-                        function.addTransition(param_assignment)
-                    param_assigned = True
+            # if param_assigned == False:
+            #     for param, param_type in params.items():
+            #         #print(param, param_type, 'param and param_type')
+            #         if param_type in VariableComponent['EnumVariables']:
+            #             # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
+            #             guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
+            #                                            **{'ntype': 'ParameterDeclarationStatement',
+            #                                               'kind': 'AssignmentCheck'})
+            #            # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
+            #             param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+            #             function.addTransition(param_assignment)
+            #
+            #         # work on this part later
+            #         elif param_type in num_set:
+            #             rhs_list  = ['0','1']
+            #             guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
+            #                                                               'kind': 'AssignmentCheck'})
+            #             param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
+            #             function.addTransition(param_assignment)
+            #         param_assigned = True
 
 
         elif 'ntype' in exp and exp['ntype'] == 'Assignment' and exp['kind'] == 'structConstructorCall':

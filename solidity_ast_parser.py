@@ -112,6 +112,11 @@ def handleVariableDeclaration(node):
                 if attr in VariableComponent['AddressVariables']:
                     VariableComponent['AddressVariables'][var_struct] = VariableComponent['AddressVariables'][attr]
 
+                    # Adding the address to list of declared address variables
+                    DeclaredAddressVariables[var_struct] = VariableComponent['AddressVariables'][attr]
+                    #print(DeclaredAddressVariables)
+                    #asdf
+
 
 
     #return str(var_type + " : " + name)
@@ -213,7 +218,7 @@ def handleFunctionCall(node):
             name = 'x0'
             print('Address conversion:', name)
 
-    print('Function call:', name)
+    #print('Function call:', name)
     #print(asdf)
 
 
@@ -505,11 +510,15 @@ def handleIfStatement(node):
 def handleStructDefinition(node):
     assert ntype(node) == 'StructDefinition', "Node not StructDefinition"
     members = [lookup_table[ntype(m)](m) for m in node['members']]
-    #members = "\n".join(members)
     name = node['name']
     packet = {'name': name, 'members': members}
-    #print(packet)
+    print(packet)
     if superStructDefinition(packet):
+        for mem in members:
+            if mem in DeclaredAddressVariables:
+                # trialzone3
+                DeclaredAddressVariables.pop(mem)
+
         return True
     #return str (name + " {\n" + members + "\n}")
 
@@ -528,7 +537,6 @@ def handleMapping(node):
     packet = {'ntype':node_type, 'key_value': key_value}
     #print(packet)
     return packet
-
 
 
 

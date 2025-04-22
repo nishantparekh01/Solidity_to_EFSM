@@ -47,10 +47,13 @@ contract NineGame {
         } else {
             state.whoseTurn = player1;
         }
+        require(state.num + value <= 9, "Move would exceed 9");
+
 
         if (state.num == 9) {
-            gameOver = true;
-           payable(msg.sender).transfer(address(this).balance);
+           gameOver = true;
+           //payable(msg.sender).transfer(address(this).balance);
+           player1.transfer(address(this).balance);
         }
 
     }

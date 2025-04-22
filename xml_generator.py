@@ -93,7 +93,7 @@ ComponentList.append(VariableComponent_sender)
 
 # Replacing address domain for all address variables
 # Do we have an address list ?:
-print(AddressVariables)
+#print(AddressVariables)
 default_address = "x0"
 
 for address_name, address_value in VariableComponent['AddressVariables'].items():
@@ -287,7 +287,7 @@ def generate_address_xml(address_list):
 
     # Return the generated tree as a string
     return    current
-address_xml = generate_address_xml(list(sender_list.values()))
+address_xml = generate_address_xml(list(DeclaredAddressVariables.values()))
 
 def generate_assignMsg_efsm(source_s0, target_s0):
 
@@ -371,7 +371,8 @@ def generate_assignMsg_efsm(source_s0, target_s0):
 #############################################################################################################
 
 # xml testing
-address_list = list(sender_list.values())
+#address_list = list(sender_list.values())
+address_list = list(DeclaredAddressVariables.values())
 
 assignMsg_efsm = generate_assignMsg_efsm(source_s0, target_s0)
 

@@ -126,6 +126,62 @@ for address_name, address_value in VariableComponent['AddressVariables'].items()
         xml_initialValue = wmodify_assignment(address_name, "==", default_address)
         xml_VariableInitial.append(xml_initialValue)
 
+print(FunctionVariablesTEMP)
+temp_address = []
+for global_temp_variables in FunctionVariablesTEMP.values():
+    for temp_variables in global_temp_variables.keys():
+        if temp_variables in DeclaredAddressVariables:
+            #print(temp_variables)
+            print(DeclaredAddressVariables[temp_variables])
+            if temp_variables not in temp_address:
+                temp_address.append(temp_variables)
+print(temp_address)
+print('--------------------------------')
+
+# find the corresponding TEMP variable and assign it
+temp_address_list = []
+for address_variable in temp_address:
+    temp_list_all = FunctionVariablesTEMP.values()
+    for temp_list in temp_list_all:
+        if address_variable in temp_list:
+            #print(temp_list[address_variable])
+            temp_address_list.append(temp_list[address_variable])
+
+print(temp_address_list)
+
+for address_temp_var in temp_address_list:
+    if address_temp_var in VariableComponent:
+        # print(f'Updating address: {address_name}')
+
+        # Get the VariableComponent for the address
+        xml_VariableComponent = VariableComponent[address_temp_var]
+
+        # Remove existing VariableRange (if required)
+        existing_ranges = xml_VariableComponent.findall("VariableRange")
+        for existing_range in existing_ranges:
+            xml_VariableComponent.remove(existing_range)
+
+        # Remove existing VariableInitial (to ensure correct order when re-adding)
+        existing_initial = xml_VariableComponent.find("VariableInitial")
+        if existing_initial is not None:
+            xml_VariableComponent.remove(existing_initial)
+
+        # Add VariableRange first
+        xml_variableRange = ET.SubElement(xml_VariableComponent, "VariableRange")
+        xml_EnumSetExpression = ET.SubElement(xml_variableRange, "EnumSetExpression")
+
+        # Copy the EnumSetExpression from sender
+        for child in EnumSetExpression_sender:
+            xml_EnumSetExpression.append(ET.Element("SimpleIdentifier", Name=child.attrib["Name"]))
+
+        # Add VariableInitial second
+        xml_VariableInitial = ET.SubElement(xml_VariableComponent, "VariableInitial")
+        xml_initialValue = wmodify_assignment(address_temp_var, "==", default_address)
+        xml_VariableInitial.append(xml_initialValue)
+
+
+
+#asdf
 #############################################################################################################
 
 for efsm in pre_supremica['Components']:
@@ -526,7 +582,8 @@ def generate_attacker_model(function_name, address_name):
 #print(FunctionVariablesTEMP)
 #print(GeneralVariablesTEMP)
 #print(event_list)
-#print(asdf)
+#print(DeclaredAddressVariables)
+#asdf
 
 timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
 

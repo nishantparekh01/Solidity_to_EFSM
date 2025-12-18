@@ -158,6 +158,9 @@ class EFSM:
                         guard_exp = expression['guard_exp']
                         transition_type = expression['type']
 
+                    elif expression['type'] == 'user_invocation':
+                        transition_type = 'user_invocation'
+
                 # elif 'type' in expression and expression['type'] == 'param_assignment':
                 #     guard_exp = expression['guard_exp']
                 #     transition_type = expression['type']
@@ -281,7 +284,6 @@ class EFSM:
         evaluate_exp = None
         evaluate_exp = expression
 
-
 def superEnumDefinition(packet):
     global VariableComponent
     name = packet['name']
@@ -289,7 +291,6 @@ def superEnumDefinition(packet):
 
     VariableComponent['EnumVariables'][name] = members
     return True
-
 
 def superStructDefinition(packet):
     global VariableComponent
@@ -299,12 +300,10 @@ def superStructDefinition(packet):
     VariableComponent['StructVariables'][name] = members
     return True
 
-
 def get_address_index():
     global address_index
     address_index += 1
     return address_index
-
 
 def superVariableDeclaration(packet, **kwargs):
     global VariableComponent
@@ -423,7 +422,6 @@ def addAutomata(efsm):
     global Components
     Components[efsm.name] = efsm.efsm
 
-
 def superModifierDefinition(packet):
     # must return a dictionary
     global Supremica
@@ -480,7 +478,6 @@ def add_transfer_efsm(efsm_name):
 
         addAutomata(transfer_efsm)
 
-
 # function to check if there are any requires in the function body
 def check_require_in_function(body):
     for exp in body:
@@ -490,7 +487,6 @@ def check_require_in_function(body):
     return False
 
 # function to check if there are any leading requires in the function body
-
 def check_leading_require_in_function(body):
     leading_require_count = 0
 
@@ -528,7 +524,6 @@ def check_parameter_in_require2(require_arg, search_string):
 
     return False
 
-
 def check_parameter_in_require( body, search_string):
     # check for all parameter if they are present in any require statement
     # Check if the search string is in the element's text
@@ -558,9 +553,6 @@ def check_parameter_in_require( body, search_string):
                 return False
 
         return False
-
-
-
 
 def superFunctionDefinition(packet):
     global false_body
@@ -679,9 +671,11 @@ def superFunctionDefinition(packet):
                     {'ntype': 'Simple', 'name': name + '_' + address_name, 'type': 'parameter_invocation', 'guard_exp': guard_exp})
                 addAutomata(param_invoke_efsm)
 
-                # Generate the transition for the address
-                # part 1 : sender == address_name
-                # part 2 : assignment of parameter (parameter must be primed)
+            # Generate the transition for the address
+            user_invocation_transition = {'ntype': 'Simple', 'name': name + '_' + address_name, 'type': 'user_invocation'}
+            print(user_invocation_transition)
+            function.addTransition(user_invocation_transition)
+        #asdf
 
 
     # Add function name to invoked modifiers
@@ -803,191 +797,168 @@ def superFunctionDefinition(packet):
                             function.addTransition(extra_transition)
 
 
+        def handleIfStaement_functionDefinition(exp, nested = False):
+            if 'ntype' in exp and exp['ntype'] == 'IfStatement':
+                true_condition = exp['true_condition']
+                false_condition = exp['false_condition']
 
-        elif 'ntype' in exp and exp['ntype'] == 'IfStatement':
-            true_condition = exp['true_condition']
-            false_condition = exp['false_condition']
+                true_body = exp['true_body']
 
-            true_body = exp['true_body']
+                if 'false_body' in exp:
+                    false_body = exp['false_body']
 
-            if 'false_body' in exp:
-                false_body = exp['false_body']
-            true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
-                                   'guard_exp': true_condition, 'type': 'true_body_start'}
+                if nested == False:
+                    true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
+                                       'guard_exp': true_condition, 'type': 'true_body_start'}
+                else:
+                    true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
+                                           'guard_exp': true_condition, 'type': 'nested_true_body_start'}
 
-            if 'false_body' in exp:
-                false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
-                                    'guard_exp': false_condition, 'type': 'false_body_start'}
-            else:
-                false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false','guard_exp': false_condition, 'type': 'false_body_absent'}
+                if 'false_body' in exp :
+                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
+                                        'guard_exp': false_condition, 'type': 'false_body_start'}
 
-            function.addTransition(true_exp_transition)
-            for index, stmnt in enumerate(true_body): # add transitions for each statement in the true body
-                if index == len(true_body) - 1: # if it is the only statement / last statement in true body
-
-                    #print('true body last statement', stmnt)
-                    if 'type' in stmnt and stmnt['type'] == 'transfer':
-                        transfer_in_function_name = str()
-                        #print('Transfer here')
-
-
-                        if exp_index == 0:
-                            first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
-                            function.addTransition(first_transition)
-                            transfer_in_function_name = name + stmnt['name']
-                            add_transfer_efsm(transfer_in_function_name)
+                if 'false_body' in exp and 'ntype' in exp['false_body'] and exp['false_body']['ntype'] == 'IfStatement':
+                    print('found something')
+                    print(exp['false_body'])
+                    nested_false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
+                                            'guard_exp': false_condition, 'type': 'nested_false_body_start'}
 
 
-                        else:
-                            transfer_in_function_name = name + stmnt['name']
-                            add_transfer_efsm(transfer_in_function_name)
+                else:
+                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false','guard_exp': false_condition, 'type': 'false_body_absent'}
+
+                function.addTransition(true_exp_transition)
+                for index, stmnt in enumerate(true_body): # add transitions for each statement in the true body
+                    if index == len(true_body) - 1: # if it is the only statement / last statement in true body
+
+                        #print('true body last statement', stmnt)
+                        if 'type' in stmnt and stmnt['type'] == 'transfer':
+                            transfer_in_function_name = str()
+                            #print('Transfer here')
 
 
-                        stmnt['name'] = name + stmnt[
-                            'name']  # transfer name is now function name + transfer name to distinguish between same address transfers in different functions
-                        function.addTransition(stmnt)
-
-                        transfer_success = transfer_in_function_name + 'X'
-                        transfer_fail = transfer_in_function_name + 'Fail'
-
-                        transfer_success_exp = {'ntype': 'Simple', 'name': transfer_success, 'type': 'transfer_success'}
-                        transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_fail, 'type': 'transfer_fail'}
-                        next_statement = {'ntype': 'Simple', 'type': 'true_body_last'}
-                        efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
-
-                        function.addTransition(transfer_fail_exp)
-                        function.addTransition(efsm_fail)
-                        function.addTransition(transfer_success_exp)
-                        function.addTransition(next_statement)
-
-                    # This is the place where we need to add the msg.sender transfer functionality as well.
-                    elif 'type' in stmnt and stmnt['type'] == 'mapping_transfer':
-                        # trialzone3 start
-                        print('Mapping Transfer reached in superFunctionDefinition')
-                        print(exp)
-                        sender_list = exp['true_body']
-                        print('Total variables here: ',DeclaredAddressVariables)
-                        #asdf
-                        declared_address_list = list(DeclaredAddressVariables.keys())
-                        if exp_index == 0:
-                            first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
-                            function.addTransition(first_transition)
-                            for sender_address in declared_address_list:  # add transfer_efsm for each address if it is not already present
-                                if sender_address not in any(list(FunctionVariablesTEMP.values())):
-                                    # print('Check SENDER Address', sender_address)
-                                    sender_address_check = name + sender_address + 'transfer'
-                                    add_transfer_efsm(sender_address_check)
+                            if exp_index == 0:
+                                first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
+                                function.addTransition(first_transition)
+                                transfer_in_function_name = name + stmnt['name']
+                                add_transfer_efsm(transfer_in_function_name)
 
 
+                            else:
+                                transfer_in_function_name = name + stmnt['name']
+                                add_transfer_efsm(transfer_in_function_name)
 
-                        else:
-                            for sender_address in declared_address_list:  # add transfer_efsm for each address if it is not already present
 
+                            stmnt['name'] = name + stmnt[
+                                'name']  # transfer name is now function name + transfer name to distinguish between same address transfers in different functions
+                            function.addTransition(stmnt)
+
+                            transfer_success = transfer_in_function_name + 'X'
+                            transfer_fail = transfer_in_function_name + 'Fail'
+
+                            transfer_success_exp = {'ntype': 'Simple', 'name': transfer_success, 'type': 'transfer_success'}
+                            transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_fail, 'type': 'transfer_fail'}
+                            next_statement = {'ntype': 'Simple', 'type': 'true_body_last'}
+                            efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+
+                            function.addTransition(transfer_fail_exp)
+                            function.addTransition(efsm_fail)
+                            function.addTransition(transfer_success_exp)
+                            function.addTransition(next_statement)
+
+                        # This is the place where we need to add the msg.sender transfer functionality as well.
+                        elif 'type' in stmnt and stmnt['type'] == 'mapping_transfer':
+                            # trialzone3 start
+                            print('Mapping Transfer reached in superFunctionDefinition')
+                            print(exp)
+                            sender_list = exp['true_body']
+                            print('Total variables here: ',DeclaredAddressVariables)
+                            #asdf
+                            declared_address_list = list(DeclaredAddressVariables.keys())
+                            if exp_index == 0:
+                                first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
+                                function.addTransition(first_transition)
+                                for sender_address in declared_address_list:  # add transfer_efsm for each address if it is not already present
+                                    if sender_address not in any(list(FunctionVariablesTEMP.values())):
+                                        # print('Check SENDER Address', sender_address)
+                                        sender_address_check = name + sender_address + 'transfer'
+                                        add_transfer_efsm(sender_address_check)
+
+
+
+                            else:
+                                for sender_address in declared_address_list:  # add transfer_efsm for each address if it is not already present
+
+                                    if not check_address_in_TEMP(sender_address):
+                                        sender_address_check = name + sender_address + 'transfer'
+                                        add_transfer_efsm(sender_address_check)
+
+                            for sender_id, sender_address in enumerate(declared_address_list):
                                 if not check_address_in_TEMP(sender_address):
-                                    sender_address_check = name + sender_address + 'transfer'
-                                    add_transfer_efsm(sender_address_check)
+                                    transfer_event = name + sender_address + 'transfer'
+                                    transfer_event_initial = transfer_event + '1'
+                                    transfer_event_fail = transfer_event + 'Fail'
+                                    transfer_event_success = transfer_event + 'X'
+                                    # print('sender id ====', sender_id)
 
-                        for sender_id, sender_address in enumerate(declared_address_list):
-                            if not check_address_in_TEMP(sender_address):
-                                transfer_event = name + sender_address + 'transfer'
-                                transfer_event_initial = transfer_event + '1'
-                                transfer_event_fail = transfer_event + 'Fail'
-                                transfer_event_success = transfer_event + 'X'
-                                # print('sender id ====', sender_id)
+                                    sender_guard = get_sender_guard(sender_address)
 
-                                sender_guard = get_sender_guard(sender_address)
+                                    if sender_id == 0:
+                                        transfer_attempt_type = 'sender_transfer_initial'
 
-                                if sender_id == 0:
-                                    transfer_attempt_type = 'sender_transfer_initial'
+                                        transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
+                                                            'sender_index': sender_id, 'guard_exp': sender_guard,
+                                                            'type': transfer_attempt_type}
+                                        function.addTransition(transfer_attempt)
 
-                                    transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
-                                                        'sender_index': sender_id, 'guard_exp': sender_guard,
-                                                        'type': transfer_attempt_type}
-                                    function.addTransition(transfer_attempt)
+                                        transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
+                                                             'type': 'transfer_fail'}
+                                        efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+                                        function.addTransition(transfer_fail_exp)
+                                        function.addTransition(efsm_fail)
 
-                                    transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
-                                                         'type': 'transfer_fail'}
-                                    efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
-                                    function.addTransition(transfer_fail_exp)
-                                    function.addTransition(efsm_fail)
-
-                                    transfer_success_type = 'sender_transfer_success_initial'
-                                    transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
-                                                            'type': transfer_success_type}
-                                    function.addTransition(transfer_success_exp)
+                                        transfer_success_type = 'sender_transfer_success_initial'
+                                        transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
+                                                                'type': transfer_success_type}
+                                        function.addTransition(transfer_success_exp)
 
 
-                                else:
-                                    transfer_attempt_type = 'sender_transfer'
+                                    else:
+                                        transfer_attempt_type = 'sender_transfer'
 
-                                    transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
-                                                        'sender_index': sender_id, 'guard_exp': sender_guard,
-                                                        'type': transfer_attempt_type}
-                                    function.addTransition(transfer_attempt)
+                                        transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
+                                                            'sender_index': sender_id, 'guard_exp': sender_guard,
+                                                            'type': transfer_attempt_type}
+                                        function.addTransition(transfer_attempt)
 
-                                    transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
-                                                         'type': 'transfer_fail'}
-                                    efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
-                                    function.addTransition(transfer_fail_exp)
-                                    function.addTransition(efsm_fail)
+                                        transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
+                                                             'type': 'transfer_fail'}
+                                        efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+                                        function.addTransition(transfer_fail_exp)
+                                        function.addTransition(efsm_fail)
 
-                                    transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
-                                                            'type': 'sender_transfer_success'}
-                                    # print('TRANSFER SUCCESS',sender_address,transfer_success_exp)
-                                    function.addTransition(transfer_success_exp)
+                                        transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
+                                                                'type': 'sender_transfer_success'}
+                                        # print('TRANSFER SUCCESS',sender_address,transfer_success_exp)
+                                        function.addTransition(transfer_success_exp)
 
-                                    # if exp_index == len(body) - 1 and sender_id == len(declared_address_list) - 1:
-                                    #     # function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
-                                    #     extra_transition = {'ntype': 'Simple'}
-                                    #     function.addTransition(extra_transition)
-                    # trialzone3 end
+                                        # if exp_index == len(body) - 1 and sender_id == len(declared_address_list) - 1:
+                                        #     # function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
+                                        #     extra_transition = {'ntype': 'Simple'}
+                                        #     function.addTransition(extra_transition)
+                        # trialzone3 end
 
-
-                    else:
-                        stmnt['type'] = 'true_body_last'
-                        if name not in FunctionVariablesTEMP:
-                            FunctionVariablesTEMP[name] = {}
-                        if 'exp' in stmnt:
-                            assignment_xml = stmnt['exp']
-                            # print('Assignment XML', assignment_xml)
-
-                            # if exp_index != len(body) -1 :
-                            lhs_variable = get_lhs_variable(assignment_xml)
-                            if lhs_variable in VariableComponent:
-                                # print('Variable Component', VariableComponent[lhs_variable])
-                                lhs_variable_temp = lhs_variable + 'TEMP'
-
-                                # Add the lhs_variable to the FunctionVariablesTEMP dictionary
-                                FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
-
-                                # Replace and declare the lhs_variable with lhs_variable_temp
-                                variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
-                                                                                 lhs_variable_temp)
-                                # print('Variable Temp XML', variable_temp_xml_expression)
-
-                                # replace var with varTEMP in the expression if it is not the last expression
-
-                                exp['exp'] = variable_temp_xml_expression
-
-                                # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
-                                lhs_variable_definition = VariableComponent[lhs_variable]
-                                lhs_variable_temp_definition = copy.deepcopy(lhs_variable_definition)
-                                lhs_variable_temp_definition = replace_with_temp(lhs_variable_temp_definition, lhs_variable,
-                                                                                 lhs_variable_temp)
-
-                                # Add the lhs_variable_temp to the VariableComponent
-                                VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
-                        function.addTransition(stmnt)
-                else: # transfer not added here, can be added later
-                    if 'exp' or 'expression' in stmnt:
-                      # trialzone3
-                        if 'exp' in exp or 'exp' in stmnt:
-                            print('Calling process_in_ignore_list')
+                        else:
+                            stmnt['type'] = 'true_body_last'
+                            if name not in FunctionVariablesTEMP:
+                                FunctionVariablesTEMP[name] = {}
                             if 'exp' in stmnt:
                                 assignment_xml = stmnt['exp']
-                                #print('Assignment XML', assignment_xml)
+                                # print('Assignment XML', assignment_xml)
+
+                                # if exp_index != len(body) -1 :
                                 lhs_variable = get_lhs_variable(assignment_xml)
-                                print('lhs_variable', lhs_variable)
                                 if lhs_variable in VariableComponent:
                                     # print('Variable Component', VariableComponent[lhs_variable])
                                     lhs_variable_temp = lhs_variable + 'TEMP'
@@ -1007,122 +978,170 @@ def superFunctionDefinition(packet):
                                     # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
                                     lhs_variable_definition = VariableComponent[lhs_variable]
                                     lhs_variable_temp_definition = copy.deepcopy(lhs_variable_definition)
-                                    lhs_variable_temp_definition = replace_with_temp(lhs_variable_temp_definition,
-                                                                                     lhs_variable,
+                                    lhs_variable_temp_definition = replace_with_temp(lhs_variable_temp_definition, lhs_variable,
                                                                                      lhs_variable_temp)
 
                                     # Add the lhs_variable_temp to the VariableComponent
                                     VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
-                            process_in_ignore_list(stmnt, 'exp', ignore_list, function)
-                            print('Expression added--------')
-                            # asdf
+                            function.addTransition(stmnt)
+                    else: # transfer not added here, can be added later
+                        if 'exp' or 'expression' in stmnt:
+                          # trialzone3
+                            if 'exp' in exp or 'exp' in stmnt:
+                                print('Calling process_in_ignore_list')
+                                if 'exp' in stmnt:
+                                    assignment_xml = stmnt['exp']
+                                    #print('Assignment XML', assignment_xml)
+                                    lhs_variable = get_lhs_variable(assignment_xml)
+                                    print('lhs_variable', lhs_variable)
+                                    if lhs_variable in VariableComponent:
+                                        # print('Variable Component', VariableComponent[lhs_variable])
+                                        lhs_variable_temp = lhs_variable + 'TEMP'
 
-                        elif 'expression' in exp:
+                                        # Add the lhs_variable to the FunctionVariablesTEMP dictionary
+                                        FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
-                            process_in_ignore_list(stmnt, 'expression', ignore_list, function)
+                                        # Replace and declare the lhs_variable with lhs_variable_temp
+                                        variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
+                                                                                         lhs_variable_temp)
+                                        # print('Variable Temp XML', variable_temp_xml_expression)
 
-                        # elif 'exp' in stmnt:
-                        #     #print(stmnt['exp'])
-                        #     stmnt_exp =
-                        #     asdf
+                                        # replace var with varTEMP in the expression if it is not the last expression
 
+                                        exp['exp'] = variable_temp_xml_expression
 
-                if stmnt['ntype'] == 'FunctionCall':
-                    if stmnt['type'] == 'transfer':
-                        #print('-----------------Transfer in function call-----------------')
+                                        # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
+                                        lhs_variable_definition = VariableComponent[lhs_variable]
+                                        lhs_variable_temp_definition = copy.deepcopy(lhs_variable_definition)
+                                        lhs_variable_temp_definition = replace_with_temp(lhs_variable_temp_definition,
+                                                                                         lhs_variable,
+                                                                                         lhs_variable_temp)
 
-                        continue
-                    elif index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
+                                        # Add the lhs_variable_temp to the VariableComponent
+                                        VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
+                                process_in_ignore_list(stmnt, 'exp', ignore_list, function)
+                                print('Expression added--------')
+                                # asdf
 
-                        function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
-                        function_call_name = stmnt['name']
-                        if check_transfer_in_function(function_call_name):
-                            function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                            function.addTransition(function_fail)
-                        function.addTransition(function_complete)
-                    else:
-                        function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
-                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                        #function.addTransition(function_fail)
-                        if check_transfer_in_function(function_call_name):
-                            function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                            function.addTransition(function_fail)
+                            elif 'expression' in exp:
 
-                        function.addTransition(function_complete)
+                                process_in_ignore_list(stmnt, 'expression', ignore_list, function)
 
-
-
-            function.addTransition(false_exp_transition) # add transition for false condition. For both cases when false body is present/absent
+                            # elif 'exp' in stmnt:
+                            #     #print(stmnt['exp'])
+                            #     stmnt_exp =
+                            #     asdf
 
 
-            if 'false_body' in exp: # if false body is present
-                for index, stmnt in enumerate(false_body): # add transitions for each statement in the false body
-                    if index == len(false_body) - 1:  # if it is the last statement in the false body
-                        stmnt['type'] = 'false_body_last'
-                        if name not in FunctionVariablesTEMP:
-                            FunctionVariablesTEMP[name] = {}
-                        if 'exp' in stmnt:
-                            assignment_xml = stmnt['exp']
-                            # print('Assignment XML', assignment_xml)
-
-                            # if exp_index != len(body) -1 :
-                            lhs_variable = get_lhs_variable(assignment_xml)
-                            if lhs_variable in VariableComponent:
-                                # print('Variable Component', VariableComponent[lhs_variable])
-                                lhs_variable_temp = lhs_variable + 'TEMP'
-
-                                # Add the lhs_variable to the FunctionVariablesTEMP dictionary
-                                FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
-
-                                # Replace and declare the lhs_variable with lhs_variable_temp
-                                variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
-                                                                                 lhs_variable_temp)
-                                # print('Variable Temp XML', variable_temp_xml_expression)
-
-                                # replace var with varTEMP in the expression if it is not the last expression
-
-                                exp['exp'] = variable_temp_xml_expression
-
-                                # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
-                                lhs_variable_definition = VariableComponent[lhs_variable]
-                                lhs_variable_temp_definition = copy.deepcopy(lhs_variable_definition)
-                                lhs_variable_temp_definition = replace_with_temp(lhs_variable_temp_definition, lhs_variable,
-                                                                                 lhs_variable_temp)
-
-                                # Add the lhs_variable_temp to the VariableComponent
-                                VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
-                        function.addTransition(stmnt)
-                    #     if exp_index == len(body) - 1: # and if it is the last transition in the body
-                    #         function_complete = {'ntype': 'Simple','name': name + 'X', 'type': 'function_complete'}
-                    #         function.addTransition(function_complete)
-                    #
-                    # else:
-                    #     pass
-                        #function.addTransition(stmnt)
                     if stmnt['ntype'] == 'FunctionCall':
-                        if index == len(false_body) - 1: # flag the last statement in the false body, if statement is a function call
-                            function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
+                        if stmnt['type'] == 'transfer':
+                            #print('-----------------Transfer in function call-----------------')
+
+                            continue
+                        elif index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
+
+                            function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
                             function_call_name = stmnt['name']
                             if check_transfer_in_function(function_call_name):
                                 function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
                                 function.addTransition(function_fail)
-                            # else:
-                            # function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                            # function.addTransition(function_fail)
                             function.addTransition(function_complete)
-
                         else:
                             function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
                             function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
-                            function.addTransition(function_fail)
-                            function.addTransition(function_complete)
-            else:
-                # if false body is absent and it was the last transition
-                if exp_index == len(body) - 1:
-                    function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
-                    function.addTransition(function_complete)
+                            #function.addTransition(function_fail)
+                            if check_transfer_in_function(function_call_name):
+                                function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                                function.addTransition(function_fail)
 
-        elif 'ntype' in exp and exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
+                            function.addTransition(function_complete)
+
+                if 'false_body' in exp and 'ntype' in exp['false_body'] and exp['false_body']['ntype'] == 'IfStatement':
+                    function.addTransition(nested_false_exp_transition)
+                else:
+                    function.addTransition(false_exp_transition)
+                #function.addTransition(false_exp_transition) # add transition for false condition. For both cases when false body is present/absent
+
+
+                if 'false_body' in exp: # if false body is present
+                    print("------FALSE BODY HERE-----",false_body)
+                    if 'ntype' in false_body and false_body['ntype'] == 'IfStatement':
+                        print("I'm here")
+                        #asdf
+                        handleIfStaement_functionDefinition(false_body, True)
+                    #asdf
+                    else:
+                        for index, stmnt in enumerate(false_body): # add transitions for each statement in the false body
+                            if index == len(false_body) - 1:  # if it is the last statement in the false body
+                                stmnt['type'] = 'false_body_last'
+                                if name not in FunctionVariablesTEMP:
+                                    FunctionVariablesTEMP[name] = {}
+                                if 'exp' in stmnt:
+                                    assignment_xml = stmnt['exp']
+                                    # print('Assignment XML', assignment_xml)
+
+                                    # if exp_index != len(body) -1 :
+                                    lhs_variable = get_lhs_variable(assignment_xml)
+                                    if lhs_variable in VariableComponent:
+                                        # print('Variable Component', VariableComponent[lhs_variable])
+                                        lhs_variable_temp = lhs_variable + 'TEMP'
+
+                                        # Add the lhs_variable to the FunctionVariablesTEMP dictionary
+                                        FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+
+                                        # Replace and declare the lhs_variable with lhs_variable_temp
+                                        variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
+                                                                                         lhs_variable_temp)
+                                        # print('Variable Temp XML', variable_temp_xml_expression)
+
+                                        # replace var with varTEMP in the expression if it is not the last expression
+
+                                        exp['exp'] = variable_temp_xml_expression
+
+                                        # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
+                                        lhs_variable_definition = VariableComponent[lhs_variable]
+                                        lhs_variable_temp_definition = copy.deepcopy(lhs_variable_definition)
+                                        lhs_variable_temp_definition = replace_with_temp(lhs_variable_temp_definition, lhs_variable,
+                                                                                         lhs_variable_temp)
+
+                                        # Add the lhs_variable_temp to the VariableComponent
+                                        VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
+                                function.addTransition(stmnt)
+                            #     if exp_index == len(body) - 1: # and if it is the last transition in the body
+                            #         function_complete = {'ntype': 'Simple','name': name + 'X', 'type': 'function_complete'}
+                            #         function.addTransition(function_complete)
+                            #
+                            # else:
+                            #     pass
+                                #function.addTransition(stmnt)
+                            print(stmnt)
+                            if 'ntype' in stmnt and stmnt['ntype'] == 'FunctionCall':
+                                if index == len(false_body) - 1: # flag the last statement in the false body, if statement is a function call
+                                    function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
+                                    function_call_name = stmnt['name']
+                                    if check_transfer_in_function(function_call_name):
+                                        function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                                        function.addTransition(function_fail)
+                                    # else:
+                                    # function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                                    # function.addTransition(function_fail)
+                                    function.addTransition(function_complete)
+
+                                else:
+                                    function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
+                                    function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
+                                    function.addTransition(function_fail)
+                                    function.addTransition(function_complete)
+                else:
+                    # if false body is absent and it was the last transition
+                    if exp_index == len(body) - 1:
+                        function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
+                        function.addTransition(function_complete)
+
+
+        handleIfStaement_functionDefinition(exp)
+
+        if 'ntype' in exp and exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
             #print('Require statement reached in superFunctionDefinition', exp_index)
             if exp_index < leading_require_count:
                 # trialzone5 start
@@ -1362,7 +1381,6 @@ def in_ignore_list(element, search_string):
 
     # If none of the conditions are met
     return False
-
 ################ Processing if in in_ignore_list ################################################
 
 def process_in_ignore_list(exp, exp_key, ignore_list, function, **kwargs):
@@ -1397,8 +1415,6 @@ def process_in_ignore_list(exp, exp_key, ignore_list, function, **kwargs):
         #print("False Exp", false_exp)
         function.addTransition(false_exp)
 
-
-
 ################ Checking through final_sol_list ################################################
 
 #print(final_sol_list)
@@ -1418,8 +1434,6 @@ def check_transfer_in_function(function_name):
                 #print(node['name'])
                 return False
 
-
-
 #check_transfer_in_function('operatorWins')
 
 ################ Definition for get_lhs_variable ################################################
@@ -1438,7 +1452,6 @@ def get_lhs_variable(root):
 def get_sender_guard(sender_address):
     sender_guard = wmodify_assignment('sender', "==", sender_address)
     return sender_guard
-
 
 ################ Definition for replace_with_temp ################################################
 
@@ -1466,8 +1479,7 @@ def replace_with_temp(element, old_variable, new_variable):
 
     return element
 
-################ Definition for get_variable_reassignment ################################################
-
+################ Definition for get_variable_reassignment #########################################
 
 def get_variable_reassignment(variable_dict):
 
@@ -1493,7 +1505,6 @@ def get_variable_reassignment(variable_dict):
         return container
     else:
         return None
-
 
 def check_address_in_TEMP(sender_address):
     for key, value in FunctionVariablesTEMP.items():

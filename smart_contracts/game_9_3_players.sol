@@ -5,6 +5,7 @@ pragma solidity >=0.5.0 <0.9.0;
 contract NineGame {
     address payable public player1;
     address payable public player2;
+    address payable public player3;
     uint256 public betAmount;
     bool public gameOver;
 
@@ -22,13 +23,19 @@ contract NineGame {
     }
 
     function join() public payable {
-        require(player2 == address(0), "Game has already started.");
-        require(!gameOver, "Game was canceled.");
-        require(msg.value == betAmount, "Wrong bet amount.");
+            require(!gameOver, "Game was canceled.");
+            require(msg.value == betAmount, "Wrong bet amount.");
 
-        player2 = payable(msg.sender);
-        state.whoseTurn = player1;
+            if (player2 == address(0)) {
+                require (msg.sender != player1);
+                player2 = payable(msg.sender);
+            }
+            if (player3 == address(0)){
+                require(msg.sender != player1 && msg.sender != player2);
+                player3 = payable(msg.sender);
 
+                state.whoseTurn = player1;
+            }
     }
 
 
@@ -44,7 +51,11 @@ contract NineGame {
 
         if (msg.sender == player1) {
             state.whoseTurn = player2;
-        } else {
+        }
+        if (msg.sender == player2) {
+            state.whoseTurn = player3;
+        }
+        if (msg.sender == player3){
             state.whoseTurn = player1;
         }
         require(state.num + value <= 9, "Move would exceed 9");

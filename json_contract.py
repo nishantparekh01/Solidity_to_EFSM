@@ -3,7 +3,9 @@ import json
 #contract_file = r'smart_contracts/casino_blocking.sol'  # Replace with the path to your contract
 #contract_file = r'smart_contracts/game_21_updated.sol'
 #contract_file = r'smart_contracts/escrow_v2_blocking.sol'
-contract_file = r'smart_contracts/game_9.sol'
+#contract_file = r'smart_contracts/game_9.sol'
+#contract_file = r'smart_contracts/game_9_3_players.sol'
+contract_file = r'smart_contracts/game_9_3_players_version2.sol'
 
 ################ Function to clean the JSON file by removing the extra string ###############
 
@@ -71,6 +73,7 @@ final_sol_list = []
 
 try:
     final_sol_list = process_contract_in_memory(contract_file)
+    print("done")
 except Exception as e:
     print(f"Error processing contract: {e}")
 

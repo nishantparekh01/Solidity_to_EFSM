@@ -121,6 +121,7 @@ for efsm in pre_supremica['Components']:
                 sender_transfer_merge_node = str()
                 temporary_source_node = str()
                 require_node = str()
+                user_invocation_node = str()
                 for i in range(n_transitions): # if there are multiple transitions
                     #print('========',condition_node, true_last_node)
                     processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
@@ -163,7 +164,7 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_last':
-                            #print('found some false last here')
+                            print('found some false last here')
                             target_node = true_last_node
                             node_id = int(target_node[-1])
                             processing_transition['source_index'] = source_node
@@ -172,7 +173,7 @@ for efsm in pre_supremica['Components']:
                             #print(asdf)
 
                         elif processing_transition['transition_type'] == 'false_body_start':
-                            # print('found some false body start here')
+                            print('found some false body start here')
                             source_node = condition_node
 
                             target_node = get_new_node('target')
@@ -192,7 +193,14 @@ for efsm in pre_supremica['Components']:
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
-
+                        elif processing_transition['transition_type'] == 'user_invocation':
+                            # Adding user invocation here trial 7
+                            source_node = INITIAL_NODE
+                            target_node = get_new_node('target')
+                            user_invocation_node = target_node
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
                         else:
                             # target_node = get_new_node('target')
                             target_node = get_new_node('target') if not processing_transition['target_index'] else \
@@ -342,6 +350,17 @@ for efsm in pre_supremica['Components']:
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)
+                        elif processing_transition['transition_type'] == 'nested_true_body_start':
+                            #print('found some true body start here----------------------------------')
+                            #print(efsm, processing_transition)
+                            source_node = condition_node
+                            #condition_node = source_node
+                            target_node = get_new_node('target')
+                            if next_transition_type ==  'false_body_start' or next_transition_type == 'false_body_absent':
+                                true_last_node = target_node
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'true_body_last':
                             #print('found some true last here, transaction not first not last')
@@ -354,8 +373,9 @@ for efsm in pre_supremica['Components']:
                             add_node_to_efsm_node_list(source_node, target_node)
 
                         elif processing_transition['transition_type'] == 'false_body_last':
-                            #print('found some false last here')
+                            print('found some false last here sfdgdfg')
                             target_node = true_last_node  #s5
+                            print(source_node, target_node)
                             node_id = int(target_node[-1])
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
@@ -363,11 +383,23 @@ for efsm in pre_supremica['Components']:
                             #print(asdf)
 
                         elif processing_transition['transition_type'] == 'false_body_start':
-                            #print('found some false body start here ------', processing_transition)
+                            print('found some false body start here ------', processing_transition)
 
                             source_node = condition_node #s3 #trueLastNode = s5
 
                             target_node = get_new_node('target') #s6
+                            #print(efsm, processing_transition)
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'nested_false_body_start':
+                            #jkl
+                            print('found some false body start here ------', processing_transition)
+
+                            source_node = condition_node #s3 #trueLastNode = s5
+
+                            target_node = true_last_node #s6
                             #print(efsm, processing_transition)
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
@@ -442,6 +474,16 @@ for efsm in pre_supremica['Components']:
                         elif processing_transition['transition_type'] == 'require_false':
                             source_node = require_node
                             target_node = INITIAL_NODE
+                            processing_transition['source_index'] = source_node
+                            processing_transition['target_index'] = target_node
+                            add_node_to_efsm_node_list(source_node, target_node)
+
+                        elif processing_transition['transition_type'] == 'user_invocation':
+                            print(processing_transition)
+                            print('###########################################################')
+                            # Adding user invocation here trial 7
+                            source_node = INITIAL_NODE
+                            target_node = user_invocation_node
                             processing_transition['source_index'] = source_node
                             processing_transition['target_index'] = target_node
                             add_node_to_efsm_node_list(source_node, target_node)

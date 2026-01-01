@@ -30,6 +30,8 @@ def restructure(pre_supremica):
         if efsm != 'VariableComponent':
             for i in range(len(pre_supremica['Components'][efsm]['edge_list'])):
                 processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
+                print(efsm)
+                print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
                 if i != 0:
                     previous_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i - 1}']
                 if i != len(pre_supremica['Components'][efsm]['edge_list']) - 1:
@@ -58,6 +60,9 @@ def restructure(pre_supremica):
                     #print('param_assignment here', processing_transition)
                     continue
 
+                if processing_transition['transition_type'] == 'user_invocation':
+                    continue
+
                 if processing_transition['action_exp'] == None:
                     # check ntype of evaluate_expression
                     if get_ntype_eval_exp(processing_transition) == 'VariableDeclarationStatement':   #or processing_transition['transition_type'] == 'false_body_absent' or processing_transition['transition_type'] == 'false_body_last':
@@ -65,6 +70,8 @@ def restructure(pre_supremica):
 
                     if not check_action_present(processing_transition): # isn't this the same as the above if statement?
                         processing_node = processing_transition
+
+
 
 
                 else:

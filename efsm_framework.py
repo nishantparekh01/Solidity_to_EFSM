@@ -130,6 +130,10 @@ class EFSM:
                     elif expression['type'] == 'transfer_efsm_fail':
                         target_index = INITIAL_NODE
 
+                    elif expression['type'] == 'transfer_efsm_success':
+                        source_index = 'S1'
+                        target_index = INITIAL_NODE
+
                     elif expression['type'] == 'true_body_last' or expression['type'] == 'false_body_last':
                         transition_type = expression['type']
 
@@ -951,8 +955,10 @@ def superFunctionDefinition(packet):
 
                         else:
                             stmnt['type'] = 'true_body_last'
+                            # initializing function name in FunctionVariablesTEMP
                             if name not in FunctionVariablesTEMP:
                                 FunctionVariablesTEMP[name] = {}
+
                             if 'exp' in stmnt:
                                 assignment_xml = stmnt['exp']
                                 # print('Assignment XML', assignment_xml)
@@ -962,9 +968,11 @@ def superFunctionDefinition(packet):
                                 if lhs_variable in VariableComponent:
                                     # print('Variable Component', VariableComponent[lhs_variable])
                                     lhs_variable_temp = lhs_variable + 'TEMP'
+                                    # lhs_variable_temp = player2TEMP
 
                                     # Add the lhs_variable to the FunctionVariablesTEMP dictionary
-                                    FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+                                    if lhs_variable not in FunctionVariablesTEMP[name]:
+                                        FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                                     # Replace and declare the lhs_variable with lhs_variable_temp
                                     variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
@@ -983,6 +991,7 @@ def superFunctionDefinition(packet):
 
                                     # Add the lhs_variable_temp to the VariableComponent
                                     VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
+
                             function.addTransition(stmnt)
                     else: # transfer not added here, can be added later
                         if 'exp' or 'expression' in stmnt:
@@ -999,7 +1008,8 @@ def superFunctionDefinition(packet):
                                         lhs_variable_temp = lhs_variable + 'TEMP'
 
                                         # Add the lhs_variable to the FunctionVariablesTEMP dictionary
-                                        FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+                                        if lhs_variable not in FunctionVariablesTEMP[name]:
+                                            FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                                         # Replace and declare the lhs_variable with lhs_variable_temp
                                         variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
@@ -1031,6 +1041,7 @@ def superFunctionDefinition(packet):
                             #     #print(stmnt['exp'])
                             #     stmnt_exp =
                             #     asdf
+
 
 
                     if stmnt['ntype'] == 'FunctionCall':
@@ -1087,7 +1098,8 @@ def superFunctionDefinition(packet):
                                         lhs_variable_temp = lhs_variable + 'TEMP'
 
                                         # Add the lhs_variable to the FunctionVariablesTEMP dictionary
-                                        FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+                                        if lhs_variable not in FunctionVariablesTEMP[name]:
+                                            FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                                         # Replace and declare the lhs_variable with lhs_variable_temp
                                         variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
@@ -1136,10 +1148,11 @@ def superFunctionDefinition(packet):
                     # if false body is absent and it was the last transition
                     if exp_index == len(body) - 1:
                         function_complete = {'ntype': 'Simple', 'name': name + 'X', 'type': 'function_complete'}
-                        function.addTransition(function_complete)
+                        #function.addTransition(function_complete)
 
 
         handleIfStaement_functionDefinition(exp)
+
 
         if 'ntype' in exp and exp['ntype'] == 'FunctionCall' and exp['name'] == 'require':
             #print('Require statement reached in superFunctionDefinition', exp_index)
@@ -1236,7 +1249,8 @@ def superFunctionDefinition(packet):
                     lhs_variable_temp = lhs_variable + 'TEMP'
 
                     # Add the lhs_variable to the FunctionVariablesTEMP dictionary
-                    FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+                    if lhs_variable not in FunctionVariablesTEMP[name]:
+                        FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                     # Replace and declare the lhs_variable with lhs_variable_temp
                     variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable, lhs_variable_temp)
@@ -1284,7 +1298,8 @@ def superFunctionDefinition(packet):
                                 lhs_variable_temp = lhs_variable + 'TEMP'
 
                                 # Add the lhs_variable to the FunctionVariablesTEMP dictionary
-                                FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+                                if lhs_variable not in FunctionVariablesTEMP[name]:
+                                    FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                                 # Replace and declare the lhs_variable with lhs_variable_temp
                                 variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable, lhs_variable_temp)

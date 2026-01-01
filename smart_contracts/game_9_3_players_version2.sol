@@ -32,7 +32,7 @@ contract NineGame {
                 //require(msg.sender != player1);
                 player2 = payable(msg.sender);
             }
-            if (player3 == address(0) && (msg.sender != player1 && msg.sender != player2)){
+            else if (player3 == address(0) && (msg.sender != player1 && msg.sender != player2)){
                 //require(msg.sender != player1 && msg.sender != player2);
                 player3 = payable(msg.sender);
 
@@ -60,7 +60,6 @@ contract NineGame {
         if (msg.sender == player3){
             state.whoseTurn = player1;
         }
-        require(state.total + num <= 9, "Move would exceed 9");
 
 
         if (state.total == 9) {

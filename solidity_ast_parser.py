@@ -113,7 +113,7 @@ def handleVariableDeclaration(node):
                     VariableComponent['AddressVariables'][var_struct] = VariableComponent['AddressVariables'][attr]
 
                     # Adding the address to list of declared address variables
-                    DeclaredAddressVariables[var_struct] = VariableComponent['AddressVariables'][attr]
+                    #DeclaredAddressVariables[var_struct] = VariableComponent['AddressVariables'][attr]
                     #print(DeclaredAddressVariables)
                     #asdf
 

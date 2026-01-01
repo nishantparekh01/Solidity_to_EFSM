@@ -1,4 +1,4 @@
-from add_events_nodes import *
+from add_events_nodes_v2 import *
 import xml.etree.ElementTree as ET
 from datetime import datetime
 import os
@@ -437,7 +437,6 @@ add_events_to_xml('assignSev')
 
 ############################# GENERATE PROGRESS SPEC ########################################################
 
-
 def generate_spec(event_name):
 
     root = ET.Element("SimpleComponent", Kind="SPEC", Name="ProgressSpec")
@@ -575,14 +574,14 @@ def generate_attacker_model(function_name, address_name):
 #ComponentList.append(progress_spec_model)
 
 
-############################## SPECITY OUTPUT DIRECTORY #####################################################
+############################## SPECIFY OUTPUT DIRECTORY #####################################################
 
 #print(VariableComponent['AddressVariables'])
 #print(transfer_efsm_list)
 #print(FunctionVariablesTEMP)
 #print(GeneralVariablesTEMP)
 #print(event_list)
-#print(DeclaredAddressVariables)
+print(DeclaredAddressVariables)
 #asdf
 
 timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")

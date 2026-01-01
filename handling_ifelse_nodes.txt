@@ -1,0 +1,74 @@
+Case1: # only one statement in if condition and else condit
+    if (condition) {
+    statement1
+    }
+    else {
+    statement2
+    }
+
+
+Handling Case1:
+So here there is only one statement in the true body.
+statement_type = true_body_last for statement1
+
+We create a list that will store (start,end) pair tuples of the nodes.
+
+node_pair = []
+
+
+if statement_type = true_body_start:
+    This means that the statement represents the start of true_body block and there are multiple
+    statements in the true_body block.
+    We should add a new pair to the list with the start node.
+
+    create a new pair: (get_new_source_node, _ )
+    source_node = get_new_source_node
+
+
+elif statement_type = true_body_last:
+    check last pair in node_pair
+    if there exists a pair in node_pair:
+        check if the end_node is assigned
+        if end_node is assigned (not null):   # there was a true_body block earlier
+            create a new pair: (get_new_source_node, get_new_target_node)
+        else: # end node is not assigned      # there are more than one statements in the true_body block
+            add the end_node to the existing pair (start, _ )
+
+    else:  # the list node_pair is empty
+         create a new pair: (get_new_source_node, get_new_target_node)
+
+elif statement_type = false_body_start:
+    pop the last element in list node_pair
+    node_set = pop_last_element(node_pair)
+    source_node = node_set[0]
+
+elif statement_type = false_body_last:
+    it could be the last statement in a bunch of statements or it could be the only statement
+    in the false_body block.
+
+    Figure out a way to find if it is last statement in a bunch of statements or it is the
+    only statement in the false_body block
+
+    node_set is not initialized it is the only statement. it is null. This means that we must
+    reset node_set back to null after having popped it and used it.
+
+    1. it is the last statement in a bunch of statements
+    pop the last element in list node_pair
+    node_set = pop_last_element(node_pair)
+    target_node = node_set[1]
+
+    2. it is the only statement in false_body block
+    pop the last element in list node_pair
+    node_set = pop_last_element(node_pair)
+    source_node = node_set[0]
+    target_node = node_set[1]
+
+elif statement_type = false_body_absent:
+    pop the last element in list node_pair
+    node_set = pop_last_element(node_pair)
+    source_node = node_set[0]
+    target_node = node_set[1]
+
+
+
+

@@ -46,6 +46,83 @@ node_id = 0
 
 node_list = []
 
+if_node_list = [] # list of tuples of nodes
+
+def check_if_statement_type(transition_type):
+    source = str()
+    target = str()
+    source_temp = str()
+    target_temp = str()
+
+    #source_node_temp = get_new_node('source')
+    #target_node_temp = get_new_node('target')
+
+    if transition_type == 'true_body_start':
+        #there are more than one statements in the true body
+        source_node_temp = get_new_node('source')
+
+        # setting source and target
+        source = str(source_node_temp)
+        target = None
+
+        # adding it to list
+        if_node_list.append([source, target])
+
+    elif transition_type == 'true_body_last':
+
+        # multiple statements exist in the true body and this is the last statement
+        if len(if_node_list) > 0:
+            pair_temp = if_node_list[-1] # checking the last node in if_node_list
+            source_temp = pair_temp[0]
+            target_temp = pair_temp[1]
+
+            if target_temp is not None:
+                # create a new pair and add it to if_node_list
+
+                # setting source and target
+                source_node_temp = get_new_node('source')
+                source = str(source_node_temp)
+                target_node_temp = get_new_node('target')
+                target = str(target_node_temp)
+
+                # adding it to the list
+                if_node_list.append([source, target])
+            else:
+                # it is the last statement amongst multiple statements in true body
+
+                target_node_temp = get_new_node('target')
+                pair_temp[1] = target_node_temp
+                if_node_list.pop()
+                if_node_list.append(pair_temp)
+
+                # setting source and target
+                source = pair_temp[0]
+                target = pair_temp[1]
+
+        else:
+            # setting source and target
+            source_node_temp = get_new_node('source')
+            source = str(source_node_temp)
+            target_node_temp = get_new_node('target')
+            target = str(target_node_temp)
+
+            # adding it to the list
+            if_node_list.append([source, target])
+
+    elif transition_type == 'false_body_start':
+        # only set the source as the target will be a new element
+        pair_temp = if_node_list.pop()
+        source = pair_temp[0]
+
+    elif transition_type == 'false_body_last':
+        pass
+
+    elif transition_type == 'false_body_absent':
+        pass
+
+    pair = [source, target]
+
+    return pair
 
 def check_node_already_created(node):
     global node_list

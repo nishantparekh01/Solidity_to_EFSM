@@ -7,6 +7,7 @@ from wmodify import *
 import copy
 
 current_function_name = str()
+function_list = []
 
 # defining numerical set
 num_set = {'uint', 'uint8', 'uint16', 'uint32', 'uint64', 'uint128', 'uint256', 'int', 'int8', 'int16', 'int32', 'int64', 'int128', 'int256', 'bytes32'}
@@ -178,7 +179,7 @@ def handleBinaryOperation(node):
     lhs = lookup_table[ntype(node['leftExpression'])](node['leftExpression'])
     op = node['operator']
     rhs = lookup_table[ntype(node['rightExpression'])](node['rightExpression'])
-    print('rhs:', rhs)
+    #print('rhs:', rhs)
     #print(asdf)
 
     # if op == "||" then convert to "|" and similarly if op == "&&" then convert to "&"
@@ -211,12 +212,12 @@ def handleFunctionCall(node):
     if kind == 'typeConversion':
         #conversion_type = lookup_table[ntype(node['expression'])](node['expression'])
         arg = lookup_table[ntype(node['arguments'][0])](node['arguments'][0])
-        print('Type conversion:', arg)
+        #print('Type conversion:', arg)
         #print(asdf)
         if name == 'address' and arg == '0':
-            print('Address 0 found')
+            #print('Address 0 found')
             name = 'x0'
-            print('Address conversion:', name)
+            #print('Address conversion:', name)
 
     #print('Function call:', name)
     #print(asdf)
@@ -289,7 +290,10 @@ def handleModifierDefinition(node):
 def handleFunctionDefinition(node):
     assert ntype(node) == 'FunctionDefinition', "Node not FunctionDefinition"
     global current_function_name
+    global function_list
     current_function_name = node['name']
+
+    function_list.append(node['name'])
 
     packet = {}
     packet['body'] = lookup_table[ntype(node['body'])](node['body'])
@@ -512,7 +516,7 @@ def handleStructDefinition(node):
     members = [lookup_table[ntype(m)](m) for m in node['members']]
     name = node['name']
     packet = {'name': name, 'members': members}
-    print(packet)
+    #print(packet)
     if superStructDefinition(packet):
         for mem in members:
             if mem in DeclaredAddressVariables:

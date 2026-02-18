@@ -30,8 +30,8 @@ def restructure(pre_supremica):
         if efsm != 'VariableComponent':
             for i in range(len(pre_supremica['Components'][efsm]['edge_list'])):
                 processing_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i}']
-                print(efsm)
-                print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                #print(efsm)
+                #print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
                 if i != 0:
                     previous_transition = pre_supremica['Components'][efsm]['edge_list'][f't{i - 1}']
                 if i != len(pre_supremica['Components'][efsm]['edge_list']) - 1:
@@ -61,6 +61,12 @@ def restructure(pre_supremica):
                     continue
 
                 if processing_transition['transition_type'] == 'user_invocation':
+                    continue
+
+                if processing_transition['transition_type'] == 'shadow_initiate':
+                    continue
+
+                if processing_transition['transition_type'] == 'function_fail_final':
                     continue
 
                 if processing_transition['action_exp'] == None:

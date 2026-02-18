@@ -1,3 +1,5 @@
+import json
+
 from add_events_nodes_v2 import *
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -126,17 +128,17 @@ for address_name, address_value in VariableComponent['AddressVariables'].items()
         xml_initialValue = wmodify_assignment(address_name, "==", default_address)
         xml_VariableInitial.append(xml_initialValue)
 
-print(FunctionVariablesTEMP)
+#print(FunctionVariablesTEMP)
 temp_address = []
 for global_temp_variables in FunctionVariablesTEMP.values():
     for temp_variables in global_temp_variables.keys():
-        if temp_variables in DeclaredAddressVariables:
+        if temp_variables in DeclaredAddressVariables or temp_variables in AddressVariables:
             #print(temp_variables)
-            print(DeclaredAddressVariables[temp_variables])
+            #print(DeclaredAddressVariables[temp_variables])
             if temp_variables not in temp_address:
                 temp_address.append(temp_variables)
-print(temp_address)
-print('--------------------------------')
+#print(temp_address)
+#print('--------------------------------')
 
 # find the corresponding TEMP variable and assign it
 temp_address_list = []
@@ -147,7 +149,7 @@ for address_variable in temp_address:
             #print(temp_list[address_variable])
             temp_address_list.append(temp_list[address_variable])
 
-print(temp_address_list)
+#print(temp_address_list)
 
 for address_temp_var in temp_address_list:
     if address_temp_var in VariableComponent:
@@ -256,12 +258,9 @@ def extract_events_ending_with(edge_list, suffix):
 
 print('______________________________________________________')
 print( Supremica)
+#print(json.dumps(dict(Supremica)))
 
 #############################################################################################################
-
-# Get list of functions
-
-function_list = []
 
 for node in sol_list:
     if node['nodeType'] == 'FunctionDefinition' and node['visibility'] == 'public':
@@ -581,13 +580,17 @@ def generate_attacker_model(function_name, address_name):
 #print(FunctionVariablesTEMP)
 #print(GeneralVariablesTEMP)
 #print(event_list)
-print(DeclaredAddressVariables)
+#print(DeclaredAddressVariables)
 #asdf
 
 timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
 
 # Define the folder where you want to store the output files
-base_folder = r'C:\Users\nishantp\OneDrive - Chalmers\Casino\Casino_Nishant\casino\Output test files'
+
+#base_folder = r'C:\Users\nishantp\OneDrive - Chalmers\Casino\Casino_Nishant\casino\Output test files'
+
+base_folder = r'C:\Users\nishantp\OneDrive - Chalmers\Bias in Smart contract\conversion output models'
+
 
 # Create a unique folder name using the current timestamp
 output_folder = os.path.join(base_folder, f"output_{timestamp}")

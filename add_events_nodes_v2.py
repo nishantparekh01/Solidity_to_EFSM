@@ -10,7 +10,8 @@ EventDeclList = ET.Element("EventDeclList")
 event_list = []
 
 INITIAL_NODE = "S0"
-
+FAIL_NODE = "S_fail"
+efsm_failed = False
 
 def add_events_to_xml(event: str):
     global EventDeclList, event_list
@@ -152,6 +153,8 @@ for efsm in pre_supremica["Components"]:
         pending_else: Optional[NodePair] = None
 
         current_node = INITIAL_NODE
+        last_if_start_node = None  # condition/decision node of most recent if
+        last_if_merge_node = None  # merge node of most recent if (where branches join)
 
         # special bookkeeping
         sender_transfer_node = ""
@@ -226,6 +229,7 @@ for efsm in pre_supremica["Components"]:
                 elif k in {"efsm_fail", "function_fail"}:
                     last_transfer_fail_edge = None
                     current_node = tgt
+                    efsm_failed = True
 
                 else:
                     # normal sequential: treat target as next current location
@@ -278,12 +282,19 @@ for efsm in pre_supremica["Components"]:
 
                 elif k == "false_body_last":
                     if pending_else is None:
-                        raise RuntimeError("false_body_last encountered but pending_else is None.")
-                    merge = _ensure_end(pending_else)
-                    src = current_node
-                    tgt = merge
-                    current_node = tgt
-                    pending_else = None
+                        # fallback: treat as “only else statement”
+                        if not node_pair_stack:
+                            raise RuntimeError("false_body_last with no if-context")
+                        p = node_pair_stack.pop()
+                        merge = _ensure_end(p)
+                        src, tgt = current_node, merge
+                        current_node = tgt
+                    else:
+                        merge = _ensure_end(pending_else)
+                        src, tgt = current_node, merge
+                        current_node = tgt
+                        pending_else = None
+
 
                 elif k == "false_body_absent":
                     if not node_pair_stack:
@@ -304,12 +315,15 @@ for efsm in pre_supremica["Components"]:
                     if last_transfer_fail_edge is not None:
                         _, fail_tgt = last_transfer_fail_edge
                         src = fail_tgt
-                        tgt = INITIAL_NODE
+                        #tgt = INITIAL_NODE
+                        tgt = FAIL_NODE
                         current_node = tgt
                         last_transfer_fail_edge = None
+                        efsm_failed = True
                     else:
                         src = current_node
-                        tgt = INITIAL_NODE
+                        #tgt = INITIAL_NODE
+                        tgt = FAIL_NODE
                         current_node = tgt
 
                 # other specials (kept conservative)
@@ -356,7 +370,8 @@ for efsm in pre_supremica["Components"]:
 
                 elif k == "require_false":
                     src = require_node if require_node else current_node
-                    tgt = INITIAL_NODE
+                    #tgt = INITIAL_NODE
+                    tgt = FAIL_NODE
                     current_node = tgt
 
                 # default sequential
@@ -375,9 +390,15 @@ for efsm in pre_supremica["Components"]:
                     current_node = tgt
 
                 # Force last transition to S0 ONLY when not locked
-                if i == n_transitions - 1:
-                    tgt = INITIAL_NODE
-                    current_node = INITIAL_NODE
+
+                if efsm_failed == True:
+                    if i == n_transitions - 2:
+                        tgt = INITIAL_NODE
+                        current_node = INITIAL_NODE
+                else:
+                    if i == n_transitions - 1:
+                        tgt = INITIAL_NODE
+                        current_node = INITIAL_NODE
 
                 tr["source_index"] = src
                 tr["target_index"] = tgt
@@ -389,7 +410,9 @@ for efsm in pre_supremica["Components"]:
             if not tr.get("events"):
                 if i == 0:
                     event_name = str(efsm + "1")
-                elif i == n_transitions - 1:
+                elif i == n_transitions - 2 and efsm_failed == True:
+                    event_name = str(efsm + "X")
+                elif i == n_transitions - 1 and efsm_failed == False:
                     event_name = str(efsm + "X")
                 else:
                     event_name = str(efsm + str(i + 1))

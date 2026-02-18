@@ -1,8 +1,11 @@
 import xml.etree.ElementTree as ET
 from wmodify import *
 from copy import deepcopy
+from typing import Iterable, Optional
 from json_contract import *  # load the list of nodes from the json_contract.py file corresponding to the contract
 import  copy
+
+
 
 Supremica = {}
 
@@ -103,7 +106,7 @@ class EFSM:
                     guard_exp = expression['args']
                     transition_type = 'self_loop'
                     if args:
-                        print('args here---------------------', args)
+                        #print('args here---------------------', args)
                         events = args[0]
 
                 elif 'type' in expression and expression['type'] == 'transfer':
@@ -164,6 +167,14 @@ class EFSM:
 
                     elif expression['type'] == 'user_invocation':
                         transition_type = 'user_invocation'
+
+                    elif expression['type'] == 'shadow_variable_initiate_transition':
+                        transition_type = 'shadow_initiate'
+
+                    elif expression['type'] == 'function_fail_final':
+                        transition_type = 'function_fail_final'
+                        source_index = 'S_fail'
+                        target_index = 'S0'
 
                 # elif 'type' in expression and expression['type'] == 'param_assignment':
                 #     guard_exp = expression['guard_exp']
@@ -562,7 +573,7 @@ def superFunctionDefinition(packet):
     global false_body
     name = packet['name']
     params = packet['params']
-    print('params------------------------------', params)
+    #print('params------------------------------', params)
     global param_assigned
     param_assigned = False
     body = packet['body']
@@ -576,62 +587,8 @@ def superFunctionDefinition(packet):
 
     require_in_function = check_require_in_function(body)
     leading_require_count = check_leading_require_in_function(body)
-    print('Leading require count', leading_require_count)
-    # if require_in_function: # if there is any require present in the function
-    #     #print('Require in function', name)
-    #
-    #     for param, param_type in params.items():
-    #         # check if the parameter is present in the require statement
-    #         if check_parameter_in_require(body, param):
-    #             # Add parameter to the function
-    #             #print('Parameter present in require statement', param, param_type)
-    #
-    #             if param_type in VariableComponent['EnumVariables']:
-    #                 # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
-    #                 guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
-    #                                                **{'ntype': 'ParameterDeclarationStatement',
-    #                                                   'kind': 'AssignmentCheck'})
-    #                 # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
-    #                 param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-    #                 function.addTransition(param_assignment)
-    #                 param_assigned = True
-    #                 initial_statement_added = True
-    #
-    #
-    #             #elif
-    #
-    #             elif param_type in num_set:
-    #                 rhs_list = ['0', '1']
-    #                 guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
-    #                                                                          'kind': 'AssignmentCheck'})
-    #                 param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-    #                 function.addTransition(param_assignment)
-    #                 param_assigned = True
-    #                 initial_statement_added = True
-    # else:
-    #     # add parameters to the function
-    #     for param, param_type in params.items():
-    #         # print(param, param_type, 'param and param_type')
-    #         if param_type in VariableComponent['EnumVariables']:
-    #             # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
-    #             guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
-    #                                            **{'ntype': 'ParameterDeclarationStatement',
-    #                                               'kind': 'AssignmentCheck'})
-    #             # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
-    #             param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-    #             function.addTransition(param_assignment)
-    #             param_assigned = True
-    #
-    #         elif param_type in num_set:
-    #             rhs_list  = ['0','1']
-    #             guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
-    #                                                               'kind': 'AssignmentCheck'})
-    #             param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-    #             function.addTransition(param_assignment)
-    #             param_assigned = True
+    #print('Leading require count', leading_require_count)
 
-    # Adding parameters here
-    # trialzone 6
     if params:
 
         # This should be for each parameter as well. So the resulting name of the EFSM could be
@@ -677,10 +634,14 @@ def superFunctionDefinition(packet):
 
             # Generate the transition for the address
             user_invocation_transition = {'ntype': 'Simple', 'name': name + '_' + address_name, 'type': 'user_invocation'}
-            print(user_invocation_transition)
+            #print(user_invocation_transition)
             function.addTransition(user_invocation_transition)
         #asdf
 
+
+    # Adding a transition to initiate shadow variables
+    shadow_variable_initiate_transition = {'ntype': 'Simple', 'name': name + '_' + 'shadow_initiate', 'type': 'shadow_variable_initiate_transition'}
+    function.addTransition(shadow_variable_initiate_transition)
 
     # Add function name to invoked modifiers
     if modifiers:
@@ -728,11 +689,7 @@ def superFunctionDefinition(packet):
             sender_list = exp['sender_list']
             #print('SENDER LIST-----', sender_list)
             #print(AddressVariables)
-
             #print(sender_list)
-            #asdf
-
-
 
             if exp_index == 0:
                 first_transition = {'ntype': 'Simple', 'name': name + '1', 'type': 'first_transition'}
@@ -823,8 +780,8 @@ def superFunctionDefinition(packet):
                                         'guard_exp': false_condition, 'type': 'false_body_start'}
 
                 if 'false_body' in exp and 'ntype' in exp['false_body'] and exp['false_body']['ntype'] == 'IfStatement':
-                    print('found something')
-                    print(exp['false_body'])
+                    #print('found something')
+                    #print(exp['false_body'])
                     nested_false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
                                             'guard_exp': false_condition, 'type': 'nested_false_body_start'}
 
@@ -874,10 +831,10 @@ def superFunctionDefinition(packet):
                         # This is the place where we need to add the msg.sender transfer functionality as well.
                         elif 'type' in stmnt and stmnt['type'] == 'mapping_transfer':
                             # trialzone3 start
-                            print('Mapping Transfer reached in superFunctionDefinition')
-                            print(exp)
+                            #print('Mapping Transfer reached in superFunctionDefinition')
+                            #print(exp)
                             sender_list = exp['true_body']
-                            print('Total variables here: ',DeclaredAddressVariables)
+                            #print('Total variables here: ',DeclaredAddressVariables)
                             #asdf
                             declared_address_list = list(DeclaredAddressVariables.keys())
                             if exp_index == 0:
@@ -965,9 +922,11 @@ def superFunctionDefinition(packet):
 
                                 # if exp_index != len(body) -1 :
                                 lhs_variable = get_lhs_variable(assignment_xml)
+                                print(lhs_variable)
                                 if lhs_variable in VariableComponent:
                                     # print('Variable Component', VariableComponent[lhs_variable])
                                     lhs_variable_temp = lhs_variable + 'TEMP'
+                                    print(lhs_variable_temp)
                                     # lhs_variable_temp = player2TEMP
 
                                     # Add the lhs_variable to the FunctionVariablesTEMP dictionary
@@ -975,13 +934,18 @@ def superFunctionDefinition(packet):
                                         FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                                     # Replace and declare the lhs_variable with lhs_variable_temp
-                                    variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
-                                                                                     lhs_variable_temp)
+                                    #variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,lhs_variable_temp)
+                                    variable_temp_xml_expression = assignment_xml
+                                    exp['exp'] = variable_temp_xml_expression
                                     # print('Variable Temp XML', variable_temp_xml_expression)
+                                    #print(ET.tostring(variable_temp_xml_expression, encoding='unicode', method='xml'))
 
                                     # replace var with varTEMP in the expression if it is not the last expression
 
-                                    exp['exp'] = variable_temp_xml_expression
+                                    #exp['exp'] = variable_temp_xml_expression
+                                    #print('exp-- ', exp)
+                                    #print('stmnt -- ', stmnt)
+                                    #print(ET.tostring(exp['exp'], encoding='unicode', method='xml'))
 
                                     # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
                                     lhs_variable_definition = VariableComponent[lhs_variable]
@@ -992,33 +956,48 @@ def superFunctionDefinition(packet):
                                     # Add the lhs_variable_temp to the VariableComponent
                                     VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
 
+                            #print(ET.tostring(stmnt['exp'], encoding='unicode', method='xml'))
+                            print(FunctionVariablesTEMP)
                             function.addTransition(stmnt)
                     else: # transfer not added here, can be added later
+                        if name not in FunctionVariablesTEMP:
+                            FunctionVariablesTEMP[name] = {}
                         if 'exp' or 'expression' in stmnt:
                           # trialzone3
                             if 'exp' in exp or 'exp' in stmnt:
-                                print('Calling process_in_ignore_list')
+                                #print('Calling process_in_ignore_list')
                                 if 'exp' in stmnt:
                                     assignment_xml = stmnt['exp']
                                     #print('Assignment XML', assignment_xml)
+
                                     lhs_variable = get_lhs_variable(assignment_xml)
-                                    print('lhs_variable', lhs_variable)
+                                    print(lhs_variable)
+
+                                    #print('lhs_variable', lhs_variable)
+
                                     if lhs_variable in VariableComponent:
                                         # print('Variable Component', VariableComponent[lhs_variable])
                                         lhs_variable_temp = lhs_variable + 'TEMP'
+                                        print(lhs_variable_temp)
 
                                         # Add the lhs_variable to the FunctionVariablesTEMP dictionary
+                                        print(lhs_variable)
+                                        print(FunctionVariablesTEMP)
                                         if lhs_variable not in FunctionVariablesTEMP[name]:
                                             FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                                         # Replace and declare the lhs_variable with lhs_variable_temp
-                                        variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
-                                                                                         lhs_variable_temp)
-                                        # print('Variable Temp XML', variable_temp_xml_expression)
+                                        #variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variabl, lhs_variable_temp)
+                                        variable_temp_xml_expression = assignment_xml
+                                        exp['exp'] = variable_temp_xml_expression
+                                        #print('Variable Temp XML', variable_temp_xml_expression)
+                                        #print(ET.tostring(variable_temp_xml_expression, encoding='unicode', method='xml'))
 
                                         # replace var with varTEMP in the expression if it is not the last expression
 
-                                        exp['exp'] = variable_temp_xml_expression
+                                        #exp['exp'] = variable_temp_xml_expression
+                                        #print('exp-- ', exp)
+                                        #print('stmnt -- ', stmnt)
 
                                         # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
                                         lhs_variable_definition = VariableComponent[lhs_variable]
@@ -1030,17 +1009,15 @@ def superFunctionDefinition(packet):
                                         # Add the lhs_variable_temp to the VariableComponent
                                         VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
                                 process_in_ignore_list(stmnt, 'exp', ignore_list, function)
-                                print('Expression added--------')
+                                #print(ET.tostring(exp['exp'], encoding='unicode', method='xml'))
+                                print(FunctionVariablesTEMP)
+                                #print(ET.tostring(stmnt['exp'], encoding='unicode', method='xml'))
+                                #print('Expression added--------')
                                 # asdf
 
                             elif 'expression' in exp:
 
                                 process_in_ignore_list(stmnt, 'expression', ignore_list, function)
-
-                            # elif 'exp' in stmnt:
-                            #     #print(stmnt['exp'])
-                            #     stmnt_exp =
-                            #     asdf
 
 
 
@@ -1075,9 +1052,9 @@ def superFunctionDefinition(packet):
 
 
                 if 'false_body' in exp: # if false body is present
-                    print("------FALSE BODY HERE-----",false_body)
+                    #print("------FALSE BODY HERE-----",false_body)
                     if 'ntype' in false_body and false_body['ntype'] == 'IfStatement':
-                        print("I'm here")
+
                         #asdf
                         handleIfStaement_functionDefinition(false_body, True)
                     #asdf
@@ -1102,13 +1079,14 @@ def superFunctionDefinition(packet):
                                             FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                                         # Replace and declare the lhs_variable with lhs_variable_temp
-                                        variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,
-                                                                                         lhs_variable_temp)
+                                        #variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable,lhs_variable_temp)
+                                        variable_temp_xml_expression = assignment_xml
+                                        exp['exp'] = variable_temp_xml_expression
                                         # print('Variable Temp XML', variable_temp_xml_expression)
 
                                         # replace var with varTEMP in the expression if it is not the last expression
 
-                                        exp['exp'] = variable_temp_xml_expression
+                                        #exp['exp'] = variable_temp_xml_expression
 
                                         # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
                                         lhs_variable_definition = VariableComponent[lhs_variable]
@@ -1126,7 +1104,7 @@ def superFunctionDefinition(packet):
                             # else:
                             #     pass
                                 #function.addTransition(stmnt)
-                            print(stmnt)
+                            #print(stmnt)
                             if 'ntype' in stmnt and stmnt['ntype'] == 'FunctionCall':
                                 if index == len(false_body) - 1: # flag the last statement in the false body, if statement is a function call
                                     function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'false_body_last'}
@@ -1158,7 +1136,7 @@ def superFunctionDefinition(packet):
             #print('Require statement reached in superFunctionDefinition', exp_index)
             if exp_index < leading_require_count:
                 # trialzone5 start
-                print('Adding separate EFSM for require statement here', exp_index)
+                #print('Adding separate EFSM for require statement here', exp_index)
 
                 # generating a separate efsm for require statement
                 require_efsm_name = 'req' + name + str(exp_index)
@@ -1182,7 +1160,7 @@ def superFunctionDefinition(packet):
                 if params != {}:
                     for declared_address in declared_address_list:
                         event_names.append( name + '_' + declared_address)
-                print('Event names', event_names)
+                #print('Event names', event_names)
 
                 if event_names != []:
                     require_efsm.addTransition(require_efsm_expression, event_names)
@@ -1200,34 +1178,6 @@ def superFunctionDefinition(packet):
                 process_in_ignore_list(exp, 'args', ignore_list, function, transition_type = 'require_true', efsm_name = name)
             if exp_index == 0:
                 initial_statement_added = True
-
-
-
-            # else:
-            #     process_in_ignore_list(exp, 'args', ignore_list, function)
-            #function.addTransition(exp)
-
-            # Parameter assignment place here so that it is called after the require statement if any require statement is present
-            # if param_assigned == False:
-            #     for param, param_type in params.items():
-            #         #print(param, param_type, 'param and param_type')
-            #         if param_type in VariableComponent['EnumVariables']:
-            #             # generate xml expression where param = param_type[0] | param_type[1] | param_type[2] | ...
-            #             guard_exp = wmodify_assignment(param, "==", VariableComponent['EnumVariables'][param_type],
-            #                                            **{'ntype': 'ParameterDeclarationStatement',
-            #                                               'kind': 'AssignmentCheck'})
-            #            # print(ET.tostring(guard_exp, encoding='unicode', method='xml'))
-            #             param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-            #             function.addTransition(param_assignment)
-            #
-            #         # work on this part later
-            #         elif param_type in num_set:
-            #             rhs_list  = ['0','1']
-            #             guard_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
-            #                                                               'kind': 'AssignmentCheck'})
-            #             param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
-            #             function.addTransition(param_assignment)
-            #         param_assigned = True
 
 
         elif 'ntype' in exp and exp['ntype'] == 'Assignment' and exp['kind'] == 'structConstructorCall':
@@ -1253,13 +1203,13 @@ def superFunctionDefinition(packet):
                         FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                     # Replace and declare the lhs_variable with lhs_variable_temp
-                    variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable, lhs_variable_temp)
+                    #variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable, lhs_variable_temp)
                     # print('Variable Temp XML', variable_temp_xml_expression)
                     # VariableComponent[lhs_variable_temp] = variable_temp_xml
 
                     # replace var with varTEMP in the expression if it is not the last expression
 
-                    attr_assignments = variable_temp_xml_expression
+                    #attr_assignments = variable_temp_xml_expression
 
                     # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
                     lhs_variable_definition = VariableComponent[lhs_variable]
@@ -1280,7 +1230,7 @@ def superFunctionDefinition(packet):
         else:
             if 'exp' in exp or 'expression' in exp:
                 #print('Expression in here', exp)
-# do some processing here where lhs is replaced with lhsTEMP
+                # do some processing here where lhs is replaced with lhsTEMP
 
                 #exp_string = ET.tostring(exp['exp'], encoding='unicode', method='xml')
                 if 'exp' in exp:
@@ -1302,15 +1252,17 @@ def superFunctionDefinition(packet):
                                     FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
                                 # Replace and declare the lhs_variable with lhs_variable_temp
-                                variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable, lhs_variable_temp)
+                                #variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variable, lhs_variable_temp)
                                 #print('Variable Temp XML', variable_temp_xml_expression)
                                 #VariableComponent[lhs_variable_temp] = variable_temp_xml
+                                variable_temp_xml_expression = assignment_xml
+                                exp['exp'] = variable_temp_xml_expression
 
 
 
                                 # replace var with varTEMP in the expression if it is not the last expression
 
-                                exp['exp'] = variable_temp_xml_expression
+                                #exp['exp'] = variable_temp_xml_expression
 
                                  # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
                                 lhs_variable_definition = VariableComponent[lhs_variable]
@@ -1322,8 +1274,6 @@ def superFunctionDefinition(packet):
 
                                 if lhs_variable in AddressVariables:
                                     AddressVariables[lhs_variable_temp] = AddressVariables[lhs_variable]
-
-
 
                     else:
                         pass
@@ -1343,25 +1293,65 @@ def superFunctionDefinition(packet):
         variable_temp_dict = FunctionVariablesTEMP[name]
 
 
-    reassignment_variable_xml = None
-    if variable_temp_dict != {}:
-        reassignment_variable_xml = get_variable_reassignment(variable_temp_dict)
-
-    # case1 : reassigning variabes only if there is no action expression present
-    if last_element['action_exp'] == None:
-        last_element['action_exp'] = reassignment_variable_xml
-
-        last_element['transition_type'] = 'final_transition'
-    else:
-        last_transition = {'ntype': 'Simple', 'type': 'final_transition'}
-        function.addTransition(last_transition)
-
-        efsm_edge_list = function.edge_list
-        last_key, last_element = next(reversed(efsm_edge_list.items()))
-        last_element['action_exp'] = reassignment_variable_xml
+    # reassignment_variable_xml = None
+    # if variable_temp_dict != {}:
+    #     reassignment_variable_xml = get_variable_reassignment(variable_temp_dict)
+    #
+    # # case1 : reassigning variabes only if there is no action expression present
+    # if last_element['action_exp'] == None:
+    #     last_element['action_exp'] = reassignment_variable_xml
+    #
+    #     last_element['transition_type'] = 'final_transition'
+    # else:
+    #     last_transition = {'ntype': 'Simple', 'type': 'final_transition'}
+    #     function.addTransition(last_transition)
+    #
+    #     efsm_edge_list = function.edge_list
+    #     last_key, last_element = next(reversed(efsm_edge_list.items()))
+    #     last_element['action_exp'] = reassignment_variable_xml
 
     # reassign_lhs_xml =
     #print(function.edge_list)
+
+    ###################### Adding function fail transition ############################
+
+    for transition_key in efsm_edge_list:
+        var = efsm_edge_list[transition_key]
+        if var['transition_type'] == 'efsm_fail':
+            function_fail_transition = {'ntype': 'Simple', 'name': name + '_' + 'fail', 'type': 'function_fail_final'}
+            function.addTransition(function_fail_transition)
+            break
+
+    ########################## Reassigning shadow variables #######################
+    """ Assigning shadow variables back to original values if function fails"""
+
+    for transition_key in efsm_edge_list:
+        var = efsm_edge_list[transition_key]
+        if var['transition_type'] == 'function_fail_final':
+            shadow_initialization_xml = get_variable_reassignment(variable_temp_dict)
+            var['action_exp'] = shadow_initialization_xml
+            print('here--------------', var['action_exp'])
+
+
+
+    ########################## Initializing shadow variables #######################
+    print('efsm_edge_list: ', efsm_edge_list)
+    function_shadow_initialization = name + '_' + 'shadow_initiate'
+    shadow_initialization_xml = None
+    for transition_key  in efsm_edge_list:
+        var = efsm_edge_list[transition_key]
+        if var['transition_type'] == 'shadow_initiate':
+            print('var::::',var)
+            print(var['action_exp'])
+
+            # var['action_exp'] needs to be assigned the shadow variable xml element
+
+            shadow_initialization_xml = get_shadow_initialization(variable_temp_dict)
+            var['action_exp'] = shadow_initialization_xml
+            print('here--------------',var['action_exp'])
+
+
+
     addAutomata(function)
     return Supremica
 
@@ -1494,7 +1484,34 @@ def replace_with_temp(element, old_variable, new_variable):
 
     return element
 
-################ Definition for get_variable_reassignment #########################################
+################ Definition for shadow variable initialization #########################################
+
+def get_shadow_initialization(variable_dict):
+
+
+    container = ET.Element("Container")  # Temporary container for grouping elements
+
+    # Iterate over the dictionary to create each BinaryExpression
+    for lhs_variable, lhs_variable_temp in variable_dict.items():
+        # Create a BinaryExpression element
+        if lhs_variable not in ignore_list:
+            binary_expression = ET.SubElement(
+                container,
+                "BinaryExpression",
+                {"Operator": "=", "Text": f"{lhs_variable_temp} = {lhs_variable}"}
+            )
+
+            # Add SimpleIdentifiers for the left-hand side and right-hand side
+            ET.SubElement(binary_expression, "SimpleIdentifier", {"Name": lhs_variable_temp})
+            ET.SubElement(binary_expression, "SimpleIdentifier", {"Name": lhs_variable})
+
+    # Return the container as the XML element
+    if len(container) != 0:
+        return container
+    else:
+        return None
+
+################ Definition for global variable update from shadow variable ############################
 
 def get_variable_reassignment(variable_dict):
 

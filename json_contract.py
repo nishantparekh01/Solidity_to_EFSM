@@ -5,7 +5,9 @@ import json
 #contract_file = r'smart_contracts/escrow_v2_blocking.sol'
 #contract_file = r'smart_contracts/game_9.sol'
 #contract_file = r'smart_contracts/game_9_3_players.sol'
-contract_file = r'smart_contracts/game_9_3_players_version2.sol'
+#contract_file = r'smart_contracts/game_9_3_players_version2.sol'
+#contract_file = r'smart_contracts/test_game_9_v1.sol'
+contract_file = r'smart_contracts/test_game_9_v2.sol'
 
 ################ Function to clean the JSON file by removing the extra string ###############
 

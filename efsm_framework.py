@@ -158,6 +158,9 @@ class EFSM:
                     elif expression['type'] == 'sender_transfer_success_initial':
                         transition_type = 'sender_transfer_success_initial'
 
+                    elif expression['type'] == 'sender_transfer_success_if_final':
+                        transition_type = 'sender_transfer_success_if_final'
+
                     elif expression['type'] == 'sender_transfer_success':
                         transition_type = 'sender_transfer_success'
 
@@ -232,6 +235,8 @@ class EFSM:
                     elif expression['condition'] == 'false':
                         guard_exp = expression['guard_exp']
                         transition_type = expression['type']
+                        # print('transition_type:', transition_type)
+                        # asdf
                 #         # guard_exp = ET.tostring(expression['guard_exp'], encoding='unicode', method='xml')
                 #         # action_exp = expression['exp'] # Assumption: only one expression in the body
 
@@ -775,9 +780,9 @@ def superFunctionDefinition(packet):
                     true_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'true',
                                            'guard_exp': true_condition, 'type': 'nested_true_body_start'}
 
-                if 'false_body' in exp :
-                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
-                                        'guard_exp': false_condition, 'type': 'false_body_start'}
+                # if 'false_body' in exp :
+                #     false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
+                #                         'guard_exp': false_condition, 'type': 'false_body_start'}
 
                 if 'false_body' in exp and 'ntype' in exp['false_body'] and exp['false_body']['ntype'] == 'IfStatement':
                     #print('found something')
@@ -785,9 +790,13 @@ def superFunctionDefinition(packet):
                     nested_false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
                                             'guard_exp': false_condition, 'type': 'nested_false_body_start'}
 
+                elif 'false_body' in exp :
+                    false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false',
+                                        'guard_exp': false_condition, 'type': 'false_body_start'}
 
                 else:
                     false_exp_transition = {'ntype': 'IfStatement', 'kind': 'internal', 'condition': 'false','guard_exp': false_condition, 'type': 'false_body_absent'}
+                    #asdf
 
                 function.addTransition(true_exp_transition)
                 for index, stmnt in enumerate(true_body): # add transitions for each statement in the true body
@@ -865,7 +874,7 @@ def superFunctionDefinition(packet):
 
                                     sender_guard = get_sender_guard(sender_address)
 
-                                    if sender_id == 0:
+                                    if sender_id == 0 and len(declared_address_list) == 1: # if it is the only address in list
                                         transfer_attempt_type = 'sender_transfer_initial'
 
                                         transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
@@ -876,14 +885,51 @@ def superFunctionDefinition(packet):
                                         transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
                                                              'type': 'transfer_fail'}
                                         efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
-                                        function.addTransition(transfer_fail_exp)
-                                        function.addTransition(efsm_fail)
+                                        function.addTransition(transfer_fail_exp) # s5 to s6
+                                        function.addTransition(efsm_fail) # s6 to s_fail
+
+                                        transfer_success_type = 'sender_transfer_success_initial'
+                                        transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
+                                                                'type': transfer_success_type}
+                                        function.addTransition(transfer_success_exp) #s5 to s7
+
+                                    elif sender_id == 0 and len(declared_address_list) != 1: # it is the first address in list
+                                        transfer_attempt_type = 'sender_transfer_initial'
+
+                                        transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
+                                                            'sender_index': sender_id, 'guard_exp': sender_guard,
+                                                            'type': transfer_attempt_type}
+                                        function.addTransition(transfer_attempt)
+
+                                        transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
+                                                             'type': 'transfer_fail'}
+                                        efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+                                        function.addTransition(transfer_fail_exp)  # s5 to s6
+                                        function.addTransition(efsm_fail)  # s6 to s_fail
 
                                         transfer_success_type = 'sender_transfer_success_initial'
                                         transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
                                                                 'type': transfer_success_type}
                                         function.addTransition(transfer_success_exp)
 
+                                    elif sender_id != 0 and sender_id == len(declared_address_list) - 1: # it is the last element in list and mapping transfer is last in true body
+                                        transfer_attempt_type = 'sender_transfer'
+
+                                        transfer_attempt = {'ntype': 'Simple', 'name': transfer_event_initial,
+                                                            'sender_index': sender_id, 'guard_exp': sender_guard,
+                                                            'type': transfer_attempt_type}
+                                        function.addTransition(transfer_attempt)
+
+                                        transfer_fail_exp = {'ntype': 'Simple', 'name': transfer_event_fail,
+                                                             'type': 'transfer_fail'}
+                                        efsm_fail = {'ntype': 'Simple', 'name': name + 'Fail', 'type': 'efsm_fail'}
+                                        function.addTransition(transfer_fail_exp)  # s5 to s6
+                                        function.addTransition(efsm_fail)  # s6 to s_fail
+
+                                        transfer_success_type = 'sender_transfer_success_if_final'
+                                        transfer_success_exp = {'ntype': 'Simple', 'name': transfer_event_success,
+                                                                'type': transfer_success_type} # s5 to s7
+                                        function.addTransition(transfer_success_exp)
 
                                     else:
                                         transfer_attempt_type = 'sender_transfer'
@@ -1033,7 +1079,7 @@ def superFunctionDefinition(packet):
                             if check_transfer_in_function(function_call_name):
                                 function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
                                 function.addTransition(function_fail)
-                            function.addTransition(function_complete)
+                            #function.addTransition(function_complete) # senderX problem is stemming from here
                         else:
                             function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
                             function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}

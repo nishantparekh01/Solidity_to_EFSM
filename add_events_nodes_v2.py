@@ -276,6 +276,7 @@ for efsm in pre_supremica["Components"]:
                     p = node_pair_stack.pop()
                     _ensure_end(p)
                     pending_else = p
+
                     src = p.start
                     tgt = get_new_node("target")
                     current_node = tgt
@@ -355,6 +356,19 @@ for efsm in pre_supremica["Components"]:
                     tgt = get_new_node("target")
                     sender_transfer_merge_node = tgt
                     temporary_source_node = tgt
+                    current_node = tgt
+
+                elif k == 'sender_transfer_success_if_final':
+                    src = transfer_success_source_node if transfer_success_source_node else current_node
+                    tgt = sender_transfer_merge_node if sender_transfer_merge_node else get_new_node("target")
+
+                    top = node_pair_stack[-1]
+                    top.end = tgt
+                    print(top)
+
+                    merge = _ensure_end(top)
+                    print(merge)
+                    #asdf
                     current_node = tgt
 
                 elif k == "sender_transfer_success":

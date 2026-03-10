@@ -107,6 +107,8 @@ def _ensure_user_invocation_node() -> str:
 # ----------------------------
 # Main
 # ----------------------------
+#print('Crazy components here-----',pre_supremica['Components'])
+#asdf
 for efsm in pre_supremica["Components"]:
     node_id = 0
     efsm_node_list = []
@@ -239,6 +241,7 @@ for efsm in pre_supremica["Components"]:
             else:
                 src = None
                 tgt = None
+                #print('k is ---', k)
 
                 # USER INVOCATION
                 if k == "user_invocation":
@@ -274,12 +277,15 @@ for efsm in pre_supremica["Components"]:
                     if not node_pair_stack:
                         raise RuntimeError("false_body_start encountered but node_pair_stack is empty.")
                     p = node_pair_stack.pop()
-                    _ensure_end(p)
+                    #_ensure_end(p)
                     pending_else = p
-
+                    #print(p)
+                    #asdf
                     src = p.start
                     tgt = get_new_node("target")
                     current_node = tgt
+                    #print(current_node)
+                    #asdf
 
                 elif k == "false_body_last":
                     if pending_else is None:
@@ -355,7 +361,7 @@ for efsm in pre_supremica["Components"]:
                     src = transfer_success_source_node if transfer_success_source_node else current_node
                     tgt = get_new_node("target")
                     sender_transfer_merge_node = tgt
-                    temporary_source_node = tgt
+                    #temporary_source_node = tgt
                     current_node = tgt
 
                 elif k == 'sender_transfer_success_if_final':
@@ -364,10 +370,10 @@ for efsm in pre_supremica["Components"]:
 
                     top = node_pair_stack[-1]
                     top.end = tgt
-                    print(top)
+                    #print(top)
 
                     merge = _ensure_end(top)
-                    print(merge)
+                    #print(merge)
                     #asdf
                     current_node = tgt
 
@@ -390,11 +396,14 @@ for efsm in pre_supremica["Components"]:
 
                 # default sequential
                 else:
+                    #print('k must be nothing: ', k)
                     if temporary_source_node:
                         src = temporary_source_node
                         temporary_source_node = ""
+                        #print('I am here')
                     else:
                         src = current_node
+                        #print('source_node: ',src)
 
                     if k == "self_loop":
                         tgt = src

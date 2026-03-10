@@ -258,8 +258,9 @@ def extract_events_ending_with(edge_list, suffix):
 
 print('______________________________________________________')
 print(Supremica)
-#print(ET.tostring(Supremica, encoding='utf8').decode('utf8'), file=file)
-#asdf
+#print(ET.tostring(Supremica['Components']['move']['edge_list'], encoding='utf8').decode('utf8'),  encoding='unicode', method='xml')
+print(ET.tostring(Supremica['Components']['move']['edge_list'],  encoding='unicode', method='xml'))
+
 #print(json.dumps(dict(Supremica)))
 
 #############################################################################################################

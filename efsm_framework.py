@@ -59,6 +59,9 @@ address_index = 0
 # Initial Node = S0
 INITIAL_NODE = 'S0'
 
+# Specifying domain of function parameter in rhs_list
+RHS_LIST = []
+
 # list for transfer efsms
 transfer_efsm_list = []
 
@@ -519,11 +522,34 @@ def check_leading_require_in_function(body):
             break
     return leading_require_count
 
-def check_parameter_in_require2(require_arg, search_string):
+def check_parameter_in_require(require_arg, search_string):
     # check for all parameter if they are present in any require statement
     # Check if the search string is in the element's text
+    #print(element.attrib.values())
 
     element = require_arg['args']
+    print('Element', element)
+    #print(ET.fromstring(element))
+    for e in element.iter():
+        if e.get("Name") == search_string:
+            pass
+            print(ET.tostring(element, encoding='unicode', method='xml'))
+            print(e, 'search_string found here')
+            break
+            #print(e, search_string)
+    #print(element.tag)
+    #print('ET element here', element.Element)
+
+    if "gameOver" in str(element.attrib.values()):
+        #print("gameOver found")
+        pass
+    else:
+        pass
+        #print("gameOver not found")
+
+    # for e in element.Element:
+    #     pass
+
 
     if element.text and search_string in element.text:
         return True
@@ -537,42 +563,70 @@ def check_parameter_in_require2(require_arg, search_string):
         if search_string in attribute:
             return True
 
-        # Recursively check all child elements
+    # Recursively check all child elements
     for child in element:
         if in_ignore_list(child, search_string):
             return True
 
     return False
 
-def check_parameter_in_require( body, search_string):
-    # check for all parameter if they are present in any require statement
-    # Check if the search string is in the element's text
-    for exp in body:
-        if 'ntype' in exp and exp['ntype'] == 'FunctionCall':
-            if exp['name'] == 'require':
-                element = exp['args']
+def replace_parameter_with_primed(require_arg, search_string):
+    element = require_arg['args']
 
-                if element.text and search_string in element.text:
-                    return True
+    for parent in element.iter():
+        # avoid double-wrapping if already inside the desired wrapper
+        if parent.tag == "UnaryExpression" and parent.get("Operator") == "'":
+            continue
 
-                # Check if the search string is in the element's tail text
-                if element.tail and search_string in element.tail:
-                    return True
+        children = list(parent)  # snapshot since we'll modify the parent
+        for i, child in enumerate(children):
+            if child.tag != "SimpleIdentifier":
+                continue
+            if child.get("Name") != search_string:
+                continue
 
-                # Check if the search string is in any of the element's attributes
-                for attribute in element.attrib.values():
-                    if search_string in attribute:
-                        return True
+            wrapper = ET.Element("UnaryExpression", Operator="'")
 
-                # Recursively check all child elements
-                for child in element:
-                    if in_ignore_list(child, search_string):
-                        return True
+            # keep tail text in the correct place
+            wrapper.tail = child.tail
+            child.tail = None
 
-                # If none of the conditions are met
-                return False
+            parent.remove(child)
+            wrapper.append(child)
+            parent.insert(i, wrapper)
 
-        return False
+
+
+
+# def check_parameter_in_require( body, search_string):
+#     # check for all parameter if they are present in any require statement
+#     # Check if the search string is in the element's text
+#     for exp in body:
+#         if 'ntype' in exp and exp['ntype'] == 'FunctionCall':
+#             if exp['name'] == 'require':
+#                 element = exp['args']
+#
+#                 if element.text and search_string in element.text:
+#                     return True
+#
+#                 # Check if the search string is in the element's tail text
+#                 if element.tail and search_string in element.tail:
+#                     return True
+#
+#                 # Check if the search string is in any of the element's attributes
+#                 for attribute in element.attrib.values():
+#                     if search_string in attribute:
+#                         return True
+#
+#                 # Recursively check all child elements
+#                 for child in element:
+#                     if in_ignore_list(child, search_string):
+#                         return True
+#
+#                 # If none of the conditions are met
+#                 return False
+#
+#         return False
 
 def superFunctionDefinition(packet):
     global false_body
@@ -622,7 +676,8 @@ def superFunctionDefinition(packet):
                     #param_assigned = True
 
                 elif param_type in num_set:
-                    rhs_list  = ['0','1']
+                    #rhs_list  = ['0','1']
+                    rhs_list = ['1', '2', '3']
                     param_exp = wmodify_assignment(param, "==", rhs_list, **{'ntype': 'ParameterDeclarationStatement',
                                                                               'kind': 'AssignmentCheck'})
                     #param_assignment = {'ntype': 'Simple', 'guard_exp': guard_exp, 'type': 'param_assignment'}
@@ -968,11 +1023,11 @@ def superFunctionDefinition(packet):
 
                                 # if exp_index != len(body) -1 :
                                 lhs_variable = get_lhs_variable(assignment_xml)
-                                print(lhs_variable)
+                                #print(lhs_variable)
                                 if lhs_variable in VariableComponent:
                                     # print('Variable Component', VariableComponent[lhs_variable])
                                     lhs_variable_temp = lhs_variable + 'TEMP'
-                                    print(lhs_variable_temp)
+                                    #print(lhs_variable_temp)
                                     # lhs_variable_temp = player2TEMP
 
                                     # Add the lhs_variable to the FunctionVariablesTEMP dictionary
@@ -1003,7 +1058,7 @@ def superFunctionDefinition(packet):
                                     VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
 
                             #print(ET.tostring(stmnt['exp'], encoding='unicode', method='xml'))
-                            print(FunctionVariablesTEMP)
+                            #print(FunctionVariablesTEMP)
                             function.addTransition(stmnt)
                     else: # transfer not added here, can be added later
                         if name not in FunctionVariablesTEMP:
@@ -1017,18 +1072,18 @@ def superFunctionDefinition(packet):
                                     #print('Assignment XML', assignment_xml)
 
                                     lhs_variable = get_lhs_variable(assignment_xml)
-                                    print(lhs_variable)
+                                    #print(lhs_variable)
 
                                     #print('lhs_variable', lhs_variable)
 
                                     if lhs_variable in VariableComponent:
                                         # print('Variable Component', VariableComponent[lhs_variable])
                                         lhs_variable_temp = lhs_variable + 'TEMP'
-                                        print(lhs_variable_temp)
+                                        #print(lhs_variable_temp)
 
                                         # Add the lhs_variable to the FunctionVariablesTEMP dictionary
-                                        print(lhs_variable)
-                                        print(FunctionVariablesTEMP)
+                                        #print(lhs_variable)
+                                        #print(FunctionVariablesTEMP)
                                         if lhs_variable not in FunctionVariablesTEMP[name]:
                                             FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
 
@@ -1056,7 +1111,7 @@ def superFunctionDefinition(packet):
                                         VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
                                 process_in_ignore_list(stmnt, 'exp', ignore_list, function)
                                 #print(ET.tostring(exp['exp'], encoding='unicode', method='xml'))
-                                print(FunctionVariablesTEMP)
+                                #print(FunctionVariablesTEMP)
                                 #print(ET.tostring(stmnt['exp'], encoding='unicode', method='xml'))
                                 #print('Expression added--------')
                                 # asdf
@@ -1068,10 +1123,15 @@ def superFunctionDefinition(packet):
 
 
                     if stmnt['ntype'] == 'FunctionCall':
+                        # print(stmnt['type'])
+                        # asdf
                         if stmnt['type'] == 'transfer':
                             #print('-----------------Transfer in function call-----------------')
 
                             continue
+                        elif stmnt['type'] == 'mapping_transfer':
+                            continue
+
                         elif index == len(true_body) - 1: # flag the last statement in the true body, if statement is a function call
 
                             function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'true_body_last'}
@@ -1079,7 +1139,7 @@ def superFunctionDefinition(packet):
                             if check_transfer_in_function(function_call_name):
                                 function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
                                 function.addTransition(function_fail)
-                            #function.addTransition(function_complete) # senderX problem is stemming from here
+                            function.addTransition(function_complete) # senderX problem is stemming from here
                         else:
                             function_complete = {'ntype': 'Simple', 'name': stmnt['name'] + 'X', 'type': 'function_complete'}
                             function_fail = {'ntype': 'Simple', 'name': stmnt['name'] + 'Fail', 'type': 'function_fail'}
@@ -1099,6 +1159,8 @@ def superFunctionDefinition(packet):
 
                 if 'false_body' in exp: # if false body is present
                     #print("------FALSE BODY HERE-----",false_body)
+
+
                     if 'ntype' in false_body and false_body['ntype'] == 'IfStatement':
 
                         #asdf
@@ -1147,9 +1209,66 @@ def superFunctionDefinition(packet):
                             #         function_complete = {'ntype': 'Simple','name': name + 'X', 'type': 'function_complete'}
                             #         function.addTransition(function_complete)
                             #
-                            # else:
-                            #     pass
-                                #function.addTransition(stmnt)
+                            else:
+                                if name not in FunctionVariablesTEMP:
+                                    FunctionVariablesTEMP[name] = {}
+                                if 'exp' or 'expression' in stmnt:
+                                    # trialzone3
+                                    if 'exp' in exp or 'exp' in stmnt:
+                                        # print('Calling process_in_ignore_list')
+                                        if 'exp' in stmnt:
+                                            assignment_xml = stmnt['exp']
+                                            # print('Assignment XML', assignment_xml)
+
+                                            lhs_variable = get_lhs_variable(assignment_xml)
+                                            #print(lhs_variable)
+
+                                            # print('lhs_variable', lhs_variable)
+
+                                            if lhs_variable in VariableComponent:
+                                                # print('Variable Component', VariableComponent[lhs_variable])
+                                                lhs_variable_temp = lhs_variable + 'TEMP'
+                                                #print(lhs_variable_temp)
+
+                                                # Add the lhs_variable to the FunctionVariablesTEMP dictionary
+                                                #print(lhs_variable)
+                                                #print(FunctionVariablesTEMP)
+                                                if lhs_variable not in FunctionVariablesTEMP[name]:
+                                                    FunctionVariablesTEMP[name][lhs_variable] = lhs_variable_temp
+
+                                                # Replace and declare the lhs_variable with lhs_variable_temp
+                                                # variable_temp_xml_expression = replace_with_temp(assignment_xml, lhs_variabl, lhs_variable_temp)
+                                                variable_temp_xml_expression = assignment_xml
+                                                exp['exp'] = variable_temp_xml_expression
+                                                # print('Variable Temp XML', variable_temp_xml_expression)
+                                                # print(ET.tostring(variable_temp_xml_expression, encoding='unicode', method='xml'))
+
+                                                # replace var with varTEMP in the expression if it is not the last expression
+
+                                                # exp['exp'] = variable_temp_xml_expression
+                                                # print('exp-- ', exp)
+                                                # print('stmnt -- ', stmnt)
+
+                                                # Add variableTEMP to VariableComponent - replace VariableComponent with FunctionVariablesTEMP
+                                                lhs_variable_definition = VariableComponent[lhs_variable]
+                                                lhs_variable_temp_definition = copy.deepcopy(lhs_variable_definition)
+                                                lhs_variable_temp_definition = replace_with_temp(
+                                                    lhs_variable_temp_definition,
+                                                    lhs_variable,
+                                                    lhs_variable_temp)
+
+                                                # Add the lhs_variable_temp to the VariableComponent
+                                                VariableComponent[lhs_variable_temp] = lhs_variable_temp_definition
+                                        process_in_ignore_list(stmnt, 'exp', ignore_list, function)
+                                        # print(ET.tostring(exp['exp'], encoding='unicode', method='xml'))
+                                        #print(FunctionVariablesTEMP)
+                                        # print(ET.tostring(stmnt['exp'], encoding='unicode', method='xml'))
+                                        # print('Expression added--------')
+                                        # asdf
+
+                                    elif 'expression' in exp:
+
+                                        process_in_ignore_list(stmnt, 'expression', ignore_list, function)
                             #print(stmnt)
                             if 'ntype' in stmnt and stmnt['ntype'] == 'FunctionCall':
                                 if index == len(false_body) - 1: # flag the last statement in the false body, if statement is a function call
@@ -1190,10 +1309,17 @@ def superFunctionDefinition(packet):
 
                 # check if parameter is present in the require statement
                 for param, param_type in params.items():
-                    if check_parameter_in_require2(exp, param):
-                        # print('Parameter present in require statement', param, require_efsm_name)
-                        # replace the parameter with parameter' (parameter prime)
-                        pass
+                    #print(param,param_type)
+                    if  check_parameter_in_require(exp, param):
+                        print('check passed in function definition. Check above')
+                        print('----------------------------------')
+
+                        #replace the parameter with parameter' (parameter prime)
+                        replace_parameter_with_primed(exp, param)
+
+
+
+
 
                 require_efsm_expression = {'ntype': 'FunctionCall', 'name': 'require2', 'args': exp['args']}
                 #declared_address_count = len(DeclaredAddressVariables)
@@ -1211,7 +1337,7 @@ def superFunctionDefinition(packet):
                 if event_names != []:
                     require_efsm.addTransition(require_efsm_expression, event_names)
                 else:
-                    event_names = [name + '1']
+                    event_names = [name + '_shadow_initiate']
                     require_efsm.addTransition(require_efsm_expression, event_names)
                 addAutomata(require_efsm)
 
@@ -1376,25 +1502,25 @@ def superFunctionDefinition(packet):
         if var['transition_type'] == 'function_fail_final':
             shadow_initialization_xml = get_variable_reassignment(variable_temp_dict)
             var['action_exp'] = shadow_initialization_xml
-            print('here--------------', var['action_exp'])
+            #print('here--------------', var['action_exp'])
 
 
 
     ########################## Initializing shadow variables #######################
-    print('efsm_edge_list: ', efsm_edge_list)
+    #print('efsm_edge_list: ', efsm_edge_list)
     function_shadow_initialization = name + '_' + 'shadow_initiate'
     shadow_initialization_xml = None
     for transition_key  in efsm_edge_list:
         var = efsm_edge_list[transition_key]
         if var['transition_type'] == 'shadow_initiate':
-            print('var::::',var)
-            print(var['action_exp'])
+            #print('var::::',var)
+            #print(var['action_exp'])
 
             # var['action_exp'] needs to be assigned the shadow variable xml element
 
             shadow_initialization_xml = get_shadow_initialization(variable_temp_dict)
             var['action_exp'] = shadow_initialization_xml
-            print('here--------------',var['action_exp'])
+            #print('here--------------',var['action_exp'])
 
 
 

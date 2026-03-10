@@ -5,7 +5,10 @@ import json
 #contract_file = r'smart_contracts/escrow_v2_blocking.sol'
 #contract_file = r'smart_contracts/game_9.sol'
 #contract_file = r'smart_contracts/game_9_3_players.sol'
-contract_file = r'smart_contracts/game_9_3_players_version2.sol'
+#contract_file = r'smart_contracts/game_9_3_players_version2.sol'
+contract_file = r'smart_contracts/game_9_3_players_version3.sol'
+#contract_file = r'smart_contracts/game_9_3_players_version_check_parameter_prime.sol'
+
 #contract_file = r'smart_contracts/test_game_9_v1.sol'
 #contract_file = r'smart_contracts/test_game_9_v2.sol'
 

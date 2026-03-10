@@ -140,34 +140,61 @@ def wmodify_assignment(lhs, op, rhs, **info):
 
                 # rhs = ['HEADS', 'TAILS'], ['0', '1']
                 # expression to be geenrate = param' == 'HEADS' | param' == 'TAILS'
+                # extend this to rhs of random length, like rhs = ['1', '2', '3']
 
-                root_expression = ET.Element("BinaryExpression", Operator = "|")
+                #root_expression = ET.Element("BinaryExpression", Operator = "|")
                 previous_expression = None
 
 
-                if isinstance(rhs, list) and len(rhs) == 2:
+                #if isinstance(rhs, list) and len(rhs) == 2:
                     # Handle rhs as a list with two elements
                     # Create the first binary expression
-                    binary_expression1 = ET.Element("BinaryExpression", Operator="==")
-                    lhs_assignment1 = ET.SubElement(binary_expression1, "UnaryExpression", Operator="'")
-                    ET.SubElement(lhs_assignment1, "SimpleIdentifier", Name=lhs)
-                    if is_integer(rhs[0]):
-                        ET.SubElement(binary_expression1, "IntConstant", Value=str(rhs[0]))
-                    else:
-                        ET.SubElement(binary_expression1, "SimpleIdentifier", Name=rhs[0])
 
-                    # Create the second binary expression
-                    binary_expression2 = ET.Element("BinaryExpression", Operator="==")
-                    lhs_assignment2 = ET.SubElement(binary_expression2, "UnaryExpression", Operator="'")
-                    ET.SubElement(lhs_assignment2, "SimpleIdentifier", Name=lhs)
-                    if is_integer(rhs[1]):
-                        ET.SubElement(binary_expression2, "IntConstant", Value=str(rhs[1]))
-                    else:
-                        ET.SubElement(binary_expression2, "SimpleIdentifier", Name=rhs[1])
+                    # binary_expression1 = ET.Element("BinaryExpression", Operator="==")
+                    # lhs_assignment1 = ET.SubElement(binary_expression1, "UnaryExpression", Operator="'")
+                    # ET.SubElement(lhs_assignment1, "SimpleIdentifier", Name=lhs)
+                    # if is_integer(rhs[0]):
+                    #     ET.SubElement(binary_expression1, "IntConstant", Value=str(rhs[0]))
+                    # else:
+                    #     ET.SubElement(binary_expression1, "SimpleIdentifier", Name=rhs[0])
+                    #
+                    # # Create the second binary expression
+                    # binary_expression2 = ET.Element("BinaryExpression", Operator="==")
+                    # lhs_assignment2 = ET.SubElement(binary_expression2, "UnaryExpression", Operator="'")
+                    # ET.SubElement(lhs_assignment2, "SimpleIdentifier", Name=lhs)
+                    # if is_integer(rhs[1]):
+                    #     ET.SubElement(binary_expression2, "IntConstant", Value=str(rhs[1]))
+                    # else:
+                    #     ET.SubElement(binary_expression2, "SimpleIdentifier", Name=rhs[1])
+                    #
+                    # # Append the expressions to the root
+                    # root_expression.append(binary_expression1)
+                    # root_expression.append(binary_expression2)
 
-                    # Append the expressions to the root
-                    root_expression.append(binary_expression1)
-                    root_expression.append(binary_expression2)
+                    # trial zone 1
+                #
+                root_expression = None
+
+                if isinstance(rhs, list):
+                    for v in rhs:
+                        # build (lhs == v)
+                        eq = ET.Element("BinaryExpression", Operator="==")
+                        unary = ET.SubElement(eq, "UnaryExpression", Operator="'")
+                        ET.SubElement(unary, "SimpleIdentifier", Name=lhs)
+
+                        if is_integer(v):
+                            ET.SubElement(eq, "IntConstant", Value=str(v))
+                        else:
+                            ET.SubElement(eq, "SimpleIdentifier", Name=str(v))
+
+                        # fold into OR tree
+                        if root_expression is None:
+                            root_expression = eq
+                        else:
+                            or_node = ET.Element("BinaryExpression", Operator="|")
+                            or_node.append(root_expression)  # left
+                            or_node.append(eq)  # right
+                            root_expression = or_node
                 else:
                     # Handle single rhs values or non-list rhs
                     if is_integer(rhs) and not is_integer(lhs):
